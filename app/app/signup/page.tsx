@@ -74,8 +74,13 @@ export default function SignupPage() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input id="name" placeholder="John Doe" value={name} onChange={(e) => setName(e.target.value)} required />
+              <Label htmlFor="name">First Name</Label>
+              <Input id="name" placeholder="John" value={name} onChange={(e) => setName(e.target.value)} required />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="name">Last Name</Label>
+              <Input id="name" placeholder="Doe" value={name} onChange={(e) => setName(e.target.value)} required />
             </div>
 
             <div className="space-y-2">
@@ -83,7 +88,7 @@ export default function SignupPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="name@example.com"
+                placeholder="yourname@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
