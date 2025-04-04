@@ -24,3 +24,14 @@ export const isAdmin = (req: AuthRequest, res: Response, next: NextFunction) => 
     }
     next();
 };
+
+export const isStudent = (req:AuthRequest, res:Response, next: NextFunction) => {
+    if (req.user.role !== 'student') {
+      return res.status(403).json({
+        success: false,
+        message: 'UNAUTHORIZED'
+      });
+    }
+    next();
+  };
+  
