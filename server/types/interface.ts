@@ -1,4 +1,4 @@
-import { Request } from "express";
+import { request, Request } from "express";
 
 export interface SignupRequest extends Request {
   body: {
@@ -7,6 +7,7 @@ export interface SignupRequest extends Request {
     email: string;
     password_hash: string;
     role: "admin" | "student";
+    verified: boolean;
   };
 }
 
@@ -17,3 +18,25 @@ export interface LoginRequest extends Request {
     role: "admin" | "student";  
   };
 }
+
+export interface OtpVerify extends Request{
+  body: {
+    email: string;
+    otp: string;
+  };
+}
+
+export interface GetOtp extends Request{
+  body:{
+    email: string;
+  }
+}
+
+export interface SendOtp extends Request{
+  body:{
+    email: string;
+    generateOTP(): string;
+    otpEmailTemplate(): string;
+  }
+}
+
