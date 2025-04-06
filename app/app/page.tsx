@@ -1,13 +1,16 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
-import { Shield, GraduationCap, Clock, FileCheck } from "lucide-react"
+import { Shield, GraduationCap, Clock, FileCheck, Video, FileSpreadsheet } from "lucide-react"
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950">
       <header className="container mx-auto py-6 px-4 flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Secure Exam System</h1>
+        <div className="flex items-center gap-2">
+          <GraduationCap className="h-8 w-8 text-primary" />
+          <h1 className="text-2xl font-bold">Test Buddy</h1>
+        </div>
         <div className="flex gap-4">
           <Button variant="outline" asChild>
             <Link href="/login">Login</Link>
@@ -20,7 +23,7 @@ export default function Home() {
 
       <main className="container mx-auto px-4 py-12">
         <section className="text-center mb-16">
-          <h2 className="text-4xl font-bold mb-4">Secure Online Exams</h2>
+          <h2 className="text-4xl font-bold mb-4">Secure Online Exams Made Simple</h2>
           <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
             A comprehensive platform for conducting secure online examinations with advanced proctoring features.
           </p>
@@ -31,7 +34,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+        <section className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
           <Card>
             <CardHeader className="pb-2">
               <Shield className="h-12 w-12 text-primary mb-2" />
@@ -46,12 +49,12 @@ export default function Home() {
 
           <Card>
             <CardHeader className="pb-2">
-              <GraduationCap className="h-12 w-12 text-primary mb-2" />
-              <CardTitle>For All Levels</CardTitle>
+              <Video className="h-12 w-12 text-primary mb-2" />
+              <CardTitle>Dual Proctoring</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-gray-600 dark:text-gray-400">
-                Suitable for schools, universities, and professional certification exams.
+                Choose between manual proctoring with live video feeds or automatic AI-powered proctoring.
               </p>
             </CardContent>
           </Card>
@@ -79,6 +82,30 @@ export default function Home() {
               </p>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <FileSpreadsheet className="h-12 w-12 text-primary mb-2" />
+              <CardTitle>Export Results</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-600 dark:text-gray-400">
+                Generate and download exam results in Excel format for easy record-keeping.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <GraduationCap className="h-12 w-12 text-primary mb-2" />
+              <CardTitle>For All Levels</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-600 dark:text-gray-400">
+                Suitable for schools, universities, and professional certification exams.
+              </p>
+            </CardContent>
+          </Card>
         </section>
 
         <section className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-sm">
@@ -100,6 +127,15 @@ export default function Home() {
                     2
                   </div>
                   <div>
+                    <h3 className="font-semibold">Verify Your Identity</h3>
+                    <p className="text-gray-600 dark:text-gray-400">Complete OTP verification for added security.</p>
+                  </div>
+                </li>
+                <li className="flex gap-3">
+                  <div className="bg-primary/10 text-primary rounded-full h-8 w-8 flex items-center justify-center flex-shrink-0">
+                    3
+                  </div>
+                  <div>
                     <h3 className="font-semibold">Schedule or Join Exams</h3>
                     <p className="text-gray-600 dark:text-gray-400">
                       Admins create exams, students join scheduled exams.
@@ -108,7 +144,7 @@ export default function Home() {
                 </li>
                 <li className="flex gap-3">
                   <div className="bg-primary/10 text-primary rounded-full h-8 w-8 flex items-center justify-center flex-shrink-0">
-                    3
+                    4
                   </div>
                   <div>
                     <h3 className="font-semibold">Take the Exam</h3>
@@ -117,7 +153,7 @@ export default function Home() {
                 </li>
                 <li className="flex gap-3">
                   <div className="bg-primary/10 text-primary rounded-full h-8 w-8 flex items-center justify-center flex-shrink-0">
-                    4
+                    5
                   </div>
                   <div>
                     <h3 className="font-semibold">View Results</h3>
@@ -139,7 +175,11 @@ export default function Home() {
 
       <footer className="bg-gray-100 dark:bg-gray-900 py-8 mt-12">
         <div className="container mx-auto px-4 text-center text-gray-600 dark:text-gray-400">
-          <p>© 2025 Secure Online Exam System. All rights reserved.</p>
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <GraduationCap className="h-6 w-6 text-primary" />
+            <span className="text-xl font-bold">Test Buddy</span>
+          </div>
+          <p>© 2025 Test Buddy. All rights reserved.</p>
         </div>
       </footer>
     </div>

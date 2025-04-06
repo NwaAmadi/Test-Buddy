@@ -12,7 +12,8 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Plus, Trash2, ArrowLeft, Save } from "lucide-react"
+import { Switch } from "@/components/ui/switch"
+import { Plus, Trash2, ArrowLeft, Save, Video, Shield } from "lucide-react"
 import Link from "next/link"
 
 export default function CreateExamPage() {
@@ -21,6 +22,7 @@ export default function CreateExamPage() {
   const [examDescription, setExamDescription] = useState("")
   const [examDuration, setExamDuration] = useState("60")
   const [passingScore, setPassingScore] = useState("60")
+  const [proctorType, setProctorType] = useState("automatic")
   const [questions, setQuestions] = useState([
     {
       id: 1,
@@ -94,6 +96,7 @@ export default function CreateExamPage() {
       description: examDescription,
       duration: examDuration,
       passingScore,
+      proctorType,
       questions,
     })
 
@@ -112,14 +115,15 @@ export default function CreateExamPage() {
         </Button>
 
         <h1 className="text-3xl font-bold">Create New Exam</h1>
-        <p className="text-gray-500 dark:text-gray-400">Set up a new exam with questions and options</p>
+        <p className="text-gray-500 dark:text-gray-400">Set up a new exam with questions and proctoring options</p>
       </div>
 
       <form onSubmit={handleSubmit}>
         <Tabs defaultValue="details" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
             <TabsTrigger value="details">Exam Details</TabsTrigger>
             <TabsTrigger value="questions">Questions</TabsTrigger>
+            <TabsTrigger value="proctoring">Proctoring</TabsTrigger>
           </TabsList>
 
           <TabsContent value="details">
@@ -275,12 +279,155 @@ export default function CreateExamPage() {
                 >
                   Back to Details
                 </Button>
+                <Button type="button" onClick={() => document.querySelector('[data-value="proctoring"]')?.click()}>
+                  Next: Proctoring Settings
+                </Button>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="proctoring">
+            <Card>
+              <CardHeader>
+                <CardTitle>Proctoring Settings</CardTitle>
+                <CardDescription>Configure how students will be monitored during the exam</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <div className="flex flex-col space-y-1.5">
+                    <Label htmlFor="proctor-type">Proctoring Type</Label>
+                    <Select value={proctorType} onValueChange={setProctorType}>
+                      <SelectTrigger id="proctor-type">
+                        <SelectValue placeholder="Select proctoring type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="automatic">Automatic Proctoring</SelectItem>
+                        <SelectItem value="manual">Manual Proctoring</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {proctorType === "automatic" ? (
+                    <Card className="border-primary/20 bg-primary/5">
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center gap-2">
+                          <Shield className="h-5 w-5 text-primary" />
+                          <CardTitle className="text-base">Automatic Proctoring</CardTitle>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm mb-4">The system will automatically monitor students using:</p>
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Label htmlFor="webcam-monitoring">Webcam Monitoring</Label>
+                              <div className="text-xs text-gray-500 dark:text-gray-400">
+                                (Detects additional persons)
+                              </div>
+                            </div>
+                            <Switch id="webcam-monitoring" defaultChecked />
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Label htmlFor="tab-switching">Tab Switching Detection</Label>
+                              <div className="text-xs text-gray-500 dark:text-gray-400">
+                                (Flags when student leaves exam page)
+                              </div>
+                            </div>
+                            <Switch id="tab-switching" defaultChecked />
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Label htmlFor="screen-recording">Screen Recording</Label>
+                              <div className="text-xs text-gray-500 dark:text-gray-400">
+                                (Records student's screen during exam)
+                              </div>
+                            </div>
+                            <Switch id="screen-recording" defaultChecked />
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Label htmlFor="browser-lock">Browser Lockdown</Label>
+                              <div className="text-xs text-gray-500 dark:text-gray-400">
+                                (Prevents opening other applications)
+                              </div>
+                            </div>
+                            <Switch id="browser-lock" />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <Card className="border-primary/20 bg-primary/5">
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center gap-2">
+                          <Video className="h-5 w-5 text-primary" />
+                          <CardTitle className="text-base">Manual Proctoring</CardTitle>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm mb-4">You will monitor students in real-time through:</p>
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Label htmlFor="live-video">Live Video Feed</Label>
+                              <div className="text-xs text-gray-500 dark:text-gray-400">
+                                (View all students simultaneously)
+                              </div>
+                            </div>
+                            <Switch id="live-video" defaultChecked />
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Label htmlFor="chat-support">Live Chat Support</Label>
+                              <div className="text-xs text-gray-500 dark:text-gray-400">
+                                (Communicate with students during exam)
+                              </div>
+                            </div>
+                            <Switch id="chat-support" defaultChecked />
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Label htmlFor="flag-suspicious">Flag Suspicious Activity</Label>
+                              <div className="text-xs text-gray-500 dark:text-gray-400">(Mark students for review)</div>
+                            </div>
+                            <Switch id="flag-suspicious" defaultChecked />
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Label htmlFor="recording">Record Session</Label>
+                              <div className="text-xs text-gray-500 dark:text-gray-400">
+                                (Save video for later review)
+                              </div>
+                            </div>
+                            <Switch id="recording" defaultChecked />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              </CardContent>
+              <CardFooter className="flex justify-between">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => document.querySelector('[data-value="questions"]')?.click()}
+                >
+                  Back to Questions
+                </Button>
                 <Button type="submit">
                   <Save className="mr-2 h-4 w-4" />
                   Save Exam
                 </Button>
-              </div>
-            </div>
+              </CardFooter>
+            </Card>
           </TabsContent>
         </Tabs>
       </form>

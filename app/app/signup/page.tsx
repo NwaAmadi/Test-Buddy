@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { AlertCircle } from "lucide-react"
+import { AlertCircle, GraduationCap } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export default function SignupPage() {
@@ -20,6 +20,7 @@ export default function SignupPage() {
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [role, setRole] = useState("student")
+  const [accessCode, setAccessCode] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
@@ -33,6 +34,11 @@ export default function SignupPage() {
       return
     }
 
+    if (role === "admin" && !accessCode) {
+      setError("Admin access code is required")
+      return
+    }
+
     setIsLoading(true)
 
     // Simulate API call
@@ -40,13 +46,9 @@ export default function SignupPage() {
       // In a real app, this would be an API call to register
       await new Promise((resolve) => setTimeout(resolve, 1000))
 
-      // For demo purposes, we'll just redirect based on role
+      // For demo purposes, we'll just redirect to OTP verification
       if (name && email && password) {
-        if (role === "admin") {
-          router.push("/admin/dashboard")
-        } else {
-          router.push("/student/dashboard")
-        }
+        router.push("/verify-otp")
       } else {
         setError("Please fill in all fields")
       }
@@ -61,7 +63,10 @@ export default function SignupPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Create an account</CardTitle>
+          <div className="flex justify-center mb-2">
+            <GraduationCap className="h-10 w-10 text-primary" />
+          </div>
+          <CardTitle className="text-2xl font-bold text-center">Create a Test Buddy account</CardTitle>
           <CardDescription className="text-center">Enter your information to create an account</CardDescription>
         </CardHeader>
         <CardContent>
@@ -74,13 +79,8 @@ export default function SignupPage() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="name">First Name</Label>
-              <Input id="name" placeholder="John" value={name} onChange={(e) => setName(e.target.value)} required />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="name">Last Name</Label>
-              <Input id="name" placeholder="Doe" value={name} onChange={(e) => setName(e.target.value)} required />
+              <Label htmlFor="name">Full Name</Label>
+              <Input id="name" placeholder="John Doe" value={name} onChange={(e) => setName(e.target.value)} required />
             </div>
 
             <div className="space-y-2">
@@ -88,7 +88,7 @@ export default function SignupPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="yourname@example.com"
+                placeholder="name@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -130,6 +130,23 @@ export default function SignupPage() {
                 </div>
               </RadioGroup>
             </div>
+
+            {role === "admin" && (
+              <div className="space-y-2">
+                <Label htmlFor="accessCode">Admin Access Code</Label>
+                <Input
+                  id="accessCode"
+                  type="password"
+                  placeholder="Enter admin access code"
+                  value={accessCode}
+                  onChange={(e) => setAccessCode(e.target.value)}
+                  required={role === "admin"}
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Admin accounts require a special access code. Contact your system administrator if you don't have one.
+                </p>
+              </div>
+            )}
 
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? "Creating account..." : "Sign Up"}

@@ -7,7 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Secure Online Exam System",
+  title: "Test Buddy",
   description: "A secure platform for online exams and proctoring",
     generator: 'v0.dev'
 }
