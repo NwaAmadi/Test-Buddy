@@ -3,9 +3,13 @@ import bcrypt from 'bcryptjs';
 import express from "express";
 import dotenv from 'dotenv';
 import { supabase } from "./db/supabase";
-import { SignupRequest, LoginRequest, OtpVerify, SendOtp } from "./types/interface";
+import { SignupRequest, LoginRequest, User, OtpVerify, SendOtp } from "./types/interface";
 import { OtpEmailTemplate } from "./OTP/OtpEmailTemplate";
 import { generateOTP }  from "./OTP/otpGenerator";
+import { canRequestOTP } from "./OTP/canRequestOtp";
+import { cleanupExpiredOTPs } from "./OTP/deleteExpiredOTPs";
+import { otpValid } from "./OTP/otpValid";
+
 
 dotenv.config();
 const app = express();
@@ -56,10 +60,23 @@ app.post('/api/signup', async (req: Request, res: Response):Promise<any> => {
 }); 
 
 app.post('/api/otp-verify', async (req: Request, res: Response): Promise<any> => {
-  const { otp } = req.body as OtpVerify['body'];
+  const { otp, email} = req.body as OtpVerify['body'];
 
   if (!otp) {
     return res.status(400).json({ error: "OTP REQUIRED" });
+  }
+  if (!email) {
+    return res.status(400).json({ error: "EMAIL REQUIRED" });
+  }
+  const canRequest = await canRequestOTP(email);
+
+  if (!canRequest) {
+    return res.status(429).json({ error: "TOO MANY REQUESTS" });
+  }
+
+  const isValid = await otpValid(email, otp);
+  if (!isValid) {
+    return res.status(401).json({ error: "OTP IS EXPIRED!" });
   }
 
   try {
@@ -87,8 +104,9 @@ app.post('/api/otp-verify', async (req: Request, res: Response): Promise<any> =>
       return res.status(500).json({ message: 'COULD NOT VERIFY OTP' });
     }
 
-    return res.status(200).json({ message: 'OTP VERIFIED SUCCESSFULLY' });
     res.redirect('/student/dashboard');
+    return res.status(200).json({ message: 'OTP VERIFIED SUCCESSFULLY' });
+    
 
   } catch (err) {
     return res.status(500).json({ error: "INTERNAL SERVER ERROR" });

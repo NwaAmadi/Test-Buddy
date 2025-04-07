@@ -1,14 +1,16 @@
-import { request, Request } from "express";
+import { Request } from "express";
+
+export interface User {
+  first_name: string;
+  last_name: string;
+  email: string;
+  password_hash: string;
+  role: "admin" | "student";
+  verified: boolean;
+}
 
 export interface SignupRequest extends Request {
-  body: {
-    first_name: string;
-    last_name: string;
-    email: string;
-    password_hash: string;
-    role: "admin" | "student";
-    verified: boolean;
-  };
+  body: User;
 }
 
 export interface LoginRequest extends Request {
