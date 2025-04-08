@@ -68,12 +68,7 @@ app.post('/api/otp-verify', async (req: Request, res: Response): Promise<any> =>
   if (!email) {
     return res.status(400).json({ error: "EMAIL REQUIRED" });
   }
-  const canRequest = await canRequestOTP(email);
-
-  if (!canRequest) {
-    return res.status(429).json({ error: "TOO MANY REQUESTS" });
-  }
-
+  
   const isValid = await otpValid(email, otp);
   if (!isValid) {
     return res.status(401).json({ error: "OTP IS EXPIRED!" });
@@ -113,8 +108,54 @@ app.post('/api/otp-verify', async (req: Request, res: Response): Promise<any> =>
   }
 });
 
+app.post('/api/login', async (req: Request, res: Response): Promise<any> => {
+  const { email, password, role } = req.body as LoginRequest['body'];
+
+  if (!email || !password || !role) {
+    return res.status(400).json({ error: "ALL FIELDS ARE REQUIRED" });
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .single();
+
+    if (error) {
+      return res.status(500).json({ error: "INTERNAL SERVER ERROR" });
+    }
+
+    if (!data) {
+      return res.status(401).json({ error: "INVALID CREDENTIALS" });
+    }
+
+    const isMatch = await bcrypt.compare(password, data.password_hash);
+    if (!isMatch) {
+      return res.status(401).json({ error: "INVALID CREDENTIALS" });
+    }
+
+    if (!data.verified) {
+      return res.status(401).json({ error: "EMAIL NOT VERIFIED" });
+    }
+
+    res.status(200).json({ message: "LOGIN SUCCESSFUL", user: data });
+
+  } catch (error) {
+    res.status(500).json({ error: "INTERNAL SERVER ERROR" });
+  }
+});
+
+
 app.post('/api/sendOtp', async (req: Request, res: Response): Promise<any> => {
+  
   const{ email, generateOTP } = req.body as SendOtp['body'];
+  const canRequest = await canRequestOTP(email);
+  
+  if (!canRequest) {
+    return res.status(429).json({ error: "TOO MANY REQUESTS" });
+  }
+
   const otp = generateOTP();
   const mail = OtpEmailTemplate(otp);
 

@@ -42,3 +42,11 @@ export interface SendOtp extends Request{
   }
 }
 
+export interface LoginRequest extends Request{
+  body:{
+    email: string;
+    password: string;
+    role: "admin" | "student";
+  }
+}
+
