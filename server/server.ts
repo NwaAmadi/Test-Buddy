@@ -6,7 +6,7 @@ import { supabase } from "./db/supabase";
 import { SignupRequest, LoginRequest, User, OtpVerify, SendOtp } from "./types/interface";
 import { OtpEmailTemplate } from "./OTP/OtpEmailTemplate";
 import { generateOTP }  from "./OTP/otpGenerator";
-import { canRequestOTP } from "./OTP/canRequestOtp";
+import { canRequestOTP } from "./OTP/canRequestOTP";
 import { cleanupExpiredOTPs } from "./OTP/deleteExpiredOTPs";
 import { otpValid } from "./OTP/otpValid";
 

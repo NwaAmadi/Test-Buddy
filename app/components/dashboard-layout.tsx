@@ -267,3 +267,4 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
   )
 }
 
+}

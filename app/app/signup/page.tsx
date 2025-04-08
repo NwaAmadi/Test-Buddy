@@ -15,7 +15,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export default function SignupPage() {
   const router = useRouter()
-  const [name, setName] = useState("")
+  const [first_name, setFirstName] = useState("")
+  const [last_name, setLastName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
@@ -47,7 +48,7 @@ export default function SignupPage() {
       await new Promise((resolve) => setTimeout(resolve, 1000))
 
       // For demo purposes, we'll just redirect to OTP verification
-      if (name && email && password) {
+      if (first_name && last_name && email && password) {
         router.push("/verify-otp")
       } else {
         setError("Please fill in all fields")
@@ -80,12 +81,12 @@ export default function SignupPage() {
 
             <div className="space-y-2">
               <Label htmlFor="name">First Name</Label>
-              <Input id="name" placeholder="John" value={name} onChange={(e) => setName(e.target.value)} required />
+              <Input id="first_name" placeholder="John" value={first_name} onChange={(e) => setFirstName(e.target.value)} required />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="name">Last Name</Label>
-              <Input id="name" placeholder="Doe" value={name} onChange={(e) => setName(e.target.value)} required />
+              <Input id="last_name" placeholder="Doe" value={last_name} onChange={(e) => setLastName(e.target.value)} required />
             </div>
 
             <div className="space-y-2">
