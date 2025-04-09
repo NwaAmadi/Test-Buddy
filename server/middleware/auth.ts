@@ -1,14 +1,14 @@
-import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 dotenv.config();
+import { Request, Response, NextFunction } from 'express';
+import * as jose from 'jose'
 
 export interface AuthRequest extends Request {
   user?: { email: string; role: string };
 }
 
 
-export const verifyToken = (req: AuthRequest, res: Response, next: NextFunction): void => {
+export const verifyToken = async (req: AuthRequest, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -19,9 +19,13 @@ export const verifyToken = (req: AuthRequest, res: Response, next: NextFunction)
   const token = authHeader.split(' ')[1];
 
   try {
-    const secret = process.env.JWT_SECRET!;
-    const decoded = jwt.verify(token, secret) as { email: string; role: string };
 
+    const secret = new TextEncoder().encode(
+      process.env.JWT_SECRET!
+    )
+    
+    const { payload:decoded } = await jose.jwtVerify<{ email: string; role: string }>(token, secret)
+    
     req.user = decoded;
     next();
   } catch (err) {

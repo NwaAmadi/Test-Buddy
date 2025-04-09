@@ -10,13 +10,12 @@ import { generateOTP }  from "./OTP/otpGenerator";
 import { canRequestOTP } from "./OTP/canRequestOTP";
 import { cleanupExpiredOTPs } from "./OTP/deleteExpiredOTPs";
 import { otpValid } from "./OTP/otpValid";
-import jwt from 'jsonwebtoken';
 import { verifyToken, isAdmin, isStudent } from './middleware/auth';
-import  ms  from 'ms';
-
+import  * as jose from 'jose';
 
 
 const app = express();
+app.use(express.json());
 const PORT = process.env.PORT;
 const JWT_EXPIRATION = process.env.JWT_EXPIRATION as string;
 const JWT_SECRET = process.env.JWT_SECRET as string;
@@ -24,7 +23,7 @@ const JWT_SECRET = process.env.JWT_SECRET as string;
 app.post('/api/signup', async (req: Request, res: Response):Promise<any> => {
   const {email,first_name,last_name,password_hash,role, verified } = req.body as SignupRequest['body'];
 
-  if(!first_name || !last_name || !email || !password_hash || !role) {
+  if(!first_name || !last_name || !email || !password_hash || !role || !verified) {
     return res.status(400).json({ error: "ALL FIELDS ARE REQUIRED" });
   }
   if(role !== "admin" && role !== "student") {
@@ -38,7 +37,7 @@ app.post('/api/signup', async (req: Request, res: Response):Promise<any> => {
     .single();
 
     if(checkError){
-        return res.status(500).json({ message: 'ERROR CHECKING EMAIL'})
+      return res.status(500).json({ message: 'ERROR CHECKING EMAIL'})
     }
 
     if(existingUser){
@@ -113,7 +112,7 @@ app.post('/api/otp-verify', async (req: Request, res: Response): Promise<any> =>
   }
 });
 
-app.post('/api/login', verifyToken , async (req: Request, res: Response): Promise<any> => {
+app.post('/api/login', async (req: Request, res: Response): Promise<any> => {
   const { email, password, role } = req.body as LoginRequest['body'];
 
   if (!email || !password || !role) {
@@ -144,13 +143,17 @@ app.post('/api/login', verifyToken , async (req: Request, res: Response): Promis
       return res.status(401).json({ error: "EMAIL NOT VERIFIED" });
     }
 
-    const token = jwt.sign(
-      { email: data.email, role: data.role },
-      JWT_SECRET as string,
-      { expiresIn: ms(JWT_EXPIRATION) }
-    );
+    const secret = new TextEncoder().encode(JWT_SECRET)
+    const alg = 'HS256'
+    
+    const token = await new jose.SignJWT({ email: data.email, role: data.role })
+      .setProtectedHeader({ alg })
+      .setIssuedAt()
+      .setExpirationTime(JWT_EXPIRATION)
+      .sign(secret)
 
-    res.status(200).json({ message: "LOGIN SUCCESSFUL", user: data, token });
+
+    res.status(200).json({ message: "LOGIN SUCCESSFUL", token });
 
   } catch (error) {
     res.status(500).json({ error: "INTERNAL SERVER ERROR" });
