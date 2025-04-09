@@ -12,13 +12,17 @@ import { cleanupExpiredOTPs } from "./OTP/deleteExpiredOTPs";
 import { otpValid } from "./OTP/otpValid";
 import { verifyToken, isAdmin, isStudent } from './middleware/auth';
 import  * as jose from 'jose';
+import nodemailer from 'nodemailer';
 
 
 const app = express();
 app.use(express.json());
+
 const PORT = process.env.PORT;
 const JWT_EXPIRATION = process.env.JWT_EXPIRATION as string;
 const JWT_SECRET = process.env.JWT_SECRET as string;
+const TEST_BUDDY_EMAIL = process.env.TEST_BUDDY_EMAIL as string;
+const TEST_BUDDY_EMAIL_PASSWORD = process.env.TEST_BUDDY_EMAIL_PASSWORD as string;
 
 app.post('/api/signup', async (req: Request, res: Response):Promise<any> => {
   const {email,first_name,last_name,password_hash,role, verified } = req.body as SignupRequest['body'];
@@ -103,8 +107,9 @@ app.post('/api/otp-verify', async (req: Request, res: Response): Promise<any> =>
       return res.status(500).json({ message: 'COULD NOT VERIFY OTP' });
     }
 
-    res.redirect('/student/dashboard');
+    cleanupExpiredOTPs();
     return res.status(200).json({ message: 'OTP VERIFIED SUCCESSFULLY' });
+    
     
 
   } catch (err) {
@@ -172,6 +177,30 @@ app.post('/api/sendOtp', async (req: Request, res: Response): Promise<any> => {
 
   const otp = generateOTP();
   const mail = OtpEmailTemplate(otp);
+  
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: TEST_BUDDY_EMAIL,
+      pass: TEST_BUDDY_EMAIL_PASSWORD
+    }
+  });
+
+  const mailOptions = {
+    from: TEST_BUDDY_EMAIL,
+    to: email,
+    subject: 'HI, Your OTP Code',
+    html: mail
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    res.status(200).json({ message: 'OTP SENT SUCCESSFULLY'})
+    
+
+  } catch (error) {
+    res.status(500).json({ message: 'ERROR SENDING OTP'})
+  }
 
 
 });
