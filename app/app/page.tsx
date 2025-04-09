@@ -164,9 +164,9 @@ export default function Home() {
             </div>
             <div className="bg-gray-100 dark:bg-gray-700 rounded-xl h-80 flex items-center justify-center">
               <img
-                src="/placeholder.svg?height=300&width=400"
+                src="/WBG.png?height=300&width=400"
                 alt="Platform demonstration"
-                className="rounded-lg max-h-full"
+                className="rounded-lg max-h-full "
               />
             </div>
           </div>

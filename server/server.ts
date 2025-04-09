@@ -1,7 +1,8 @@
+import dotenv from 'dotenv';
+dotenv.config();
 import {Request, Response} from "express";
 import bcrypt from 'bcryptjs';
 import express from "express";
-import dotenv from 'dotenv';
 import { supabase } from "./db/supabase";
 import { SignupRequest, LoginRequest, User, OtpVerify, SendOtp } from "./types/interface";
 import { OtpEmailTemplate } from "./OTP/OtpEmailTemplate";
@@ -9,12 +10,16 @@ import { generateOTP }  from "./OTP/otpGenerator";
 import { canRequestOTP } from "./OTP/canRequestOTP";
 import { cleanupExpiredOTPs } from "./OTP/deleteExpiredOTPs";
 import { otpValid } from "./OTP/otpValid";
+import jwt from 'jsonwebtoken';
+import { verifyToken, isAdmin, isStudent } from './middleware/auth';
+import  ms  from 'ms';
 
 
-dotenv.config();
+
 const app = express();
-const PORT = process.env.PORT || 3000;
-
+const PORT = process.env.PORT;
+const JWT_EXPIRATION = process.env.JWT_EXPIRATION as string;
+const JWT_SECRET = process.env.JWT_SECRET as string;
 
 app.post('/api/signup', async (req: Request, res: Response):Promise<any> => {
   const {email,first_name,last_name,password_hash,role, verified } = req.body as SignupRequest['body'];
@@ -108,7 +113,7 @@ app.post('/api/otp-verify', async (req: Request, res: Response): Promise<any> =>
   }
 });
 
-app.post('/api/login', async (req: Request, res: Response): Promise<any> => {
+app.post('/api/login', verifyToken , async (req: Request, res: Response): Promise<any> => {
   const { email, password, role } = req.body as LoginRequest['body'];
 
   if (!email || !password || !role) {
@@ -139,7 +144,13 @@ app.post('/api/login', async (req: Request, res: Response): Promise<any> => {
       return res.status(401).json({ error: "EMAIL NOT VERIFIED" });
     }
 
-    res.status(200).json({ message: "LOGIN SUCCESSFUL", user: data });
+    const token = jwt.sign(
+      { email: data.email, role: data.role },
+      JWT_SECRET as string,
+      { expiresIn: ms(JWT_EXPIRATION) }
+    );
+
+    res.status(200).json({ message: "LOGIN SUCCESSFUL", user: data, token });
 
   } catch (error) {
     res.status(500).json({ error: "INTERNAL SERVER ERROR" });
