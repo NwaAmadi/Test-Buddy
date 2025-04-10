@@ -9,7 +9,7 @@ export async function generateOTP(user: User): Promise<string> {
   
   const { error } = await supabase
     .from("otp_table")
-    .insert([{ otp, user_email: user.email, created_at: new Date(Date.now()), expires_at: new Date(Date.now() + 10 * 60 * 1000) }]);
+    .insert([{ otp, user_email: user.email, is_used: 'FALSE', created_at: new Date(Date.now()), expires_at: new Date(Date.now() + 10 * 60 * 1000) }]);
 
   if (error) {
     console.error("FAILED TO INSERT OTP:", error);

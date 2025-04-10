@@ -1,7 +1,9 @@
 import dotenv from 'dotenv';
 dotenv.config();
 import { Request, Response, NextFunction } from 'express';
-import * as jose from 'jose'
+import * as jose from 'jose';
+import { verifyAdminCode } from '../admin_access_code/verifyAdminAccessCode';
+import { supabase } from '../db/supabase';
 
 export interface AuthRequest extends Request {
   user?: { email: string; role: string };
@@ -34,12 +36,23 @@ export const verifyToken = async (req: AuthRequest, res: Response, next: NextFun
 };
 
 
-export const isAdmin = (req: AuthRequest, res: Response, next: NextFunction): void => {
+export const isAdmin = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void>=> {
   if (req.user?.role !== 'admin') {
     res.status(403).json({ message: 'ACCESS DENIED: UNAUTHORIZED' });
     return;
   }
-  next();
+
+  const access_code = req.body.accessCode;
+  const trueCode = await verifyAdminCode(req.user.email, access_code);
+
+  if (req.user?.role === 'admin' && trueCode){
+    next();
+  }
+
+  if (req.user?.role === 'admin' && !trueCode){
+    res.status(401).json({ message: 'INVALID ACCESS CODE!'});
+    return;
+  }
 };
 
 export const isStudent = (req: AuthRequest, res: Response, next: NextFunction): void => {
