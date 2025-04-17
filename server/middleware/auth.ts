@@ -3,7 +3,7 @@ dotenv.config();
 import { Request, Response, NextFunction } from 'express';
 import * as jose from 'jose';
 import { verifyAdminCode } from '../admin_access_code/verifyAdminAccessCode';
-import { supabase } from '../db/supabase';
+
 
 export interface AuthRequest extends Request {
   user?: { email: string; role: string };

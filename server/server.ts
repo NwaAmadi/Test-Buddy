@@ -11,6 +11,7 @@ import { canRequestOTP } from "./OTP/canRequestOTP";
 import { cleanupExpiredOTPs } from "./OTP/deleteExpiredOTPs";
 import { otpValid } from "./OTP/otpValid";
 import { verifyToken, isAdmin, isStudent } from './middleware/auth';
+import { verifyAdminCode } from './admin_access_code/verifyAdminAccessCode';
 import  * as jose from 'jose';
 import nodemailer from 'nodemailer';
 
@@ -24,48 +25,86 @@ const JWT_SECRET = process.env.JWT_SECRET as string;
 const TEST_BUDDY_EMAIL = process.env.TEST_BUDDY_EMAIL as string;
 const TEST_BUDDY_EMAIL_PASSWORD = process.env.TEST_BUDDY_EMAIL_PASSWORD as string;
 
-app.post('/api/signup', async (req: Request, res: Response):Promise<any> => {
-  const {email,first_name,last_name,password_hash,role, verified } = req.body as SignupRequest['body'];
+app.post('/api/signup', async (req: Request, res: Response): Promise<any> => {
+  const {
+    email,
+    first_name,
+    last_name,
+    password_hash: rawPassword,
+    role,
+    verified,
+    accessCode
+  } = req.body as SignupRequest['body'];
 
-  if(!first_name || !last_name || !email || !password_hash || !role || !verified) {
+  if (
+    !first_name ||
+    !last_name ||
+    !email ||
+    !rawPassword ||
+    !role ||
+    typeof verified !== 'boolean'
+  ) {
     return res.status(400).json({ error: "ALL FIELDS ARE REQUIRED" });
   }
-  if(role !== "admin" && role !== "student") {
-    return res.status(400).json({ error: "INVALID ROLE" });
+
+  if (role !== "admin" && role !== "student") {
+    return res.status(400).json({ message: "INVALID ROLE" });
   }
-  try{
+
+  if (role === 'admin') {
+    const isValidAdminCode = await verifyAdminCode(email, accessCode);
+    
+    if(!accessCode){
+      return res.status(400).json({ message: "ACCESS CODE IS REQUIRED" })
+    }
+
+    if (!isValidAdminCode) {
+      return res.status(403).json({ message: "INVALID OR EXPIRED ADMIN ACCESS CODE" });
+    }
+  }
+
+  try {
     const { data: existingUser, error: checkError } = await supabase
-    .from('users')
-    .select('*')
-    .eq('email', email)
-    .single();
-
-    if(checkError){
-      return res.status(500).json({ message: 'ERROR CHECKING EMAIL'})
-    }
-
-    if(existingUser){
-        return res.status(400).json({ message: 'INVALID EMAIL'})
-    }
-
-    const passwordHash = await bcrypt.hash(password_hash, 10);
-
-    const { data, error } = await supabase
       .from('users')
-      .insert([
-        { first_name, last_name, email, password_hash: passwordHash, role }
-      ]);
-      if (error) {
-        return res.status(500).json({ message: 'COULD NOT REGISTER USER'})
-      }
-      res.status(201).json({ message: 'USER REGISTERED SUCCESSFULLY'})
-
-  }catch (error) {
-    res.status(500).json({ error: "INTERNAL SERVER ERROR" });
-  }
+      .select('*')
+      .eq('email', email)
+      .single();
   
 
-}); 
+    if (checkError && checkError.code !== 'PGRST116') {
+      return res.status(500).json({ message: 'ERROR CHECKING EMAIL', error: checkError.message });
+    }
+
+    if (existingUser) {
+      return res.status(400).json({ message: 'EMAIL ALREADY REGISTERED' });
+    }
+
+    const passwordHash = await bcrypt.hash(rawPassword, 10);
+
+    const { error } = await supabase
+      .from('users')
+      .insert([
+        {
+          first_name,
+          last_name,
+          email,
+          password_hash: passwordHash,
+          role,
+          verified
+        }
+      ]);
+
+    if (error) {
+      return res.status(500).json({ message: 'COULD NOT REGISTER USER', error: error.message });
+    }
+
+    return res.status(201).json({ message: 'USER REGISTERED SUCCESSFULLY!' });
+
+  } catch (error) {
+    console.error('Signup Error:', error);
+    return res.status(500).json({ error: "INTERNAL SERVER ERROR!" });
+  }
+});
 
 app.post('/api/otp-verify', async (req: Request, res: Response): Promise<any> => {
   const { otp, email} = req.body as OtpVerify['body'];

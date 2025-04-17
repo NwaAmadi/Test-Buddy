@@ -7,6 +7,7 @@ export interface User {
   password_hash: string;
   role: "admin" | "student";
   verified: boolean;
+  accessCode: string;
 }
 
 export interface SignupRequest extends Request {
@@ -49,4 +50,3 @@ export interface LoginRequest extends Request{
     role: "admin" | "student";
   }
 }
-
