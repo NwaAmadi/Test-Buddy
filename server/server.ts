@@ -58,6 +58,10 @@ app.post('/api/signup', async (req: Request, res: Response): Promise<any> => {
       return res.status(400).json({ message: "ACCESS CODE IS REQUIRED" })
     }
 
+    if(verified === false){
+      return res.status(400).json({ message: "USER NOT VERIFIED!"})
+    }
+
     if (!isValidAdminCode) {
       return res.status(403).json({ message: "INVALID OR EXPIRED ADMIN ACCESS CODE" });
     }
