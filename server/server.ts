@@ -25,7 +25,7 @@ const JWT_SECRET = process.env.JWT_SECRET as string;
 const TEST_BUDDY_EMAIL = process.env.TEST_BUDDY_EMAIL as string;
 const TEST_BUDDY_EMAIL_PASSWORD = process.env.TEST_BUDDY_EMAIL_PASSWORD as string;
 
-app.post('/api/signup', async (req: Request, res: Response): Promise<any> => {
+app.post('/api/signup', isAdmin, async (req: Request, res: Response): Promise<any> => {
   const {
     email,
     first_name,
@@ -177,9 +177,7 @@ app.post('/api/login', isAdmin, async (req: Request, res: Response): Promise<any
       return res.status(401).json({ error: "EMAIL NOT VERIFIED" });
     }
 
-    if(data.role == "admin"){
-      
-    }
+ 
 
     const secret = new TextEncoder().encode(JWT_SECRET)
     const alg = 'HS256'
