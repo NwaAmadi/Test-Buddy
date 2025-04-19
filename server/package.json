@@ -3,7 +3,7 @@
 	"scripts": {
 		"dev": "tsx --watch server.ts",
 		"start": "tsx server.ts",
-		"build": "echo 'No build step required'",
+		"build": "echo 'No build step required'"
 	},
 	"dependencies": {
 		"@supabase/supabase-js": "^2.49.4",
