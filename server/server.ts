@@ -177,9 +177,9 @@ app.post('/api/login', isAdmin, async (req: Request, res: Response): Promise<any
       return res.status(401).json({ error: "EMAIL NOT VERIFIED" });
     }
 
-    /*if(data.role == "admin"){
-
-    }*/
+    if(data.role == "admin"){
+      
+    }
 
     const secret = new TextEncoder().encode(JWT_SECRET)
     const alg = 'HS256'
