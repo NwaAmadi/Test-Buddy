@@ -51,21 +51,7 @@ app.post('/api/signup', async (req: Request, res: Response): Promise<any> => {
     return res.status(400).json({ message: "INVALID ROLE" });
   }
 
-  if (role === 'admin') {
-    const isValidAdminCode = await verifyAdminCode(email, accessCode);
-    
-    if(!accessCode){
-      return res.status(400).json({ message: "ACCESS CODE IS REQUIRED" })
-    }
-
-    if(verified === false){
-      return res.status(400).json({ message: "USER NOT VERIFIED!"})
-    }
-
-    if (!isValidAdminCode) {
-      return res.status(403).json({ message: "INVALID OR EXPIRED ADMIN ACCESS CODE" });
-    }
-  }
+  
 
   try {
     const { data: existingUser, error: checkError } = await supabase
@@ -160,7 +146,7 @@ app.post('/api/otp-verify', async (req: Request, res: Response): Promise<any> =>
   }
 });
 
-app.post('/api/login', async (req: Request, res: Response): Promise<any> => {
+app.post('/api/login', isAdmin, async (req: Request, res: Response): Promise<any> => {
   const { email, password, role } = req.body as LoginRequest['body'];
 
   if (!email || !password || !role) {
@@ -190,6 +176,10 @@ app.post('/api/login', async (req: Request, res: Response): Promise<any> => {
     if (!data.verified) {
       return res.status(401).json({ error: "EMAIL NOT VERIFIED" });
     }
+
+    /*if(data.role == "admin"){
+
+    }*/
 
     const secret = new TextEncoder().encode(JWT_SECRET)
     const alg = 'HS256'
