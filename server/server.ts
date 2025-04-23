@@ -100,10 +100,10 @@ app.post('/api/otp-verify', async (req: Request, res: Response): Promise<any> =>
   const { otp, email} = req.body as OtpVerify['body'];
 
   if (!otp) {
-    return res.status(400).json({ error: "OTP REQUIRED" });
+    return res.status(400).json({ error: "OTP REQUIRED!" });
   }
   if (!email) {
-    return res.status(400).json({ error: "EMAIL REQUIRED" });
+    return res.status(400).json({ error: "EMAIL REQUIRED!" });
   }
   
   const isValid = await otpValid(email, otp);
