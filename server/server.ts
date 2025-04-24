@@ -25,7 +25,7 @@ const JWT_SECRET = process.env.JWT_SECRET as string;
 const TEST_BUDDY_EMAIL = process.env.TEST_BUDDY_EMAIL as string;
 const TEST_BUDDY_EMAIL_PASSWORD = process.env.TEST_BUDDY_EMAIL_PASSWORD as string;
 
-app.post('/api/signup', isAdmin, async (req: Request, res: Response): Promise<any> => {
+app.post('/api/signup', async (req: Request, res: Response): Promise<any> => {
   const {
     email,
     first_name,
@@ -51,8 +51,6 @@ app.post('/api/signup', isAdmin, async (req: Request, res: Response): Promise<an
     return res.status(400).json({ message: "INVALID ROLE" });
   }
 
-  
-
   try {
     const { data: existingUser, error: checkError } = await supabase
       .from('users')
@@ -67,6 +65,10 @@ app.post('/api/signup', isAdmin, async (req: Request, res: Response): Promise<an
 
     if (existingUser) {
       return res.status(400).json({ message: 'EMAIL ALREADY REGISTERED' });
+    }
+
+    if (role == 'admin') {
+      isAdmin
     }
 
     const passwordHash = await bcrypt.hash(rawPassword, 10);
