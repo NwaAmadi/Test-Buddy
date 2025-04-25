@@ -76,6 +76,9 @@ app.post('/api/signup', async (req: Request, res: Response): Promise<any> => {
 
     
     if (role === "admin") {
+      if (!accessCode) {
+        return res.status(400).json({ message: 'ACCESS CODE IS REQUIRED FOR ADMIN ROLE' });
+      }
       const isValidAdminCode = await verifyAdminCode(accessCode, email);
       if (!isValidAdminCode) {
         return res.status(400).json({ message: 'INVALID ADMIN ACCESS CODE' });
