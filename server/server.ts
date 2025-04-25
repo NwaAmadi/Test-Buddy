@@ -15,7 +15,7 @@ import { verifyAdminCode } from './admin_access_code/verifyAdminAccessCode';
 import  * as jose from 'jose';
 import nodemailer from 'nodemailer';
 
-
+const cors = require('cors');
 const app = express();
 app.use(express.json());
 
@@ -24,6 +24,12 @@ const JWT_EXPIRATION = process.env.JWT_EXPIRATION as string;
 const JWT_SECRET = process.env.JWT_SECRET as string;
 const TEST_BUDDY_EMAIL = process.env.TEST_BUDDY_EMAIL as string;
 const TEST_BUDDY_EMAIL_PASSWORD = process.env.TEST_BUDDY_EMAIL_PASSWORD as string;
+
+
+app.use(cors({
+  origin: 'http://192.168.0.107:3000', 
+  credentials: true
+}));
 
 app.post('/api/signup', async (req: Request, res: Response): Promise<any> => {
   const {

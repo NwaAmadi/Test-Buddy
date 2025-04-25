@@ -1,7 +1,8 @@
 "use client"
-
+import dotenv from 'dotenv';
+dotenv.config();
 import type React from "react"
-
+import { Toaster, toast } from 'sonner'
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -25,40 +26,55 @@ export default function SignupPage() {
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
+
+  const BACKEND_URL= process.env.NEXT_PUBLIC_SERVER
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
-
-    // Basic validation
+    e.preventDefault();
+    setError("");
+  
     if (password !== confirmPassword) {
-      setError("Passwords do not match")
-      return
+      toast.error("Passwords do not match");
+      return;
     }
-
+  
     if (role === "admin" && !accessCode) {
-      setError("Admin access code is required")
-      return
+      toast.error("Admin access code is required");
+      return;
     }
-
-    setIsLoading(true)
-
-    // Simulate API call
+  
+    setIsLoading(true);
+  
     try {
-      // In a real app, this would be an API call to register
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      // For demo purposes, we'll just redirect to OTP verification
-      if (first_name && last_name && email && password) {
-        router.push("/verify-otp")
-      } else {
-        setError("Please fill in all fields")
+      const response = await fetch(`${BACKEND_URL}/api/signup` || "", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          first_name,
+          last_name,
+          email,
+          password,
+          role,
+          access_code: accessCode || undefined,
+        }),
+      });
+  
+      const data = await response.json();
+  
+      if (!response.ok) {
+        throw new Error(data.message || "Registration failed");
       }
-    } catch (err) {
-      setError("Failed to create account. Please try again.")
+  
+      toast.success("Account created! Redirecting to OTP verification...");
+      router.push(`/verify-otp?email=${email}`);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to create account. Please try again.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
+  
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
