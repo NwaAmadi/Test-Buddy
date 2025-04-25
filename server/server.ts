@@ -14,8 +14,9 @@ import { verifyToken, isAdmin, isStudent } from './middleware/auth';
 import { verifyAdminCode } from './admin_access_code/verifyAdminAccessCode';
 import  * as jose from 'jose';
 import nodemailer from 'nodemailer';
+import cors from 'cors';
 
-const cors = require('cors');
+
 const app = express();
 app.use(express.json());
 
