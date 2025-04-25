@@ -15,6 +15,7 @@ import { verifyAdminCode } from './admin_access_code/verifyAdminAccessCode';
 import  * as jose from 'jose';
 import nodemailer from 'nodemailer';
 import cors from 'cors';
+import { Resend } from 'resend';
 
 
 const app = express();
@@ -25,7 +26,7 @@ const JWT_EXPIRATION = process.env.JWT_EXPIRATION as string;
 const JWT_SECRET = process.env.JWT_SECRET as string;
 const TEST_BUDDY_EMAIL = process.env.TEST_BUDDY_EMAIL as string;
 const TEST_BUDDY_EMAIL_PASSWORD = process.env.TEST_BUDDY_EMAIL_PASSWORD as string;
-
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 app.use(cors({
   origin: 'http://192.168.0.107:3000', 
@@ -214,14 +215,13 @@ app.post('/api/login', isAdmin, async (req: Request, res: Response): Promise<any
 
 
 app.post('/api/sendOtp', async (req: Request, res: Response): Promise<any> => {
-  
   const { email } = req.body as SendOtp['body'];
-  
+
   if (!email) {
     return res.status(400).json({ error: "EMAIL REQUIRED!" });
   }
+
   const canRequest = await canRequestOTP(email);
-  
   if (!canRequest) {
     return res.status(429).json({ error: "TOO MANY REQUESTS" });
   }
@@ -235,35 +235,25 @@ app.post('/api/sendOtp', async (req: Request, res: Response): Promise<any> => {
     verified: false,
     accessCode: ''
   };
+
   const otp = await generateOTP(user);
   const mail = OtpEmailTemplate(otp);
-  
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: TEST_BUDDY_EMAIL,
-      pass: TEST_BUDDY_EMAIL_PASSWORD
-    }
-  });
-
-  const mailOptions = {
-    from: TEST_BUDDY_EMAIL,
-    to: email,
-    subject: 'Your OTP Code - Complete Your Registration',
-    html: mail
-  };
 
   try {
-    await transporter.sendMail(mailOptions);
-    res.status(200).json({ message: 'OTP SENT SUCCESSFULLY'})
-    
+    await resend.emails.send({
+      from: 'Your App <noreply@testbuddy.com>',
+      to: [email],
+      subject: 'Your OTP Code - Complete Your Registration',
+      html: mail
+    });
 
+    res.status(200).json({ message: 'OTP SENT SUCCESSFULLY' });
   } catch (error) {
-    res.status(500).json({ message: 'ERROR SENDING OTP'})
+    console.error('Resend Error:', error);
+    res.status(500).json({ message: 'ERROR SENDING OTP' });
   }
-
-
 });
+
 
 app.listen(PORT, () => {
   console.log(`ACTIVE ON  ${PORT}`);

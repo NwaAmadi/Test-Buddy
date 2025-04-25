@@ -13,13 +13,14 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { AlertCircle, GraduationCap } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import axios from 'axios'
 
 export default function SignupPage() {
   const router = useRouter()
   const [first_name, setFirstName] = useState("")
   const [last_name, setLastName] = useState("")
   const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
+  const [password_hash, setPassword_hash] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [role, setRole] = useState("student")
   const [accessCode, setAccessCode] = useState("")
@@ -27,18 +28,32 @@ export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false)
 
 
+  const sendOtp = async (email: string) => {
+    try {
+      const response = await axios.post(`${BACKEND_URL}/api/sendOtp`, {
+        email,
+      });
+  
+      console.log('OTP sent:', response.data);
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to send OTP. Please try again.");
+      console.error('Failed to send OTP:', error);
+    }
+  };
+
   const BACKEND_URL= process.env.NEXT_PUBLIC_SERVER
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
   
-    if (password !== confirmPassword) {
-      toast.error("Passwords do not match");
+    if (password_hash !== confirmPassword) {
+      toast.info("Passwords do not match");
       return;
     }
   
     if (role === "admin" && !accessCode) {
-      toast.error("Admin access code is required");
+      toast.info("Admin access code is required");
       return;
     }
   
@@ -54,7 +69,7 @@ export default function SignupPage() {
           first_name,
           last_name,
           email,
-          password,
+          password_hash,
           role,
           verified: false,
           access_code: accessCode || undefined,
@@ -62,15 +77,16 @@ export default function SignupPage() {
       });
   
       const data = await response.json();
-  
+      console.log(data);
       if (!response.ok) {
-        throw new Error(data.message || "Registration failed");
+        throw new Error(data.message || toast.error("Failed to create account"));
       }
   
       toast.success("Account created! Redirecting to OTP verification...");
+      sendOtp(email)
       router.push(`/verify-otp?email=${email}`);
     } catch (err: any) {
-      toast.error(err.message || "Failed to create account. Please try again.");
+      toast.error("Failed to create account. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -123,8 +139,8 @@ export default function SignupPage() {
               <Input
                 id="password"
                 type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={password_hash}
+                onChange={(e) => setPassword_hash(e.target.value)}
                 required
               />
             </div>
