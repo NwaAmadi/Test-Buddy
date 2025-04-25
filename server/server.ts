@@ -74,8 +74,12 @@ app.post('/api/signup', async (req: Request, res: Response): Promise<any> => {
       return res.status(400).json({ message: 'EMAIL ALREADY REGISTERED' });
     }
 
-    if (role == 'admin') {
-      isAdmin
+    
+    if (role === "admin") {
+      const isValidAdminCode = await verifyAdminCode(accessCode, email);
+      if (!isValidAdminCode) {
+        return res.status(400).json({ message: 'INVALID ADMIN ACCESS CODE' });
+      }
     }
 
     const passwordHash = await bcrypt.hash(rawPassword, 10);
@@ -208,14 +212,27 @@ app.post('/api/login', isAdmin, async (req: Request, res: Response): Promise<any
 
 app.post('/api/sendOtp', async (req: Request, res: Response): Promise<any> => {
   
-  const{ email, generateOTP } = req.body as SendOtp['body'];
+  const { email } = req.body as SendOtp['body'];
+  
+  if (!email) {
+    return res.status(400).json({ error: "EMAIL REQUIRED!" });
+  }
   const canRequest = await canRequestOTP(email);
   
   if (!canRequest) {
     return res.status(429).json({ error: "TOO MANY REQUESTS" });
   }
 
-  const otp = generateOTP();
+  const user: User = {
+    email,
+    first_name: '',
+    last_name: '',
+    password_hash: '',
+    role: 'admin',
+    verified: false,
+    accessCode: ''
+  };
+  const otp = await generateOTP(user);
   const mail = OtpEmailTemplate(otp);
   
   const transporter = nodemailer.createTransport({
@@ -229,7 +246,7 @@ app.post('/api/sendOtp', async (req: Request, res: Response): Promise<any> => {
   const mailOptions = {
     from: TEST_BUDDY_EMAIL,
     to: email,
-    subject: 'HI, Your OTP Code',
+    subject: 'Your OTP Code - Complete Your Registration',
     html: mail
   };
 

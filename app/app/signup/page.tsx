@@ -56,6 +56,7 @@ export default function SignupPage() {
           email,
           password,
           role,
+          verified: false,
           access_code: accessCode || undefined,
         }),
       });
