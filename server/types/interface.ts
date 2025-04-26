@@ -38,8 +38,6 @@ export interface GetOtp extends Request{
 export interface SendOtp extends Request{
   body:{
     email: string;
-    generateOTP(): string;
-    otpEmailTemplate(): string;
   }
 }
 
@@ -50,3 +48,4 @@ export interface LoginRequest extends Request{
     role: "admin" | "student";
   }
 }
+

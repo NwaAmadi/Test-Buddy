@@ -28,10 +28,7 @@ const TEST_BUDDY_EMAIL = process.env.TEST_BUDDY_EMAIL as string;
 const TEST_BUDDY_EMAIL_PASSWORD = process.env.TEST_BUDDY_EMAIL_PASSWORD as string;
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-app.use(cors({
-  origin: 'http://192.168.0.107:3000', 
-  credentials: true
-}));
+app.use(cors());
 
 app.post('/api/signup', async (req: Request, res: Response): Promise<any> => {
   const {
@@ -215,45 +212,45 @@ app.post('/api/login', isAdmin, async (req: Request, res: Response): Promise<any
 
 
 app.post('/api/sendOtp', async (req: Request, res: Response): Promise<any> => {
-  const { email } = req.body as SendOtp['body'];
-
-  if (!email) {
-    return res.status(400).json({ error: "EMAIL REQUIRED!" });
-  }
-
-  const canRequest = await canRequestOTP(email);
-  if (!canRequest) {
-    return res.status(429).json({ error: "TOO MANY REQUESTS" });
-  }
-
-  const user: User = {
-    email,
-    first_name: '',
-    last_name: '',
-    password_hash: '',
-    role: 'admin',
-    verified: false,
-    accessCode: ''
-  };
-
-  const otp = await generateOTP(user);
-  const mail = OtpEmailTemplate(otp);
-
   try {
+    const { email } = req.body as SendOtp['body'];
+
+    if (!email) {
+      return res.status(400).json({ error: "EMAIL REQUIRED!" });
+    }
+
+    const canRequest = await canRequestOTP(email);
+    if (!canRequest) {
+      return res.status(429).json({ error: "TOO MANY REQUESTS" });
+    }
+
+    const user: User = {
+      email,
+      first_name: '',
+      last_name: '',
+      password_hash: '',
+      role: 'admin',
+      verified: false,
+      accessCode: ''
+    };
+
+    const otp = await generateOTP(user);
+    const mail = OtpEmailTemplate(otp);
+
     await resend.emails.send({
       from: TEST_BUDDY_EMAIL,
-      to: [email],
+      to: [user.email],
       subject: 'Your OTP Code - Complete Your Registration',
       html: mail
     });
 
     res.status(200).json({ message: 'OTP SENT SUCCESSFULLY' });
+
   } catch (error) {
-    console.error('Resend Error:', error);
-    res.status(500).json({ message: 'ERROR SENDING OTP' });
+    console.error('General Error:', error);
+    res.status(500).json({ message: 'SOMETHING WENT WRONG' });
   }
 });
-
 
 app.listen(PORT, () => {
   console.log(`ACTIVE ON  ${PORT}`);
