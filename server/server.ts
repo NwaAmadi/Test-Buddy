@@ -241,7 +241,7 @@ app.post('/api/sendOtp', async (req: Request, res: Response): Promise<any> => {
 
   try {
     await resend.emails.send({
-      from: 'Your App <noreply@testbuddy.com>',
+      from: TEST_BUDDY_EMAIL,
       to: [email],
       subject: 'Your OTP Code - Complete Your Registration',
       html: mail
