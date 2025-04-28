@@ -16,7 +16,6 @@ import { verifyAdminCode } from './admin_access_code/verifyAdminAccessCode';
 import  * as jose from 'jose';
 import nodemailer from 'nodemailer';
 import cors from 'cors';
-import { Resend } from 'resend';
 
 
 const app = express();
@@ -27,7 +26,7 @@ const JWT_EXPIRATION = process.env.JWT_EXPIRATION as string;
 const JWT_SECRET = process.env.JWT_SECRET as string;
 const TEST_BUDDY_EMAIL = process.env.TEST_BUDDY_EMAIL as string;
 const TEST_BUDDY_EMAIL_PASSWORD = process.env.TEST_BUDDY_EMAIL_PASSWORD as string;
-const resend = new Resend(process.env.RESEND_API_KEY);
+
 
 app.use(cors());
 

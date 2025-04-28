@@ -15,6 +15,9 @@ import { AlertCircle, GraduationCap } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import axios from 'axios'
 
+
+
+
 export default function SignupPage() {
   const router = useRouter()
   const [first_name, setFirstName] = useState("")
@@ -27,7 +30,7 @@ export default function SignupPage() {
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
-
+  const BACKEND_URL= process.env.NEXT_PUBLIC_SERVER
   const sendOtp = async (email: string) => {
     try {
       const response = await axios.post(`${BACKEND_URL}/api/sendOtp`, {
@@ -42,7 +45,7 @@ export default function SignupPage() {
     }
   };
 
-  const BACKEND_URL= process.env.NEXT_PUBLIC_SERVER
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
