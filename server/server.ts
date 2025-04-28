@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 dotenv.config();
 import {Request, Response} from "express";
+import { brevoTransporter } from './libs/brevo';
 import bcrypt from 'bcryptjs';
 import express from "express";
 import { supabase } from "./db/supabase";
@@ -179,19 +180,17 @@ app.post('/api/login', isAdmin, async (req: Request, res: Response): Promise<any
     }
 
     if (!data) {
-      return res.status(401).json({ error: "INVALID CREDENTIALS" });
+      return res.status(404).json({ error: "USER NOT FOUND!" });
     }
 
     const isMatch = await bcrypt.compare(password, data.password_hash);
     if (!isMatch) {
-      return res.status(401).json({ error: "INVALID CREDENTIALS" });
+      return res.status(401).json({ error: "INVALID CREDENTIALS!" });
     }
 
     if (!data.verified) {
-      return res.status(401).json({ error: "EMAIL NOT VERIFIED" });
+      return res.status(401).json({ error: "USER NOT VERIFIED!" });
     }
-
- 
 
     const secret = new TextEncoder().encode(JWT_SECRET)
     const alg = 'HS256'
@@ -237,11 +236,11 @@ app.post('/api/sendOtp', async (req: Request, res: Response): Promise<any> => {
     const otp = await generateOTP(user);
     const mail = OtpEmailTemplate(otp);
 
-    await resend.emails.send({
+    await brevoTransporter.sendMail({
       from: TEST_BUDDY_EMAIL,
-      to: [user.email],
+      to: user.email,
       subject: 'Your OTP Code - Complete Your Registration',
-      html: mail
+      html: mail,
     });
 
     res.status(200).json({ message: 'OTP SENT SUCCESSFULLY' });
