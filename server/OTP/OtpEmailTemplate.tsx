@@ -23,7 +23,7 @@ export function OtpEmailTemplate(otp: string): string {
       </p>
 
       <p style="color: #999999; font-size: 13px; margin-top: 30px;">
-        Thanks,<br/><strong>Your Company Name</strong>
+        Thanks,<br/><strong>Test Buddy</strong>
       </p>
 
     </div>
