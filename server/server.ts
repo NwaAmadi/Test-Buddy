@@ -1,7 +1,6 @@
 import dotenv from 'dotenv';
 dotenv.config();
 import {Request, Response} from "express";
-import { brevoTransporter } from './libs/brevo';
 import bcrypt from 'bcryptjs';
 import express from "express";
 import { supabase } from "./db/supabase";
@@ -15,6 +14,7 @@ import { verifyToken, isAdmin, isStudent } from './middleware/auth';
 import { verifyAdminCode } from './admin_access_code/verifyAdminAccessCode';
 import  * as jose from 'jose';
 import nodemailer from 'nodemailer';
+import { sendOtpEmail } from './libs/brevo';
 import cors from 'cors';
 
 
@@ -235,12 +235,7 @@ app.post('/api/sendOtp', async (req: Request, res: Response): Promise<any> => {
     const otp = await generateOTP(user);
     const mail = OtpEmailTemplate(otp);
 
-    await brevoTransporter.sendMail({
-      from: TEST_BUDDY_EMAIL,
-      to: user.email,
-      subject: 'Your OTP Code - Complete Your Registration',
-      html: mail,
-    });
+    await sendOtpEmail(user.email, mail);
 
     res.status(200).json({ message: 'OTP SENT SUCCESSFULLY' });
 
@@ -249,6 +244,7 @@ app.post('/api/sendOtp', async (req: Request, res: Response): Promise<any> => {
     res.status(500).json({ message: 'SOMETHING WENT WRONG' });
   }
 });
+
 
 app.listen(PORT, () => {
   console.log(`ACTIVE ON  ${PORT}`);
