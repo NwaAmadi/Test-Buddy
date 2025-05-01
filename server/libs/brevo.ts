@@ -4,8 +4,8 @@ import axios from 'axios';
 
 
 export const sendOtpEmail = async (toEmail: string, htmlContent: string): Promise<void> => {
-  const apiKey = process.env.BREVO_API_KEY!;
-  const senderEmail = process.env.BREVO_USER_EMAIL!;
+  const apiKey = process.env.BREVO_API_KEY as string;
+  const senderEmail = process.env.BREVO_USER_EMAIL as string;
 
   if (!apiKey || !senderEmail) {
     throw new Error('Missing Brevo API key or sender email in environment.');
