@@ -9,7 +9,6 @@ export function OtpEmailTemplate(otp: string): string {
   <div style="text-align: center; margin-bottom: 30px;">
     <img src="https://res.cloudinary.com/dndrfvyn2/image/upload/v1746062725/graduation-hat_scwjdg.png" alt="Company Logo" style="height: 50px; width: auto; border: 0;" />
   </div>
-edtfyiguhiosehtdcjygvkhblnjcfkgvbhjlnkj
   <div style="text-align: center; color: #333333;">
     <h2 style="font-size: 22px; font-weight: 600; margin-top: 0; margin-bottom: 15px; color: #222222;">Verify Your Action</h2>
     <p style="font-size: 15px; color: #555555; margin-bottom: 30px; padding: 0 15px;">
