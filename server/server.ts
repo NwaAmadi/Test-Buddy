@@ -235,8 +235,12 @@ app.post('/api/sendOtp', async (req: Request, res: Response): Promise<any> => {
     const otp = await generateOTP(user);
     const mail = OtpEmailTemplate(otp);
 
-    await sendOtpEmail(user.email, mail);
+    const emailResult = await sendOtpEmail(user.email, mail);
 
+    if (!emailResult.success) {
+      console.error('Email sending failed:', emailResult.message);
+      return res.status(500).json({ error: 'FAILED TO SEND OTP' });
+    }
     res.status(200).json({ message: 'OTP SENT SUCCESSFULLY' });
 
   } catch (error) {
