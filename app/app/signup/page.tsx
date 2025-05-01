@@ -37,7 +37,7 @@ export default function SignupPage() {
         email,
       });
   
-      console.log('OTP sent:', response.data);
+      return response
     } catch (error) {
       console.log(error);
       toast.error("Failed to send OTP. Please try again.");
@@ -82,12 +82,41 @@ export default function SignupPage() {
       const data = await response.json();
       console.log(data);
       if (!response.ok) {
-        throw new Error(data.message || toast.error("Failed to create account"));
+        let message
+
+        if (data.message === "EMAIL ALREADY REGISTERED") {
+          message = "Email already registered. Please use a different email.";
+        } else if (data.message === "INVALID ROLE") {
+          message = "Invalid role selected. Please choose either 'student' or 'admin'.";
+        }
+        else if (data.message === "ALL FIELDS ARE REQUIRED") {
+          message = "All fields are required. Please fill in all the fields.";
+        }
+        else if (data.message === "ACCESS CODE IS REQUIRED FOR ADMIN ROLE") {
+          message = "Access code is required for admin role. Please provide the access code.";
+        }
+        else if (data.message === "INVALID ADMIN ACCESS CODE") {
+          message = "Invalid admin access code. Please check the code and try again.";
+        }
+        toast.error(message)
+        return
       }
   
       toast.success("Account created! Redirecting to OTP verification...");
-      sendOtp(email)
+      const sendResponse = await sendOtp(email);
+      if (sendResponse?.status !== 200) {
+        let message
+        if (sendResponse?.data?.message === "EMAIL REQUIRED") {
+          message = "Please provide a valid email address.";
+        }
+        else if( sendResponse?.data?.message === "TOO MANY REQUESTS") {
+          message = "Too many requests. Please try again later.";
+        }
+        toast.error(message);
+        return;
+      }
       router.push(`/verify-otp?email=${email}`);
+      toast.success("OTP sent successfully!");
     } catch (err: any) {
       toast.error("Failed to create account. Please try again.");
     } finally {
