@@ -1,5 +1,5 @@
 export function OtpEmailTemplate(otp: string): string {
-  
+
   const otpString = String(otp).padStart(6, '0');
   const currentYear = new Date().getFullYear();
 
@@ -17,9 +17,9 @@ export function OtpEmailTemplate(otp: string): string {
     </p>
   </div>
 
-  <div style="margin-bottom: 30px; text-align: center;"> {/* This centers the inline-block boxes */}
+  <div style="margin-bottom: 30px; text-align: center;"> 
     <p style="font-size: 14px; color: #777777; margin-bottom: 15px;">Your OTP Code:</p>
-    {/* Container div is optional now, text-align on parent handles centering */}
+    
     <div>
       ${otpString.split('').map(digit => `
         <div style="
