@@ -142,7 +142,7 @@ export default function SignupPage() {
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
-            )}
+            )} 
 
             <div className="space-y-2">
               <Label htmlFor="name">First Name</Label>
