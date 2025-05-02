@@ -4,7 +4,7 @@ export function OtpEmailTemplate(otp: string): string {
   const currentYear = new Date().getFullYear();
 
   return `
-<div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333333; max-width: 600px; margin: 20px auto; border: 2px solid black; padding: 20px;">
+<div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333333; max-width: 600px; margin: 20px auto; border-radius: 8px; border: 2px solid black; padding: 20px;">
 
   <div style="text-align: center; margin-bottom: 30px;">
     <img src="https://res.cloudinary.com/dndrfvyn2/image/upload/v1746062725/graduation-hat_scwjdg.png" alt="Company Logo" style="height: 50px; width: auto; border: 0;" />
