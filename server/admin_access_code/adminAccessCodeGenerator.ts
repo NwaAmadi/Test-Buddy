@@ -1,7 +1,6 @@
 import { supabase } from "../db/supabase";
-import { User } from "../types/interface";
 
-export async function generateAdminAccessCode(prefixLength: number = 6, user: User): Promise<string> {
+export async function generateAdminAccessCode(prefixLength: number = 6, email: string): Promise<string> {
     const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
     const digits = '0123456789';
   
@@ -29,10 +28,10 @@ export async function generateAdminAccessCode(prefixLength: number = 6, user: Us
     const accessCode = prefix + mixedLastPart;
    
 
-    await supabase.from("admin_access_code").delete().eq("user_email", user.email);
+    await supabase.from("admin_access_code").delete().eq("user_email", email);
     const { error } = await supabase
         .from("admin_access_code")
-        .insert([{ access_code: accessCode, is_used: 'FALSE', user_email: user.email, created_at: new Date(Date.now()), expires_at: new Date(Date.now() + 10 * 60 * 1000) }]);
+        .insert([{ access_code: accessCode, is_used: 'FALSE', user_email: email, created_at: new Date(Date.now()), expires_at: new Date(Date.now() + 10 * 60 * 1000) }]);
 
     return accessCode
   }
