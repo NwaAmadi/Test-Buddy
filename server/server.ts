@@ -11,7 +11,7 @@ import { canRequestOTP } from "./OTP/canRequestOTP";
 import { cleanupExpiredOTPs } from "./OTP/deleteExpiredOTPs";
 import { otpValid } from "./OTP/otpValid";
 import { verifyToken, isAdmin, isStudent } from './middleware/auth';
-import { verifyAdminCode } from './admin_access_code/verifyAdminAccessCode';
+import { verifyAdminCode } from './admin/verifyAdminAccessCode';
 import  * as jose from 'jose';
 import nodemailer from 'nodemailer';
 import { sendOtpEmail } from './libs/brevo';
@@ -26,6 +26,7 @@ const JWT_EXPIRATION = process.env.JWT_EXPIRATION as string;
 const JWT_SECRET = process.env.JWT_SECRET as string;
 const TEST_BUDDY_EMAIL = process.env.TEST_BUDDY_EMAIL as string;
 const TEST_BUDDY_EMAIL_PASSWORD = process.env.TEST_BUDDY_EMAIL_PASSWORD as string;
+
 
 
 app.use(cors());
