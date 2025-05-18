@@ -5,6 +5,7 @@ const supabaseUrl = Globals.SUPABASE_URL
 const supabaseKey = Globals.SUPABASE_KEY
 
 //TO RUN THIS SCRIPT: tsx .\admin\adminAccessCodeGenerator.ts TO GENERATE A UNIQUE ACCESS CODE
+//TODO: Implement an automated mail service once an access code is generated.
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
 function generateRandomString(charSet: string, length: number): string {
