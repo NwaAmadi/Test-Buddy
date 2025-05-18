@@ -4,22 +4,23 @@ import { Globals } from '../variables';
 const supabaseUrl = Globals.SUPABASE_URL
 const supabaseKey = Globals.SUPABASE_KEY
 
-
-
+//TO RUN THIS SCRIPT: tsx .\admin\adminAccessCodeGenerator.ts TO GENERATE A UNIQUE ACCESS CODE
 export const supabase = createClient(supabaseUrl, supabaseKey);
-
-const TABLE_NAME = "admin_access_code";
-const IS_USED_FALSE = "FALSE";
-const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
-const digits = '0123456789';
-const characters = letters + digits;
-const prefixLength = 6;
 
 function generateRandomString(charSet: string, length: number): string {
   return Array.from({ length }, () => charSet.charAt(Math.floor(Math.random() * charSet.length))).join('');
 }
 
 export async function generateAdminAccessCode(email: string): Promise<string> {
+
+  const TABLE_NAME = "admin_access_code";
+  const IS_USED_FALSE = "FALSE";
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+  const digits = '0123456789';
+  const characters = letters + digits;
+  const prefixLength = 6;
+
+
   const prefix = generateRandomString(characters, prefixLength);
   const letterPart = generateRandomString(letters, 5);
   const digitPart = generateRandomString(digits, 5);
@@ -47,9 +48,14 @@ export async function generateAdminAccessCode(email: string): Promise<string> {
     ]);
 
   if (error) {
-    console.error('FAILED TOINSERT ACCESS CODE:', error);
+    console.error('FAILED TO INSERT ACCESS CODE:', error);
     throw new Error('COULD NOT GENERATE ACCESS CODE.');
   }
   console.log('ACCESS CODE GENERATED:', accessCode);
   return accessCode;
 }
+
+(async () => {
+  const email = 'chibuisiukegbu@gmail.com'
+  await generateAdminAccessCode(email);
+})();
