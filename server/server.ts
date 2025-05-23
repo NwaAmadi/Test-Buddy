@@ -234,7 +234,7 @@ app.post('/api/sendOtp', async (req: Request, res: Response): Promise<any> => {
       password_hash: '',
       role: 'admin',
       verified: false,
-      accessCode: ''
+      access_code: ''
     };
 
     const otp = await generateOTP(user);
