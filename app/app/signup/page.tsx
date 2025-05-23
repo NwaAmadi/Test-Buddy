@@ -75,7 +75,7 @@ export default function SignupPage() {
           password_hash,
           role,
           verified: false,
-          access_code: accessCode || undefined,
+          access_code: accessCode ?? null,
         }),
       });
   
