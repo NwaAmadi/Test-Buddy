@@ -1,4 +1,10 @@
-import { supabase } from "../db/supabase";
+import { Globals } from '../variables';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = Globals.SUPABASE_URL
+const supabaseKey = Globals.SUPABASE_KEY
+
+export const supabase = createClient(supabaseUrl, supabaseKey);
 
 export async function verifyAdminCode(email: string, inputCode: string): Promise<boolean> {
   const { data, error } = await supabase
@@ -9,9 +15,19 @@ export async function verifyAdminCode(email: string, inputCode: string): Promise
     .limit(1)
     .single();
 
-  if (error || !data) return false;
+  if (error) {
+    console.error("Supabase error:", error);
+    return false;
+  }
 
-  const isExpired = new Date(data.expires_at) < new Date();
+  if (!data) {
+    console.warn("No data found.");
+    return false;
+  }
+
+  const now = new Date();
+  const expiresAt = new Date(data.expires_at);
+  const isExpired = expiresAt < now;
   const isMatch = data.access_code === inputCode;
   const isUsed = data.is_used === true;
 
