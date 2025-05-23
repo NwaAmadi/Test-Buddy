@@ -39,9 +39,9 @@ app.post('/api/signup', async (req: Request, res: Response): Promise<any> => {
     password_hash: rawPassword,
     role,
     verified,
-    accessCode
+    accessCode 
   } = req.body as SignupRequest['body'];
-
+ 
   if (
     !first_name ||
     !last_name ||
@@ -53,19 +53,20 @@ app.post('/api/signup', async (req: Request, res: Response): Promise<any> => {
     return res.status(400).json({ error: "ALL FIELDS ARE REQUIRED" });
   }
 
+ 
   if (role !== "admin" && role !== "student") {
     return res.status(400).json({ message: "INVALID ROLE" });
   }
 
   try {
+   
     const { data: existingUser, error: checkError } = await supabase
       .from('users')
-      .select('*')
+      .select('email') 
       .eq('email', email)
-      .single();
-  
+      .maybeSingle();
 
-    if (checkError && checkError.code !== 'PGRST116') {
+    if (checkError) {
       return res.status(500).json({ message: 'ERROR CHECKING EMAIL', error: checkError.message });
     }
 
@@ -73,23 +74,21 @@ app.post('/api/signup', async (req: Request, res: Response): Promise<any> => {
       return res.status(400).json({ message: 'EMAIL ALREADY REGISTERED' });
     }
 
-    
-    if (role === "admin" && accessCode === null) {
-      return res.status(400).json({ message: 'ACCESS CODE IS REQUIRED FOR ADMIN ROLE' });
-    }
-    
-    console.log(accessCode, email)
 
-    const isValidAdminCode = await verifyAdminCode(email, accessCode as string);
+    if (role === "admin") {
+      if (!accessCode) { 
+        return res.status(400).json({ message: 'ACCESS CODE IS REQUIRED FOR ADMIN ROLE' });
+      }
 
-    if (isValidAdminCode === false) {
-      console.log(isValidAdminCode)
-      return res.status(400).json({ message: 'INVALID ADMIN ACCESS CODE' });
+      const isValidAdminCode = await verifyAdminCode(email, accessCode as string);
+      if (!isValidAdminCode) {
+        return res.status(400).json({ message: 'INVALID ADMIN ACCESS CODE' });
+      }
     }
 
     const passwordHash = await bcrypt.hash(rawPassword, 10);
 
-    const { error } = await supabase
+    const { error: insertError } = await supabase
       .from('users')
       .insert([
         {
@@ -102,15 +101,16 @@ app.post('/api/signup', async (req: Request, res: Response): Promise<any> => {
         }
       ]);
 
-    if (error) {
-      return res.status(500).json({ message: 'COULD NOT REGISTER USER', error: error.message });
+    if (insertError) {
+      return res.status(500).json({ message: 'COULD NOT REGISTER USER', error: insertError.message });
     }
 
     return res.status(201).json({ message: 'USER REGISTERED SUCCESSFULLY!' });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Signup Error:', error);
-    return res.status(500).json({ error: "INTERNAL SERVER ERROR!" });
+    const errorMessage = error instanceof Error ? error.message : "An unknown error occurred during signup.";
+    return res.status(500).json({ error: "INTERNAL SERVER ERROR!", details: errorMessage });
   }
 });
 
