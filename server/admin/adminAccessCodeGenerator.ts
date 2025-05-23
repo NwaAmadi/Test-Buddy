@@ -52,7 +52,6 @@ export async function generateAdminAccessCode(email: string): Promise<string> {
     console.error('FAILED TO INSERT ACCESS CODE!');
     throw new Error('COULD NOT GENERATE ACCESS CODE.');
   }
-  console.log('ACCESS CODE GENERATED:', accessCode);
   return accessCode;
 }
 

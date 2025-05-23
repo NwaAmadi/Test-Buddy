@@ -81,6 +81,7 @@ app.post('/api/signup', async (req: Request, res: Response): Promise<any> => {
     const isValidAdminCode = await verifyAdminCode(email, accessCode as string);
 
     if (isValidAdminCode === false) {
+      console.log(isValidAdminCode)
       return res.status(400).json({ message: 'INVALID ADMIN ACCESS CODE' });
     }
 
