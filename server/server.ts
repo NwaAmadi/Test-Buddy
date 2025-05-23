@@ -39,7 +39,7 @@ app.post('/api/signup', async (req: Request, res: Response): Promise<any> => {
     password_hash: rawPassword,
     role,
     verified,
-    accessCode 
+    access_code 
   } = req.body as SignupRequest['body'];
  
   if (
@@ -74,13 +74,14 @@ app.post('/api/signup', async (req: Request, res: Response): Promise<any> => {
       return res.status(400).json({ message: 'EMAIL ALREADY REGISTERED' });
     }
 
-    console.log('Access Code:', accessCode);
+    console.log('Access Code:', access_code);
+
     if (role === "admin") {
-      if (!accessCode) { 
+      if (!access_code) { 
         return res.status(400).json({ message: 'ACCESS CODE IS REQUIRED FOR ADMIN ROLE' });
       }
 
-      const isValidAdminCode = await verifyAdminCode(email, accessCode as string);
+      const isValidAdminCode = await verifyAdminCode(email, access_code as string);
       if (!isValidAdminCode) {
         return res.status(400).json({ message: 'INVALID ADMIN ACCESS CODE' }); 
       }
