@@ -74,8 +74,7 @@ app.post('/api/signup', async (req: Request, res: Response): Promise<any> => {
       return res.status(400).json({ message: 'EMAIL ALREADY REGISTERED' });
     }
 
-    console.log('Access Code:', access_code);
-
+    
     if (role === "admin") {
       if (!access_code) { 
         return res.status(400).json({ message: 'ACCESS CODE IS REQUIRED FOR ADMIN ROLE' });
