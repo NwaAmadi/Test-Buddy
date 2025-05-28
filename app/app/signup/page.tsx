@@ -1,239 +1,200 @@
 "use client"
-import dotenv from 'dotenv';
-dotenv.config();
-import type React from "react"
-import { Toaster, toast } from 'sonner'
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { AlertCircle, GraduationCap } from "lucide-react"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import axios from 'axios'
+import { Button } from "@/components/ui/button"
+import { Progress } from "@/components/ui/progress"
+import { toast } from "sonner"
+import { GraduationCap, Eye, EyeOff } from "lucide-react"
 
+const getPasswordStrength = (password: string) => {
+  let strength = 0
+  if (password.length >= 8) strength++
+  if (/[A-Z]/.test(password)) strength++
+  if (/[a-z]/.test(password)) strength++
+  if (/[0-9]/.test(password)) strength++
+  if (/[^A-Za-z0-9]/.test(password)) strength++
+  return strength
+}
 
-
-
-export default function SignupPage() {
+export default function SignupForm() {
   const router = useRouter()
-  const [first_name, setFirstName] = useState("")
-  const [last_name, setLastName] = useState("")
-  const [email, setEmail] = useState("")
-  const [password_hash, setPassword_hash] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-  const [role, setRole] = useState("student")
-  const [accessCode, setAccessCode] = useState("")
-  const [error, setError] = useState("")
+  const [step, setStep] = useState(1)
+  const [form, setForm] = useState({
+    first_name: "",
+    last_name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    role: "student",
+    accessCode: "",
+  })
   const [isLoading, setIsLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER
+  const passwordStrength = getPasswordStrength(form.password)
 
-  const BACKEND_URL= process.env.NEXT_PUBLIC_SERVER
-  const sendOtp = async (email: string) => {
-    try {
-      const response = await axios.post(`${BACKEND_URL}/api/sendOtp`, {
-        email,
-      });
-  
-      return response
-    } catch (error) {
-      console.log(error);
-      toast.error("Failed to send OTP. Please try again.");
-      console.error('Failed to send OTP:', error);
-    }
-  };
+  const handleChange = (key: string, value: string) => {
+    setForm((prev) => ({ ...prev, [key]: value }))
+  }
 
-  
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-  
-    if (password_hash !== confirmPassword) {
-      toast.info("Passwords do not match");
-      return;
+  const isValidEmail = (email: string) => {
+    const emailRegex = /^[\w.-]+@[a-zA-Z\d.-]+\.[a-zA-Z]{2,}$/;
+    return emailRegex.test(email);
+  }
+
+
+  const handleNext = () => {
+    if (step === 1 && (!form.first_name || !form.last_name || !form.email)) {
+      toast.info("Please fill all fields")
+      return
     }
-  
-    if (role === "admin" && !accessCode) {
-      toast.info("Admin access code is required");
-      return;
+
+    if (step === 1 && !isValidEmail(form.email)) {
+      toast.info("Please enter a valid email address")
+      return
     }
-  
-    setIsLoading(true);
-  
+    if (step === 2) {
+      if (!form.password || form.password !== form.confirmPassword) {
+        toast.info("Passwords do not match")
+        return
+      }
+    }
+    setStep(step + 1)
+  }
+
+  const handlePrev = () => setStep(step - 1)
+
+  const handleSubmit = async () => {
+    setIsLoading(true)
     try {
-      const response = await fetch(`${BACKEND_URL}/api/signup` || "", {
+      const response = await fetch(`${BACKEND_URL}/api/signup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          first_name,
-          last_name,
-          email,
-          password_hash,
-          role,
+          first_name: form.first_name,
+          last_name: form.last_name,
+          email: form.email,
+          password_hash: form.password,
+          role: form.role,
           verified: false,
-          access_code: accessCode ?? null,
+          access_code: form.accessCode || null,
         }),
-      });
-  
-      const data = await response.json();
-      console.log(data);
-      if (!response.ok) {
-        let message
+      })
 
-        if (data.message === "EMAIL ALREADY REGISTERED") {
-          message = "Email already registered. Please use a different email.";
-        } else if (data.message === "INVALID ROLE") {
-          message = "Invalid role selected. Please choose either 'student' or 'admin'.";
-        }
-        else if (data.message === "ALL FIELDS ARE REQUIRED") {
-          message = "All fields are required. Please fill in all the fields.";
-        }
-        else if (data.message === "ACCESS CODE IS REQUIRED FOR ADMIN ROLE") {
-          message = "Access code is required for admin role. Please provide the access code.";
-        }
-        else if (data.message === "INVALID ADMIN ACCESS CODE") {
-          message = "Invalid admin access code. Please check the code and try again.";
-        }
-        toast.error(message)
+      const data = await response.json()
+      if (!response.ok) {
+        toast.error(data.message || "Signup failed")
         return
       }
-  
-      toast.success("Account created! Redirecting to OTP verification...");
-      const sendResponse = await sendOtp(email);
-      if (sendResponse?.status !== 200) {
-        let message
-        if (sendResponse?.data?.message === "EMAIL REQUIRED") {
-          message = "Please provide a valid email address.";
-        }
-        else if( sendResponse?.data?.message === "TOO MANY REQUESTS") {
-          message = "Too many requests. Please try again later.";
-        }
-        toast.error(message);
-        return;
-      }
-      router.push(`/verify-otp?email=${email}`);
-      toast.success("OTP sent successfully!");
-    } catch (err: any) {
-      toast.error("Failed to create account. Please try again.");
+
+      toast.success("Account created! Redirecting...")
+      router.push(`/verify-otp?email=${form.email}`)
+    } catch (error) {
+      toast.error("An error occurred. Please try again.")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
-  
+  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4 transition-all duration-300">
+      <Card className="w-full max-w-md animate-fadeIn border-2 border-gray-300 dark:border-gray-6">
         <CardHeader className="space-y-1">
           <div className="flex justify-center mb-2">
             <GraduationCap className="h-10 w-10 text-primary" />
           </div>
-          <CardTitle className="text-2xl font-bold text-center">Create a Test Buddy account</CardTitle>
-          <CardDescription className="text-center">Enter your information to create an account</CardDescription>
+          <CardTitle className="text-2xl font-bold text-center">Create an Account</CardTitle>
+          <CardDescription className="text-center">Step {step} of 3</CardDescription>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )} 
 
-            <div className="space-y-2">
-              <Label htmlFor="name">First Name</Label>
-              <Input id="first_name" placeholder="John" value={first_name} onChange={(e) => setFirstName(e.target.value)} required />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="name">Last Name</Label>
-              <Input id="last_name" placeholder="Doe" value={last_name} onChange={(e) => setLastName(e.target.value)} required />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="name@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password_hash}
-                onChange={(e) => setPassword_hash(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Role</Label>
-              <RadioGroup defaultValue="student" value={role} onValueChange={setRole} className="flex space-x-4">
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="student" id="student" />
-                  <Label htmlFor="student">Student</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="admin" id="admin" />
-                  <Label htmlFor="admin">Administrator</Label>
-                </div>
-              </RadioGroup>
-            </div>
-
-            {role === "admin" && (
-              <div className="space-y-2">
-                <Label htmlFor="accessCode">Admin Access Code</Label>
+        <CardContent className="space-y-4">
+          {step === 1 && (
+            <>
+              <div>
+                <Input placeholder="First Name" value={form.first_name} onChange={(e) => handleChange("first_name", e.target.value)} required />
+              </div>
+              <div>
+                <Input placeholder="Last Name" value={form.last_name} onChange={(e) => handleChange("last_name", e.target.value)} required />
+              </div>
+              <div>
                 <Input
-                  id="accessCode"
-                  type="password"
-                  placeholder="Enter admin access code"
-                  value={accessCode}
-                  onChange={(e) => setAccessCode(e.target.value)}
-                  required={role === "admin"}
+                  type="email"
+                  placeholder="Email"
+                  value={form.email}
+                  onChange={(e) => handleChange("email", e.target.value)}
+                  pattern="^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+                  required
                 />
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Admin accounts require a special access code. Contact your system administrator if you don't have one.
+              </div>
+            </>
+          )}
+
+          {step === 2 && (
+            <>
+              <div className="relative">
+                <Input type={showPassword ? "text" : "password"} placeholder="Password" value={form.password} onChange={(e) => handleChange("password", e.target.value)} required />
+                <div className="absolute right-3 top-2.5 cursor-pointer" onClick={() => setShowPassword(!showPassword)}>
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </div>
+              </div>
+              <div className="pt-1">
+                <Progress value={(passwordStrength / 5) * 100} className="mt-1" />
+                <p className="text-xs text-center p-2 text-gray-500">
+                  {['Very Weak', 'Weak', 'Moderate', 'Strong', 'Very Strong'][passwordStrength - 1] || 'Very Weak'}
                 </p>
               </div>
-            )}
+              <div className="relative">
+                <Input type={showConfirmPassword ? "text" : "password"} placeholder="Confirm Password" value={form.confirmPassword} onChange={(e) => handleChange("confirmPassword", e.target.value)} required />
+                <div className="absolute right-3 top-2.5 cursor-pointer" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </div>
+              </div>
+            </>
+          )}
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Creating account..." : "Sign Up"}
-            </Button>
-          </form>
+          {step === 3 && (
+            <>
+              <div>
+                <RadioGroup value={form.role} onValueChange={(val) => handleChange("role", val)}>
+                  <div className="flex justify-center gap-x-6">
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="student" id="student" />
+                      <Label htmlFor="student">Student</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="admin" id="admin" />
+                      <Label htmlFor="admin">Admin</Label>
+                    </div>
+                  </div>
+                </RadioGroup>
+              </div>
+              {form.role === "admin" && (
+                <div>
+                  <Input type="password" placeholder="Admin Access Code" value={form.accessCode} onChange={(e) => handleChange("accessCode", e.target.value)} required />
+                </div>
+              )}
+            </>
+          )}
         </CardContent>
-        <CardFooter className="flex flex-col space-y-2">
-          <div className="text-sm text-center text-gray-500 dark:text-gray-400">
-            Already have an account?{" "}
-            <Link href="/login" className="text-primary hover:underline">
-              Login
-            </Link>
-          </div>
+
+        <CardFooter className="flex justify-between">
+          {step > 1 && <Button onClick={handlePrev}>Back</Button>}
+          {step < 3 ? (
+            <Button onClick={handleNext}>Next</Button>
+          ) : (
+            <Button onClick={handleSubmit} disabled={isLoading}>
+              {isLoading ? "Creating..." : "Sign Up"}
+            </Button>
+          )}
         </CardFooter>
       </Card>
     </div>
   )
 }
-
