@@ -85,7 +85,7 @@ app.post('/api/signup', async (req: Request, res: Response): Promise<any> => {
         return res.status(400).json({ message: 'INVALID ADMIN ACCESS CODE' }); 
       }
     }
-
+//TODO: Set admin access Code used property == Used
     const passwordHash = await bcrypt.hash(rawPassword, 10);
 
     const { error: insertError } = await supabase
