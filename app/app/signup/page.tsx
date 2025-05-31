@@ -12,6 +12,8 @@ import { toast } from "sonner"
 import { GraduationCap, Eye, EyeOff } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER
+
 const getPasswordStrength = (password: string) => {
   let strength = 0
   if (password.length >= 8) strength++
@@ -80,7 +82,7 @@ export default function SignupForm() {
   const handleSubmit = async () => {
     setIsLoading(true)
     try {
-      const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER
+      
       if (!BACKEND_URL) {
         toast.error("Backend URL is not configured")
         setIsLoading(false)
