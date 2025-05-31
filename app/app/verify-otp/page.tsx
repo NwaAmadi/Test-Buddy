@@ -1,22 +1,23 @@
-"use client";
+'use client';
 
-import type React from "react";
-
-import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import type React from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardFooter,
-  CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { AlertCircle, GraduationCap, ArrowLeft } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { AlertCircle, GraduationCap, ArrowLeft } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+
+// Force dynamic rendering to skip prerendering
+export const dynamic = 'force-dynamic';
 
 export default function VerifyOTPPage() {
   const router = useRouter();
