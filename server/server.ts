@@ -84,8 +84,17 @@ app.post('/api/signup', async (req: Request, res: Response): Promise<any> => {
       if (!isValidAdminCode) {
         return res.status(400).json({ message: 'INVALID ADMIN ACCESS CODE' }); 
       }
+
+      const setIsused = await supabase
+        .from('admin_access_codes')
+        .update({ isUsed: true })
+        .eq('code', access_code)
+        .single();
+      if (setIsused.error) {
+        return res.status(500).json({ message: 'ERROR UPDATING ADMIN ACCESS CODE', error: setIsused.error.message });
+      }
     }
-//TODO: Set admin access Code used property == Used
+    
     const passwordHash = await bcrypt.hash(rawPassword, 10);
 
     const { error: insertError } = await supabase
