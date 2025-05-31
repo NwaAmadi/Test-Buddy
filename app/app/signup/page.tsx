@@ -1,4 +1,5 @@
 "use client"
+
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -9,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { toast } from "sonner"
 import { GraduationCap, Eye, EyeOff } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
 
 const getPasswordStrength = (password: string) => {
   let strength = 0
@@ -18,6 +20,12 @@ const getPasswordStrength = (password: string) => {
   if (/[0-9]/.test(password)) strength++
   if (/[^A-Za-z0-9]/.test(password)) strength++
   return strength
+}
+
+const stepVariants = {
+  initial: { opacity: 0, x: 50 },
+  animate: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: -50 },
 }
 
 export default function SignupForm() {
@@ -35,7 +43,6 @@ export default function SignupForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER
   const passwordStrength = getPasswordStrength(form.password)
 
   const handleChange = (key: string, value: string) => {
@@ -43,10 +50,9 @@ export default function SignupForm() {
   }
 
   const isValidEmail = (email: string) => {
-    const emailRegex = /^[\w.-]+@[a-zA-Z\d.-]+\.[a-zA-Z]{2,}$/;
-    return emailRegex.test(email);
+    const emailRegex = /^[\w.-]+@[a-zA-Z\d.-]+\.[a-zA-Z]{2,}$/
+    return emailRegex.test(email)
   }
-
 
   const handleNext = () => {
     if (step === 1 && (!form.first_name || !form.last_name || !form.email)) {
@@ -58,12 +64,14 @@ export default function SignupForm() {
       toast.info("Please enter a valid email address")
       return
     }
+
     if (step === 2) {
       if (!form.password || form.password !== form.confirmPassword) {
         toast.info("Passwords do not match")
         return
       }
     }
+
     setStep(step + 1)
   }
 
@@ -72,11 +80,16 @@ export default function SignupForm() {
   const handleSubmit = async () => {
     setIsLoading(true)
     try {
+      const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER
+      if (!BACKEND_URL) {
+        toast.error("Backend URL is not configured")
+        setIsLoading(false)
+        return
+      }
+
       const response = await fetch(`${BACKEND_URL}/api/signup`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           first_name: form.first_name,
           last_name: form.last_name,
@@ -105,7 +118,7 @@ export default function SignupForm() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4 transition-all duration-300">
-      <Card className="w-full max-w-md animate-fadeIn border-2 border-gray-300 dark:border-gray-6">
+      <Card className="w-full max-w-md animate-fadeIn border-2 border-gray-300 dark:border-gray-600">
         <CardHeader className="space-y-1">
           <div className="flex justify-center mb-2">
             <GraduationCap className="h-10 w-10 text-primary" />
@@ -114,54 +127,93 @@ export default function SignupForm() {
           <CardDescription className="text-center">Step {step} of 3</CardDescription>
         </CardHeader>
 
-        <CardContent className="space-y-4">
-          {step === 1 && (
-            <>
-              <div>
-                <Input placeholder="First Name" value={form.first_name} onChange={(e) => handleChange("first_name", e.target.value)} required />
-              </div>
-              <div>
-                <Input placeholder="Last Name" value={form.last_name} onChange={(e) => handleChange("last_name", e.target.value)} required />
-              </div>
-              <div>
+        <CardContent className="space-y-4 min-h-[250px]">
+          <AnimatePresence mode="wait">
+            {step === 1 && (
+              <motion.div
+                key="step1"
+                variants={stepVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={{ duration: 0.3 }}
+                className="space-y-4"
+              >
+                <Input
+                  placeholder="First Name"
+                  value={form.first_name}
+                  onChange={(e) => handleChange("first_name", e.target.value)}
+                  required
+                />
+                <Input
+                  placeholder="Last Name"
+                  value={form.last_name}
+                  onChange={(e) => handleChange("last_name", e.target.value)}
+                  required
+                />
                 <Input
                   type="email"
                   placeholder="Email"
                   value={form.email}
                   onChange={(e) => handleChange("email", e.target.value)}
-                  //pattern="^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
                   required
                 />
-              </div>
-            </>
-          )}
+              </motion.div>
+            )}
 
-          {step === 2 && (
-            <>
-              <div className="relative">
-                <Input type={showPassword ? "text" : "password"} placeholder="Password" value={form.password} onChange={(e) => handleChange("password", e.target.value)} required />
-                <div className="absolute right-3 top-2.5 cursor-pointer" onClick={() => setShowPassword(!showPassword)}>
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            {step === 2 && (
+              <motion.div
+                key="step2"
+                variants={stepVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={{ duration: 0.3 }}
+                className="space-y-4"
+              >
+                <div className="relative">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Password"
+                    value={form.password}
+                    onChange={(e) => handleChange("password", e.target.value)}
+                    required
+                  />
+                  <div className="absolute right-3 top-2.5 cursor-pointer" onClick={() => setShowPassword(!showPassword)}>
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </div>
                 </div>
-              </div>
-              <div className="pt-1">
-                <Progress value={(passwordStrength / 5) * 100} className="mt-1" />
-                <p className="text-xs text-center p-2 text-gray-500">
-                  {['Very Weak', 'Weak', 'Moderate', 'Strong', 'Very Strong'][passwordStrength - 1] || 'Very Weak'}
-                </p>
-              </div>
-              <div className="relative">
-                <Input type={showConfirmPassword ? "text" : "password"} placeholder="Confirm Password" value={form.confirmPassword} onChange={(e) => handleChange("confirmPassword", e.target.value)} required />
-                <div className="absolute right-3 top-2.5 cursor-pointer" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
-                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                <div className="pt-1">
+                  <Progress value={(passwordStrength / 5) * 100} className="mt-1" />
+                  <p className="text-xs text-center p-2 text-gray-500">
+                    {['Very Weak', 'Weak', 'Moderate', 'Strong', 'Very Strong'][passwordStrength - 1] || 'Very Weak'}
+                  </p>
                 </div>
-              </div>
-            </>
-          )}
+                <div className="relative">
+                  <Input
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Confirm Password"
+                    value={form.confirmPassword}
+                    onChange={(e) => handleChange("confirmPassword", e.target.value)}
+                    required
+                  />
+                  <div className="absolute right-3 top-2.5 cursor-pointer" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </div>
+                </div>
+              </motion.div>
+            )}
 
-          {step === 3 && (
-            <>
-              <div>
+            {step === 3 && (
+              <motion.div
+                key="step3"
+                variants={stepVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={{ duration: 0.3 }}
+                className="space-y-4"
+              >
                 <RadioGroup value={form.role} onValueChange={(val) => handleChange("role", val)}>
                   <div className="flex justify-center gap-x-6">
                     <div className="flex items-center space-x-2">
@@ -174,14 +226,18 @@ export default function SignupForm() {
                     </div>
                   </div>
                 </RadioGroup>
-              </div>
-              {form.role === "admin" && (
-                <div>
-                  <Input type="password" placeholder="Admin Access Code" value={form.accessCode} onChange={(e) => handleChange("accessCode", e.target.value)} required />
-                </div>
-              )}
-            </>
-          )}
+                {form.role === "admin" && (
+                  <Input
+                    type="password"
+                    placeholder="Admin Access Code"
+                    value={form.accessCode}
+                    onChange={(e) => handleChange("accessCode", e.target.value)}
+                    required
+                  />
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </CardContent>
 
         <CardFooter className="flex justify-between">
