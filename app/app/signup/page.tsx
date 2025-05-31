@@ -1,255 +1,167 @@
 "use client"
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+
+import { useState, useRef, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import { toast } from "sonner"
-import { GraduationCap, Eye, EyeOff } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { AlertCircle, GraduationCap, ArrowLeft } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER
-
-const getPasswordStrength = (password: string) => {
-  let strength = 0
-  if (password.length >= 8) strength++
-  if (/[A-Z]/.test(password)) strength++
-  if (/[a-z]/.test(password)) strength++
-  if (/[0-9]/.test(password)) strength++
-  if (/[^A-Za-z0-9]/.test(password)) strength++
-  return strength
-}
-
-const stepVariants = {
-  initial: { opacity: 0, x: 50 },
-  animate: { opacity: 1, x: 0 },
-  exit: { opacity: 0, x: -50 },
-}
-
-export default function SignupForm() {
+export default function VerifyOTPPage() {
   const router = useRouter()
-  const [step, setStep] = useState(1)
-  const [form, setForm] = useState({
-    first_name: "",
-    last_name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    role: "student",
-    accessCode: "",
-  })
+  const searchParams = useSearchParams()
+  const email = searchParams.get("email") || "your email"
+
+  const [otp, setOtp] = useState(["", "", "", "", "", ""])
+  const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const passwordStrength = getPasswordStrength(form.password)
+  const [timeLeft, setTimeLeft] = useState(300)
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([])
 
-  const handleChange = (key: string, value: string) => {
-    setForm((prev) => ({ ...prev, [key]: value }))
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
   }
 
-  const isValidEmail = (email: string) => {
-    const emailRegex = /^[\w.-]+@[a-zA-Z\d.-]+\.[a-zA-Z]{2,}$/
-    return emailRegex.test(email)
+  useEffect(() => {
+    if (timeLeft <= 0) return
+    const timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000)
+    return () => clearInterval(timer)
+  }, [timeLeft])
+
+  const handleOtpChange = (index: number, value: string) => {
+    if (value && !/^\d+$/.test(value)) return
+    const newOtp = [...otp]
+    newOtp[index] = value.slice(-1)
+    setOtp(newOtp)
+    if (value && index < 5) inputRefs.current[index + 1]?.focus()
   }
 
-  const handleNext = () => {
-    if (step === 1 && (!form.first_name || !form.last_name || !form.email)) {
-      toast.info("Please fill all fields")
+  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus()
+    }
+  }
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault()
+    const pastedData = e.clipboardData.getData("text")
+    if (/^\d{6}$/.test(pastedData)) {
+      const newOtp = pastedData.split("")
+      setOtp(newOtp)
+      inputRefs.current[5]?.focus()
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError("")
+    const otpValue = otp.join("")
+    if (otpValue.length !== 6) {
+      setError("Please enter a complete 6-digit OTP")
       return
     }
 
-    if (step === 1 && !isValidEmail(form.email)) {
-      toast.info("Please enter a valid email address")
-      return
-    }
-
-    if (step === 2) {
-      if (!form.password || form.password !== form.confirmPassword) {
-        toast.info("Passwords do not match")
-        return
-      }
-    }
-
-    setStep(step + 1)
-  }
-
-  const handlePrev = () => setStep(step - 1)
-
-  const handleSubmit = async () => {
     setIsLoading(true)
     try {
-      
-      if (!BACKEND_URL) {
-        toast.error("Backend URL is not configured")
-        setIsLoading(false)
-        return
-      }
-
-      const response = await fetch(`${BACKEND_URL}/api/signup`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          first_name: form.first_name,
-          last_name: form.last_name,
-          email: form.email,
-          password_hash: form.password,
-          role: form.role,
-          verified: false,
-          access_code: form.accessCode || null,
-        }),
-      })
-
-      const data = await response.json()
-      if (!response.ok) {
-        toast.error(data.message || "Signup failed")
-        return
-      }
-
-      toast.success("Account created! Redirecting...")
-      router.push(`/verify-otp?email=${form.email}`)
-    } catch (error) {
-      toast.error("An error occurred. Please try again.")
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const role = "student"
+      router.push(role === "admin" ? "/admin/dashboard" : "/student/dashboard")
+    } catch (err) {
+      setError("Invalid OTP. Please try again.")
     } finally {
       setIsLoading(false)
     }
   }
 
+  const handleResendOtp = async () => {
+    setTimeLeft(300)
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+      setError("")
+      alert(`A new OTP has been sent to ${email}`)
+    } catch (err) {
+      setError("Failed to resend OTP. Please try again.")
+    }
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4 transition-all duration-300">
-      <Card className="w-full max-w-md animate-fadeIn border-2 border-gray-300 dark:border-gray-600">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
+      <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <div className="flex justify-center mb-2">
             <GraduationCap className="h-10 w-10 text-primary" />
           </div>
-          <CardTitle className="text-2xl font-bold text-center">Create an Account</CardTitle>
-          <CardDescription className="text-center">Step {step} of 3</CardDescription>
+          <CardTitle className="text-2xl font-bold text-center">Verify Your Email</CardTitle>
+          <CardDescription className="text-center">
+            A one-time password has been sent to <span className="font-semibold">{email}</span>. <br />
+            Enter the 6-digit code below to verify your account.
+          </CardDescription>
         </CardHeader>
 
-        <CardContent className="space-y-4 min-h-[250px]">
-          <AnimatePresence mode="wait">
-            {step === 1 && (
-              <motion.div
-                key="step1"
-                variants={stepVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                transition={{ duration: 0.3 }}
-                className="space-y-4"
-              >
-                <Input
-                  placeholder="First Name"
-                  value={form.first_name}
-                  onChange={(e) => handleChange("first_name", e.target.value)}
-                  required
-                />
-                <Input
-                  placeholder="Last Name"
-                  value={form.last_name}
-                  onChange={(e) => handleChange("last_name", e.target.value)}
-                  required
-                />
-                <Input
-                  type="email"
-                  placeholder="Email"
-                  value={form.email}
-                  onChange={(e) => handleChange("email", e.target.value)}
-                  required
-                />
-              </motion.div>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
             )}
 
-            {step === 2 && (
-              <motion.div
-                key="step2"
-                variants={stepVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                transition={{ duration: 0.3 }}
-                className="space-y-4"
-              >
-                <div className="relative">
-                  <Input
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Password"
-                    value={form.password}
-                    onChange={(e) => handleChange("password", e.target.value)}
-                    required
-                  />
-                  <div className="absolute right-3 top-2.5 cursor-pointer" onClick={() => setShowPassword(!showPassword)}>
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </div>
-                </div>
-                <div className="pt-1">
-                  <Progress value={(passwordStrength / 5) * 100} className="mt-1" />
-                  <p className="text-xs text-center p-2 text-gray-500">
-                    {['Very Weak', 'Weak', 'Moderate', 'Strong', 'Very Strong'][passwordStrength - 1] || 'Very Weak'}
-                  </p>
-                </div>
-                <div className="relative">
-                  <Input
-                    type={showConfirmPassword ? "text" : "password"}
-                    placeholder="Confirm Password"
-                    value={form.confirmPassword}
-                    onChange={(e) => handleChange("confirmPassword", e.target.value)}
-                    required
-                  />
-                  <div className="absolute right-3 top-2.5 cursor-pointer" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
-                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </div>
-                </div>
-              </motion.div>
-            )}
+            <div className="flex justify-center gap-2">
+              {otp.map((digit, index) => (
+                <Input
+                  key={index}
+                  ref={(el) => { inputRefs.current[index] = el }}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={1}
+                  value={digit}
+                  onChange={(e) => handleOtpChange(index, e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(index, e)}
+                  onPaste={index === 0 ? handlePaste : undefined}
+                  className="w-12 h-12 text-center text-lg"
+                  autoFocus={index === 0}
+                />
+              ))}
+            </div>
 
-            {step === 3 && (
-              <motion.div
-                key="step3"
-                variants={stepVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                transition={{ duration: 0.3 }}
-                className="space-y-4"
-              >
-                <RadioGroup value={form.role} onValueChange={(val) => handleChange("role", val)}>
-                  <div className="flex justify-center gap-x-6">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="student" id="student" />
-                      <Label htmlFor="student">Student</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="admin" id="admin" />
-                      <Label htmlFor="admin">Admin</Label>
-                    </div>
-                  </div>
-                </RadioGroup>
-                {form.role === "admin" && (
-                  <Input
-                    type="password"
-                    placeholder="Admin Access Code"
-                    value={form.accessCode}
-                    onChange={(e) => handleChange("accessCode", e.target.value)}
-                    required
-                  />
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
+            <div className="text-center">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Time remaining: <span className="font-mono">{formatTime(timeLeft)}</span>
+              </p>
+            </div>
+
+            <Button type="submit" className="w-full" disabled={isLoading || otp.join("").length !== 6}>
+              {isLoading ? "Verifying..." : "Verify OTP"}
+            </Button>
+
+            <div className="text-center">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Didn't receive the code?{" "}
+                <button
+                  type="button"
+                  onClick={handleResendOtp}
+                  disabled={timeLeft > 0}
+                  className="text-primary hover:underline disabled:text-gray-400 disabled:no-underline disabled:cursor-not-allowed"
+                >
+                  Resend OTP
+                </button>
+              </p>
+            </div>
+          </form>
         </CardContent>
 
-        <CardFooter className="flex justify-between">
-          {step > 1 && <Button onClick={handlePrev}>Back</Button>}
-          {step < 3 ? (
-            <Button onClick={handleNext}>Next</Button>
-          ) : (
-            <Button onClick={handleSubmit} disabled={isLoading}>
-              {isLoading ? "Creating..." : "Sign Up"}
-            </Button>
-          )}
+        <CardFooter className="flex justify-center">
+          <Button variant="ghost" size="sm" asChild>
+            <Link href="/signup">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Sign Up
+            </Link>
+          </Button>
         </CardFooter>
       </Card>
     </div>
