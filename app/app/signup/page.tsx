@@ -129,7 +129,7 @@ export default function SignupForm() {
                   placeholder="Email"
                   value={form.email}
                   onChange={(e) => handleChange("email", e.target.value)}
-                  pattern="^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+                  //pattern="^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
                   required
                 />
               </div>
