@@ -1,6 +1,6 @@
+"use client"
 import dotenv from "dotenv";
 dotenv.config();
-"use client"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
