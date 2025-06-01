@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -6,12 +7,60 @@ import { Badge } from "@/components/ui/badge"
 import { Clock, Calendar, CheckCircle, AlertCircle } from "lucide-react"
 import Link from "next/link"
 
+// Mock fetch function (replace with real API call)
+async function fetchStudentDashboard() {
+  // Replace with your API call, e.g. fetch('/api/student/dashboard')
+  return {
+    name: "Alex",
+    upcomingExams: [
+      {
+        id: 1,
+        title: "Advanced Mathematics",
+        date: "Apr 5, 2025",
+        time: "10:00 AM",
+        duration: "2 hours",
+        status: "Not Started",
+      },
+      // ...other exams
+    ],
+    recentResults: [
+      {
+        id: 4,
+        title: "Chemistry Final",
+        date: "Apr 1, 2025",
+        score: "85%",
+        status: "Passed",
+      },
+      // ...other results
+    ],
+    stats: {
+      upcomingCount: 3,
+      completedCount: 8,
+      averageScore: "85%",
+      courseProgress: 65,
+      nextExamIn: "2 days",
+    },
+  }
+}
+
 export default function StudentDashboard() {
+  const [student, setStudent] = useState<any>(null)
+
+  useEffect(() => {
+    fetchStudentDashboard().then(setStudent)
+  }, [])
+
+  if (!student) {
+    return <div>Loading...</div>
+  }
+
   return (
     <DashboardLayout role="student">
       <div className="mb-6">
         <h1 className="text-3xl font-bold">Student Dashboard</h1>
-        <p className="text-gray-500 dark:text-gray-400">Welcome back, Alex! Here's an overview of your exams.</p>
+        <p className="text-gray-500 dark:text-gray-400">
+          Welcome back, {student.name}! Here's an overview of your exams.
+        </p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-6">
@@ -21,8 +70,10 @@ export default function StudentDashboard() {
             <Calendar className="h-4 w-4 text-gray-500 dark:text-gray-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">3</div>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Next exam in 2 days</p>
+            <div className="text-2xl font-bold">{student.stats.upcomingCount}</div>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Next exam in {student.stats.nextExamIn}
+            </p>
           </CardContent>
         </Card>
 
@@ -32,8 +83,10 @@ export default function StudentDashboard() {
             <CheckCircle className="h-4 w-4 text-gray-500 dark:text-gray-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">8</div>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Average score: 85%</p>
+            <div className="text-2xl font-bold">{student.stats.completedCount}</div>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Average score: {student.stats.averageScore}
+            </p>
           </CardContent>
         </Card>
 
@@ -43,8 +96,8 @@ export default function StudentDashboard() {
             <AlertCircle className="h-4 w-4 text-gray-500 dark:text-gray-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">65%</div>
-            <Progress value={65} className="h-2 mt-2" />
+            <div className="text-2xl font-bold">{student.stats.courseProgress}%</div>
+            <Progress value={student.stats.courseProgress} className="h-2 mt-2" />
           </CardContent>
         </Card>
       </div>
@@ -57,32 +110,7 @@ export default function StudentDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {[
-                {
-                  id: 1,
-                  title: "Advanced Mathematics",
-                  date: "Apr 5, 2025",
-                  time: "10:00 AM",
-                  duration: "2 hours",
-                  status: "Not Started",
-                },
-                {
-                  id: 2,
-                  title: "Computer Science Fundamentals",
-                  date: "Apr 7, 2025",
-                  time: "2:00 PM",
-                  duration: "1.5 hours",
-                  status: "Not Started",
-                },
-                {
-                  id: 3,
-                  title: "Introduction to Physics",
-                  date: "Apr 8, 2025",
-                  time: "9:00 AM",
-                  duration: "3 hours",
-                  status: "Not Started",
-                },
-              ].map((exam) => (
+              {student.upcomingExams.map((exam: any) => (
                 <div
                   key={exam.id}
                   className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-4 last:border-0 last:pb-0"
@@ -95,7 +123,9 @@ export default function StudentDashboard() {
                       <Clock className="h-3.5 w-3.5 ml-2" />
                       <span>{exam.time}</span>
                     </div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Duration: {exam.duration}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                      Duration: {exam.duration}
+                    </p>
                   </div>
                   <div className="flex flex-col items-end gap-2">
                     <Badge variant="outline">{exam.status}</Badge>
@@ -116,29 +146,7 @@ export default function StudentDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {[
-                {
-                  id: 4,
-                  title: "Chemistry Final",
-                  date: "Apr 1, 2025",
-                  score: "85%",
-                  status: "Passed",
-                },
-                {
-                  id: 5,
-                  title: "History Midterm",
-                  date: "Mar 30, 2025",
-                  score: "92%",
-                  status: "Passed",
-                },
-                {
-                  id: 6,
-                  title: "Calculus Quiz",
-                  date: "Mar 28, 2025",
-                  score: "78%",
-                  status: "Passed",
-                },
-              ].map((exam) => (
+              {student.recentResults.map((exam: any) => (
                 <div
                   key={exam.id}
                   className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-4 last:border-0 last:pb-0"
@@ -149,7 +157,9 @@ export default function StudentDashboard() {
                   </div>
                   <div className="flex flex-col items-end gap-2">
                     <div className="text-lg font-bold">{exam.score}</div>
-                    <Badge variant={exam.status === "Passed" ? "success" : "destructive"}>{exam.status}</Badge>
+                    <Badge variant={exam.status === "Passed" ? "default" : "destructive"}>
+                      {exam.status}
+                    </Badge>
                     <Button variant="outline" size="sm" asChild>
                       <Link href={`/student/results/${exam.id}`}>View Details</Link>
                     </Button>
@@ -163,4 +173,3 @@ export default function StudentDashboard() {
     </DashboardLayout>
   )
 }
-
