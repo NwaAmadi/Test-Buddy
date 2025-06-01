@@ -22,7 +22,7 @@ export async function generateOTP(user: User): Promise<string> {
         email: user.email,
         is_used: 'FALSE',
         created_at: new Date(),
-        expires_at: new Date(Date.now() + 10 * 60 * 1000)
+        expires_at: new Date(Date.now() + 5 * 60 * 1000)
       }
     ]);
 

@@ -12,7 +12,7 @@ export function OtpEmailTemplate(otp: string): string {
   <div style="text-align: center; color: #333333;">
     <h2 style="font-size: 22px; font-weight: 600; margin-top: 0; margin-bottom: 15px; color: #222222;">Verify Your Action</h2>
     <p style="font-size: 15px; color: #555555; margin-bottom: 30px; padding: 0 15px;">
-      Please use the following One-Time Password (OTP) to complete your signup. This code is valid for 10 minutes.
+      Please use the following One-Time Password (OTP) to complete your signup. This code is valid for 5 minutes.
     </p>
   </div>
 
