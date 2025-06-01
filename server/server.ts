@@ -36,8 +36,6 @@ const REFRESH_SECRET = process.env.REFRESH_SECRET as string;
 const REFRESH_EXPIRATION = process.env.REFRESH_EXPIRATION as string;
 
 
-app.use(cors());
-
 app.post('/api/signup', async (req: Request, res: Response): Promise<any> => {
   const {
     email,
