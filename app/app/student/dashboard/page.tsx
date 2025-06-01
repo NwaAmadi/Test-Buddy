@@ -1,3 +1,5 @@
+"use client"
+
 import { useEffect, useState } from "react"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -21,7 +23,22 @@ async function fetchStudentDashboard() {
         duration: "2 hours",
         status: "Not Started",
       },
-      // ...other exams
+      {
+        id: 2,
+        title: "Computer Science Fundamentals",
+        date: "Apr 7, 2025",
+        time: "2:00 PM",
+        duration: "1.5 hours",
+        status: "Not Started",
+      },
+      {
+        id: 3,
+        title: "Introduction to Physics",
+        date: "Apr 8, 2025",
+        time: "9:00 AM",
+        duration: "3 hours",
+        status: "Not Started",
+      },
     ],
     recentResults: [
       {
@@ -31,7 +48,20 @@ async function fetchStudentDashboard() {
         score: "85%",
         status: "Passed",
       },
-      // ...other results
+      {
+        id: 5,
+        title: "History Midterm",
+        date: "Mar 30, 2025",
+        score: "92%",
+        status: "Passed",
+      },
+      {
+        id: 6,
+        title: "Calculus Quiz",
+        date: "Mar 28, 2025",
+        score: "78%",
+        status: "Passed",
+      },
     ],
     stats: {
       upcomingCount: 3,
