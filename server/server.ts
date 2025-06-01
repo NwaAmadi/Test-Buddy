@@ -144,6 +144,7 @@ app.post('/api/otp-verify', async (req: Request, res: Response): Promise<any> =>
     const { data: otpData, error: otpError } = await supabase
       .from('otp_table')
       .select('*')
+      .eq('email', email)
       .eq('otp', otp)
       .single();
 
@@ -152,32 +153,29 @@ app.post('/api/otp-verify', async (req: Request, res: Response): Promise<any> =>
     }
 
     if (!otpData) {
-      return res.status(404).json({ error: "INVALID OTP" });
+      return res.status(404).json({ error: "INVALID OTP OR EMAIL" });
     }
 
-    
     const { data: userUpdate, error: updateError } = await supabase
       .from('users')
       .update({ verified: true })
-      .eq('email', otpData.email)
+      .eq('email', email)
       .single();
 
     if (updateError) {
       return res.status(500).json({ message: 'COULD NOT VERIFY OTP' });
     }
 
-    
     const { data: user, error: userError } = await supabase
       .from('users')
       .select('*')
-      .eq('email', otpData.email)
+      .eq('email', email)
       .single();
 
     if (userError || !user) {
       return res.status(500).json({ error: "COULD NOT FETCH USER AFTER VERIFICATION" });
     }
 
-   
     const { accessToken, refreshToken } = await generateTokens(
       { email: user.email, role: user.role },
       JWT_SECRET,
@@ -186,7 +184,7 @@ app.post('/api/otp-verify', async (req: Request, res: Response): Promise<any> =>
       REFRESH_EXPIRATION
     );
 
-    cleanupExpiredOTPs();
+    await cleanupExpiredOTPs();
 
     return res.status(200).json({
       message: 'OTP VERIFIED & LOGIN SUCCESSFUL',
