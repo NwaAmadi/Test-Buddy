@@ -18,14 +18,9 @@ import nodemailer from 'nodemailer';
 import { sendOtpEmail } from './libs/brevo';
 import cors from 'cors';
 
-const allowedOrigins = ['https://testbuddy-gospel.vercel.app'];
-
 const app = express();
 
-app.use(cors({
-  origin: allowedOrigins,
-  credentials: false,
-}));
+app.use(cors());
 app.use(express.json());
 
 const PORT = process.env.PORT;
