@@ -286,10 +286,29 @@ app.post('/api/sendOtp', async (req: Request, res: Response): Promise<any> => {
       access_code: ''
     };
 
-    const otp = await generateOTP(user);
-    const mail = OtpEmailTemplate(otp);
+    let otp;
+    try {
+      otp = await generateOTP(user);
+    } catch (err) {
+      console.error('generateOTP error:', err);
+      return res.status(500).json({ error: 'FAILED TO GENERATE OTP' });
+    }
 
-    const emailResult = await sendOtpEmail(user.email, mail);
+    let mail;
+    try {
+      mail = OtpEmailTemplate(otp);
+    } catch (err) {
+      console.error('OtpEmailTemplate error:', err);
+      return res.status(500).json({ error: 'FAILED TO GENERATE EMAIL TEMPLATE' });
+    }
+
+    let emailResult;
+    try {
+      emailResult = await sendOtpEmail(user.email, mail);
+    } catch (err) {
+      console.error('sendOtpEmail error:', err);
+      return res.status(500).json({ error: 'FAILED TO SEND OTP EMAIL' });
+    }
 
     if (!emailResult.success) {
       console.error('Email sending failed:', emailResult.message);
@@ -298,7 +317,7 @@ app.post('/api/sendOtp', async (req: Request, res: Response): Promise<any> => {
     res.status(200).json({ message: 'OTP SENT SUCCESSFULLY' });
 
   } catch (error) {
-    console.error('General Error:', error);
+    console.error('General Error:', error instanceof Error ? error.stack : error);
     res.status(500).json({ message: 'SOMETHING WENT WRONG' });
   }
 });
