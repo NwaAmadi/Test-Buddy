@@ -12,6 +12,7 @@ import { cleanupExpiredOTPs } from "./OTP/deleteExpiredOTPs";
 import { otpValid } from "./OTP/otpValid";
 import { verifyToken, isAdmin, isStudent } from './middleware/auth';
 import { verifyAdminCode } from './admin/verifyAdminAccessCode';
+import { generateTokens } from './libs/tokenGenerator';
 import  * as jose from 'jose';
 import nodemailer from 'nodemailer';
 import { sendOtpEmail } from './libs/brevo';
@@ -26,7 +27,8 @@ const JWT_EXPIRATION = process.env.JWT_EXPIRATION as string;
 const JWT_SECRET = process.env.JWT_SECRET as string;
 const TEST_BUDDY_EMAIL = process.env.TEST_BUDDY_EMAIL as string;
 const TEST_BUDDY_EMAIL_PASSWORD = process.env.TEST_BUDDY_EMAIL_PASSWORD as string;
-
+const REFRESH_SECRET = process.env.REFRESH_SECRET as string;
+const REFRESH_EXPIRATION = process.env.REFRESH_EXPIRATION as string;
 
 
 app.use(cors());
@@ -124,7 +126,7 @@ app.post('/api/signup', async (req: Request, res: Response): Promise<any> => {
 });
 
 app.post('/api/otp-verify', async (req: Request, res: Response): Promise<any> => {
-  const { otp, email} = req.body as OtpVerify['body'];
+  const { otp, email } = req.body as OtpVerify['body'];
 
   if (!otp) {
     return res.status(400).json({ error: "OTP REQUIRED!" });
@@ -132,7 +134,7 @@ app.post('/api/otp-verify', async (req: Request, res: Response): Promise<any> =>
   if (!email) {
     return res.status(400).json({ error: "EMAIL REQUIRED!" });
   }
-  
+
   const isValid = await otpValid(email, otp);
   if (!isValid) {
     return res.status(401).json({ error: "OTP IS EXPIRED!" });
@@ -153,6 +155,7 @@ app.post('/api/otp-verify', async (req: Request, res: Response): Promise<any> =>
       return res.status(404).json({ error: "INVALID OTP" });
     }
 
+    
     const { data: userUpdate, error: updateError } = await supabase
       .from('users')
       .update({ verified: true })
@@ -163,15 +166,46 @@ app.post('/api/otp-verify', async (req: Request, res: Response): Promise<any> =>
       return res.status(500).json({ message: 'COULD NOT VERIFY OTP' });
     }
 
+    
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', otpData.email)
+      .single();
+
+    if (userError || !user) {
+      return res.status(500).json({ error: "COULD NOT FETCH USER AFTER VERIFICATION" });
+    }
+
+   
+    const { accessToken, refreshToken } = await generateTokens(
+      { email: user.email, role: user.role },
+      JWT_SECRET,
+      REFRESH_SECRET,
+      JWT_EXPIRATION,
+      REFRESH_EXPIRATION
+    );
+
     cleanupExpiredOTPs();
-    return res.status(200).json({ message: 'OTP VERIFIED SUCCESSFULLY' });
-    
-    
+
+    return res.status(200).json({
+      message: 'OTP VERIFIED & LOGIN SUCCESSFUL',
+      accessToken,
+      refreshToken,
+      user: {
+        email: user.email,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        role: user.role,
+        verified: user.verified
+      }
+    });
 
   } catch (err) {
     return res.status(500).json({ error: "INTERNAL SERVER ERROR" });
   }
 });
+
 
 app.post('/api/login', isAdmin, async (req: Request, res: Response): Promise<any> => {
   const { email, password, role } = req.body as LoginRequest['body'];
@@ -203,18 +237,26 @@ app.post('/api/login', isAdmin, async (req: Request, res: Response): Promise<any
     if (!data.verified) {
       return res.status(401).json({ error: "USER NOT VERIFIED!" });
     }
-
-    const secret = new TextEncoder().encode(JWT_SECRET)
-    const alg = 'HS256'
     
-    const token = await new jose.SignJWT({ email: data.email, role: data.role })
-      .setProtectedHeader({ alg })
-      .setIssuedAt()
-      .setExpirationTime(JWT_EXPIRATION)
-      .sign(secret)
-
-
-    res.status(200).json({ message: "LOGIN SUCCESSFUL", token });
+    const { accessToken, refreshToken } = await generateTokens(
+      { email: data.email, role: data.role },
+      JWT_SECRET,
+      REFRESH_SECRET,
+      JWT_EXPIRATION,
+      REFRESH_EXPIRATION
+    );
+    return res.status(200).json({
+      message: "LOGIN SUCCESSFUL",
+      accessToken,
+      refreshToken,
+      user: {
+        email: data.email,
+        first_name: data.first_name,
+        last_name: data.last_name,
+        role: data.role,
+        verified: data.verified
+      }
+    });
 
   } catch (error) {
     res.status(500).json({ error: "INTERNAL SERVER ERROR" });

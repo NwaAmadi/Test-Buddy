@@ -48,4 +48,8 @@ export interface LoginRequest extends Request{
     role: "admin" | "student";
   }
 }
+export interface TokenPair {
+  accessToken: string;
+  refreshToken: string;
+}
 
