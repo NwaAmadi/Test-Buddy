@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -12,6 +11,8 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { AlertCircle, GraduationCap } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -24,25 +25,41 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
+
+    if (!email || !password) {
+      setError("Please enter both email and password")
+      return
+    }
+
     setIsLoading(true)
-
-    // Simulate API call
     try {
-      // In a real app, this would be an API call to authenticate
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const res = await fetch(`${BACKEND_URL}/api/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, role }),
+      })
 
-      // For demo purposes, we'll just redirect based on role
-      if (email && password) {
-        if (role === "admin") {
-          router.push("/admin/dashboard")
-        } else {
-          router.push("/student/dashboard")
-        }
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setError(data?.message || "Invalid credentials. Please try again.")
+        setIsLoading(false)
+        return
+      }
+
+      const data = await res.json()
+      // Save token if provided
+      if (data.token) {
+        localStorage.setItem("token", data.token)
+      }
+
+      // Redirect based on role
+      if (role === "admin") {
+        router.push("/admin/dashboard")
       } else {
-        setError("Please enter both email and password")
+        router.push("/student/dashboard")
       }
     } catch (err) {
-      setError("Invalid credentials. Please try again.")
+      setError("Network error. Please try again.")
     } finally {
       setIsLoading(false)
     }
@@ -137,4 +154,3 @@ export default function LoginPage() {
     </div>
   )
 }
-
