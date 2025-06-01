@@ -94,7 +94,7 @@ app.post('/api/signup', async (req: Request, res: Response): Promise<any> => {
       const setIsused = await supabase
         .from('admin_access_code')
         .update({ is_used: true })
-        .eq('code', access_code)
+        .eq('access_code', access_code)
         .single();
       if (setIsused.error) {
         return res.status(500).json({ message: 'ERROR UPDATING ADMIN ACCESS CODE', error: setIsused.error.message });
