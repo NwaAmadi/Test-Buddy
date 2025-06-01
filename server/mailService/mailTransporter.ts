@@ -20,7 +20,7 @@ export const sendMail = async (
   if(!senderEmail){
     return{
         success: false,
-        message: 'SENDER EMAIL REQUIRED'
+        message: 'SENDER EMAIL REQUIRED',
     }
   }
 

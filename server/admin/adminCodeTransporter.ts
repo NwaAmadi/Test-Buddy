@@ -1,6 +1,6 @@
 import { generateAdminAccessCode } from './adminAccessCodeGenerator';
 import { AdminAccessCodeEmailTemplate } from './AdminAccessCodeEmailTemplate';
-import { sendMail } from '../mail service/mailTransporter';
+import { sendMail } from '../mailService/mailTransporter';
 
 (async () => {
   try {

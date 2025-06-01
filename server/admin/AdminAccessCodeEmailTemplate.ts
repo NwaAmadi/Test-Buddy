@@ -12,33 +12,26 @@ export function AdminAccessCodeEmailTemplate(code: string): string {
   <div style="text-align: center; color: #333333;">
     <h2 style="font-size: 22px; font-weight: 600; margin-top: 0; margin-bottom: 15px; color: #222222;">Admin Access Verification</h2>
     <p style="font-size: 15px; color: #555555; margin-bottom: 30px; padding: 0 15px;">
-      Please use the following admin access code to proceed with your admin action. This code is valid for 10 minutes.
+      Please use the following admin access code to proceed with your admin action. This code is valid for 5 minutes.
     </p>
   </div>
 
   <div style="margin-bottom: 30px; text-align: center;"> 
     <p style="font-size: 14px; color: #777777; margin-bottom: 15px;">Your Admin Access Code:</p>
 
-    <div>
-      ${codeString.split('').map(char => `
-        <div style="
-            display: inline-block;  
-            width: 40px;
-            height: 50px;
-            line-height: 50px;     
-            text-align: center;    
-            vertical-align: top;  
-            font-size: 24px;
-            font-weight: bold;
-            color: #111111;
-            background-color: #f0f0f0;
-            border: 1px solid #e0e0e0;
-            border-radius: 6px;
-            margin: 0 5px;         
-        ">
-          ${char}
-        </div>
-      `).join('')}
+    <div style="
+      display: inline-block;
+      border: 2px solid #111;
+      border-radius: 8px;
+      background-color: #f0f0f0;
+      padding: 12px 28px;
+      font-size: 28px;
+      font-weight: bold;
+      letter-spacing: 12px;
+      color: #111111;
+      margin-bottom: 10px;
+      ">
+      ${codeString}
     </div>
   </div>
 

@@ -1,11 +1,15 @@
 import { createClient } from '@supabase/supabase-js';
 import { Globals } from '../variables';
+import { AdminAccessCodeEmailTemplate } from './AdminAccessCodeEmailTemplate';
+import { sendMail } from '../mailService/mailTransporter';
+
+
+
 
 const supabaseUrl = Globals.SUPABASE_URL
 const supabaseKey = Globals.SUPABASE_KEY
 
 //TO RUN THIS SCRIPT: pnpm exec tsx ./admin/adminAccessCodeGenerator.ts TO GENERATE A UNIQUE ACCESS CODE
-//TODO: Implement an automated mail service once an access code is generated.
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
 function generateRandomString(charSet: string, length: number): string {
@@ -34,7 +38,7 @@ export async function generateAdminAccessCode(email: string): Promise<string> {
   await supabase.from(TABLE_NAME).delete().eq("user_email", email);
 
   const now = new Date();
-  const expiresAt = new Date(now.getTime() + 10 * 60 * 1000);
+  const expiresAt = new Date(now.getTime() + 5 * 60 * 1000);
 
   const { error } = await supabase
     .from(TABLE_NAME)
@@ -57,5 +61,9 @@ export async function generateAdminAccessCode(email: string): Promise<string> {
 
 (async () => {
   const email = 'chibuisiukegbu@gmail.com'
-  await generateAdminAccessCode(email);
+  const code = await generateAdminAccessCode(email);
+  const template = AdminAccessCodeEmailTemplate(code);
+  await sendMail(email, template, 'Admin Access Code');
+  console.log(`Access code generated and sent to ${email}: ${code}`);
+  
 })();
