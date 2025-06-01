@@ -96,7 +96,7 @@ export default function SignupForm() {
         return
       }
 
-      const response = await fetch(`${BACKEND_URL}/api/signup`, {
+      const response = await fetch(`${BACKEND_URL}/api/otp-verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
