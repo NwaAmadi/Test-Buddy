@@ -56,6 +56,6 @@ export async function generateAdminAccessCode(email: string): Promise<string> {
 }
 
 (async () => {
-  const email = 'uccleverson@outlook.com'
+  const email = 'chibuisiukegbu@gmail.com'
   await generateAdminAccessCode(email);
 })();
