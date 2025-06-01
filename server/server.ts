@@ -206,7 +206,7 @@ app.post('/api/otp-verify', async (req: Request, res: Response): Promise<any> =>
 });
 
 
-app.post('/api/login', isAdmin, async (req: Request, res: Response): Promise<any> => {
+app.post('/api/login', async (req: Request, res: Response): Promise<any> => {
   const { email, password, role } = req.body as LoginRequest['body'];
 
   if (!email || !password || !role) {
