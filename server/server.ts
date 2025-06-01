@@ -140,7 +140,7 @@ app.post('/api/otp-verify', async (req: Request, res: Response): Promise<any> =>
 
   try {
     const { data: otpData, error: otpError } = await supabase
-      .from('otp-table')
+      .from('otp_table')
       .select('*')
       .eq('otp', otp)
       .single();
