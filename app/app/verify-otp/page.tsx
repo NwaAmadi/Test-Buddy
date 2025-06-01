@@ -1,7 +1,7 @@
 import React, { Suspense } from 'react';
 import VerifyOtpForm from '../../components/VerifyOtpForm';
 
-export const dynamic = 'force-dynamic'; // prevent static rendering
+export const dynamic = 'force-dynamic';
 
 export default function VerifyOtpPage() {
   return (

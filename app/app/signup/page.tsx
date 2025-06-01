@@ -117,8 +117,7 @@ export default function SignupForm() {
         return
       }
 
-      toast.success("Account created! Redirecting...")
-      router.push(`/verify-otp?email=${form.email}`)
+      // Send OTP before redirecting
       const sendOtp = await axios.post(`${BACKEND_URL}/api/sendOtp`, {
         email: form.email
       });
@@ -126,9 +125,11 @@ export default function SignupForm() {
         toast.error(sendOtp.data.message || "Failed to send OTP")
         return
       }
-      toast.success("OTP sent to your email. Please check your inbox.")
-      
-      
+      toast.success("Account created! OTP sent to your email. Redirecting...")
+
+      // Use the correct route
+      router.push(`/app/verify-otp?email=${form.email}`)
+
     } catch (error) {
       toast.error("An error occurred. Please try again.")
     } finally {
