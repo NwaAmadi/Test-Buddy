@@ -12,8 +12,6 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { AlertCircle, GraduationCap } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000"
-
 export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState("")
@@ -21,6 +19,8 @@ export default function LoginPage() {
   const [role, setRole] = useState("student")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+
+  const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -50,6 +50,11 @@ export default function LoginPage() {
       // Save accessToken if provided
       if (data.accessToken) {
         localStorage.setItem("accessToken", data.accessToken)
+      }
+
+      // Save refreshToken if provided
+      if (data.refreshToken) {
+        localStorage.setItem("refreshToken", data.refreshToken)
       }
 
       // Optionally save user info
