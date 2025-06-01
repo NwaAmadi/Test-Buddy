@@ -19,7 +19,7 @@ export async function generateOTP(user: User): Promise<string> {
     .insert([
       {
         otp,
-        user_email: user.email,
+        email: user.email,
         is_used: 'FALSE',
         created_at: new Date(),
         expires_at: new Date(Date.now() + 10 * 60 * 1000)
