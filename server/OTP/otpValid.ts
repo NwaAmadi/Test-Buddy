@@ -4,7 +4,7 @@ export async function otpValid(email: string, inputOtp: string): Promise<boolean
   const { data, error } = await supabase
     .from("otp_table")
     .select("otp, expires_at, is_used")
-    .eq("user_email", email)
+    .eq("email", email)
     .order("created_at", { ascending: false })
     .limit(1)
     .single();
