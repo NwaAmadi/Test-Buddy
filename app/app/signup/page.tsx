@@ -128,7 +128,7 @@ export default function SignupForm() {
       toast.success("Account created! OTP sent to your email. Redirecting...")
 
       // Use the correct route
-      router.push(`/app/verify-otp?email=${form.email}`)
+      router.push(`app/app/verify-otp?email=${form.email}`)
 
     } catch (error) {
       toast.error("An error occurred. Please try again.")
