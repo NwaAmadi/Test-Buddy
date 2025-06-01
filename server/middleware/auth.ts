@@ -37,12 +37,18 @@ export const verifyToken = async (req: AuthRequest, res: Response, next: NextFun
 
 
 export const isAdmin = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void>=> {
-  if (req.user?.role !== 'admin') {
-    res.status(403).json({ message: 'ACCESS DENIED: UNAUTHORIZED' });
+  //if (req.user?.role !== 'admin') {
+    //res.status(403).json({ message: 'ACCESS DENIED: UNAUTHORIZED' });
+   // return;
+  //}
+
+  const access_code = req.body.accessCode;
+
+  if (!req.user) {
+    res.status(401).json({ message: 'UNAUTHORIZED: USER NOT FOUND' });
     return;
   }
 
-  const access_code = req.body.accessCode;
   const trueCode = await verifyAdminCode(req.user.email, access_code);
 
   if (req.user?.role === 'admin' && trueCode){
