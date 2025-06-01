@@ -7,7 +7,7 @@ export async function generateOTP(user: User): Promise<string> {
   const { error: deleteError } = await supabase
     .from("otp_table")
     .delete()
-    .eq("user_email", user.email);
+    .eq("email", user.email);
 
   if (deleteError) {
     console.error("FAILED TO DELETE OLD OTP:", deleteError);
