@@ -9,6 +9,10 @@ export const sendOtpEmail = async (
   const apiKey = process.env.BREVO_API_KEY as string;
   const senderEmail = process.env.BREVO_USER_EMAIL as string;
 
+  console.log('API Key exists:', !!apiKey);
+  console.log('Sender email:', senderEmail);
+  console.log('Recipient:', toEmail);
+
   if (!apiKey || !senderEmail) {
     return { success: false, message: 'Missing Brevo API key or sender email in environment.' };
   }
@@ -30,12 +34,16 @@ export const sendOtpEmail = async (
       }
     );
 
+    console.log('Response status:', response.status);
+    console.log('Response data:', response.data);
+
     if (response.status === 201) {
       return { success: true };
     } else {
       return { success: false, message: `UNEXPECTED ERROR: ${response.status}` };
     }
   } catch (error: any) {
+    console.error('Full error:', error.response?.data || error.message);
     return { success: false, message: error.response?.data?.message || error.message };
   }
-}; 
+};
