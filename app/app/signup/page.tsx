@@ -18,6 +18,7 @@ import { Progress } from "@/components/ui/progress"
 import { toast } from "sonner"
 import { GraduationCap, Eye, EyeOff } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
+import axios from "axios"
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER
 
@@ -96,7 +97,7 @@ export default function SignupForm() {
         return
       }
 
-      const response = await fetch(`${BACKEND_URL}/api/otp-verify`, {
+      const response = await fetch(`${BACKEND_URL}/api/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -117,7 +118,16 @@ export default function SignupForm() {
       }
 
       toast.success("Account created! Redirecting...")
+      const sendOtp = await axios.post(`${BACKEND_URL}/api/sendOtp`, {
+        email: form.email
+      });
+      if (!sendOtp.data.success) {
+        toast.error(sendOtp.data.message || "Failed to send OTP")
+        return
+      }
+      toast.success("OTP sent to your email. Please check your inbox.")
       router.push(`/verify-otp?email=${form.email}`)
+      
     } catch (error) {
       toast.error("An error occurred. Please try again.")
     } finally {

@@ -2,8 +2,9 @@
 
 import type React from 'react';
 import { useState, useRef, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import axios from 'axios';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -20,13 +21,26 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 // Force dynamic rendering to skip prerendering
 export const dynamic = 'force-dynamic';
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER;
+
 export default function VerifyOTPPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isResending, setIsResending] = useState(false);
   const [timeLeft, setTimeLeft] = useState(300); // 5 minutes in seconds
+  const [email, setEmail] = useState("");
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  // Get email from URL parameters
+  useEffect(() => {
+    const emailParam = searchParams.get('email');
+    if (emailParam) {
+      setEmail(emailParam);
+    }
+  }, [searchParams]);
 
   // Format time as MM:SS
   const formatTime = (seconds: number) => {
@@ -95,20 +109,45 @@ export default function VerifyOTPPage() {
       return;
     }
 
+    if (!email) {
+      setError("Email not found. Please go back to sign up.");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      // Simulate getting role from API; can be "admin" or "student"
-      const role = "student" as "admin" | "student"; // Replace with actual role from API
+      // Call your actual OTP verification endpoint
+      const response = await axios.post(`${BACKEND_URL}/api/otp-verify`, {
+        otp: otpValue,
+        email: email
+      });
 
-      if (role === "admin") {
-        router.push("/admin/dashboard");
-      } else {
-        router.push("/student/dashboard");
+      if (response.status === 200) {
+        // Get user role to determine redirect
+        // Replace this with your actual API response structure
+        const role = response.data?.role as string | undefined;
+
+        if (role === "admin") {
+          router.push("/admin/dashboard");
+        } else {
+          router.push("/student/dashboard");
+        }
       }
-    } catch (err) {
-      setError("Invalid OTP. Please try again.");
+    } catch (error: any) {
+      console.error('OTP Verification Error:', error);
+      
+      if (error.response) {
+        // Server responded with error status
+        const errorMessage = error.response.data?.error || error.response.data?.message || "Invalid OTP";
+        setError(errorMessage);
+      } else if (error.request) {
+        // Request was made but no response received
+        setError("Network error. Please check your connection.");
+      } else {
+        // Something else happened
+        setError("An unexpected error occurred. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -116,14 +155,38 @@ export default function VerifyOTPPage() {
 
   // Handle resend OTP
   const handleResendOtp = async () => {
-    setTimeLeft(300); // Reset timer to 5 minutes
+    if (!email) {
+      setError("Email not found. Please go back to sign up.");
+      return;
+    }
+
+    setIsResending(true);
+    setError("");
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setError("");
-      alert("A new OTP has been sent to your email");
-    } catch (err) {
-      setError("Failed to resend OTP. Please try again.");
+      const response = await axios.post(`${BACKEND_URL}/api/sendOtp`, {
+        email: email
+      });
+
+      if (response.status === 200) {
+        setTimeLeft(300); // Reset timer to 5 minutes
+        setError("");
+        // You could show a success message instead of alert
+        alert("A new OTP has been sent to your email");
+      }
+    } catch (error: any) {
+      console.error('Resend OTP Error:', error);
+      
+      if (error.response) {
+        const errorMessage = error.response.data?.error || error.response.data?.message || "Failed to resend OTP";
+        setError(errorMessage);
+      } else if (error.request) {
+        setError("Network error. Please check your connection.");
+      } else {
+        setError("Failed to resend OTP. Please try again.");
+      }
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -138,7 +201,7 @@ export default function VerifyOTPPage() {
             Verify Your Email
           </CardTitle>
           <CardDescription className="text-center">
-            We've sent a 6-digit code to your email. Enter it below to verify your
+            We've sent a 6-digit code to {email ? email : 'your email'}. Enter it below to verify your
             account.
           </CardDescription>
         </CardHeader>
@@ -192,10 +255,10 @@ export default function VerifyOTPPage() {
                 <button
                   type="button"
                   onClick={handleResendOtp}
-                  disabled={timeLeft > 0}
+                  disabled={timeLeft > 0 || isResending}
                   className="text-primary hover:underline disabled:text-gray-400 disabled:no-underline disabled:cursor-not-allowed"
                 >
-                  Resend OTP
+                  {isResending ? "Sending..." : "Resend OTP"}
                 </button>
               </p>
             </div>
