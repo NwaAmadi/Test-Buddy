@@ -405,9 +405,11 @@ app.get('/api/student/dashboard', verifyToken, isStudent, async (req: AuthReques
         nextExamIn,
       },
     });
+    return;
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "INTERNAL SERVER ERROR" });
+    return;
   }
 });
 

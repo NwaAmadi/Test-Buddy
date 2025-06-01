@@ -8,11 +8,13 @@ export interface AuthRequest extends Request {
   user?: { email: string; role: string; verified: boolean };
 }
 
-export const verifyToken = async (req: AuthRequest, res: Response, next: NextFunction) => {
+
+export const verifyToken = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ message: 'UNAUTHORIZED' });
+    res.status(401).json({ message: 'UNAUTHORIZED' }); 
+    return;
   }
 
   const token = authHeader.split(' ')[1];
@@ -23,7 +25,8 @@ export const verifyToken = async (req: AuthRequest, res: Response, next: NextFun
     req.user = decoded;
     next();
   } catch (err) {
-    return res.status(401).json({ message: 'INVALID TOKEN' });
+    res.status(401).json({ message: 'INVALID TOKEN' }); 
+    return; 
   }
 };
 
