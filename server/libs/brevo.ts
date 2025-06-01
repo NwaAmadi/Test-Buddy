@@ -38,6 +38,4 @@ export const sendOtpEmail = async (
   } catch (error: any) {
     return { success: false, message: error.response?.data?.message || error.message };
   }
-};
-
-
+}; 
