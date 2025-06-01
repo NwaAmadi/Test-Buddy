@@ -89,7 +89,7 @@ export default function VerifyOtpForm() {
     try {
       const response = await axios.post(`${BACKEND_URL}/api/otp-verify`, { otp: otpValue, email });
       if (response.status === 200) {
-        const role = response.data?.role;
+        const role = response.data?.user.role;
         if (role === "admin") router.push("/admin/dashboard");
         else router.push("/student/dashboard");
       }

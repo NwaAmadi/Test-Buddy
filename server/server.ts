@@ -163,7 +163,8 @@ app.post('/api/otp-verify', async (req: Request, res: Response): Promise<any> =>
       .single();
 
     if (updateError) {
-      return res.status(500).json({ message: 'COULD NOT VERIFY OTP' });
+      console.error("Update error:", updateError);
+      return res.status(500).json({ message: 'COULD NOT VERIFY OTP', details: updateError.message });
     }
 
     const { data: user, error: userError } = await supabase
