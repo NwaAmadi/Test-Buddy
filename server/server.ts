@@ -92,7 +92,7 @@ app.post('/api/signup', async (req: Request, res: Response): Promise<any> => {
       }
 
       const setIsused = await supabase
-        .from('admin_access_codes')
+        .from('admin_access_code')
         .update({ is_used: true })
         .eq('code', access_code)
         .single();
