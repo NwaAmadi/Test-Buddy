@@ -4,7 +4,7 @@ import { Globals } from '../variables';
 const supabaseUrl = Globals.SUPABASE_URL
 const supabaseKey = Globals.SUPABASE_KEY
 
-//TO RUN THIS SCRIPT: tsx .\admin\adminAccessCodeGenerator.ts TO GENERATE A UNIQUE ACCESS CODE
+//TO RUN THIS SCRIPT: pnpm exec tsx ./admin/adminAccessCodeGenerator.ts TO GENERATE A UNIQUE ACCESS CODE
 //TODO: Implement an automated mail service once an access code is generated.
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -56,6 +56,6 @@ export async function generateAdminAccessCode(email: string): Promise<string> {
 }
 
 (async () => {
-  const email = 'chibuisiukegbu@gmail.com'
+  const email = 'uccleverson@outlook.com'
   await generateAdminAccessCode(email);
 })();

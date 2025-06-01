@@ -18,9 +18,14 @@ import nodemailer from 'nodemailer';
 import { sendOtpEmail } from './libs/brevo';
 import cors from 'cors';
 
+const allowedOrigins = ['https://testbuddy-gospel.vercel.app'];
 
 const app = express();
-app.use(express.json());
+
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: false,
+}));
 
 const PORT = process.env.PORT;
 const JWT_EXPIRATION = process.env.JWT_EXPIRATION as string;
