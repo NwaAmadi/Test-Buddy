@@ -10,7 +10,7 @@ import { generateOTP }  from "./OTP/otpGenerator";
 import { canRequestOTP } from "./OTP/canRequestOTP";
 import { cleanupExpiredOTPs } from "./OTP/deleteExpiredOTPs";
 import { otpValid } from "./OTP/otpValid";
-import { verifyToken, isAdmin, isStudent } from './middleware/auth';
+import { verifyToken, isStudent,AuthRequest } from './middleware/auth';
 import { verifyAdminCode } from './admin/verifyAdminAccessCode';
 import { generateTokens } from './libs/tokenGenerator';
 import  * as jose from 'jose';
@@ -322,6 +322,94 @@ app.post('/api/sendOtp', async (req: Request, res: Response): Promise<any> => {
   }
 });
 
+
+
+
+app.get('/api/student/dashboard', verifyToken, isStudent, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const email = req.user!.email;
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('id, first_name, last_name')
+      .eq('email', email)
+      .single();
+
+    if (userError || !user) {
+      res.status(404).json({ error: "Student not found" });
+      return;
+    }
+
+    const today = new Date().toISOString().slice(0, 10);
+    const { data: upcomingExamsRaw } = await supabase
+      .from('exams')
+      .select('*')
+      .gte('date', today)
+      .order('date', { ascending: true })
+      .limit(3);
+
+    const upcomingExams = upcomingExamsRaw ?? [];
+
+    const { data: recentResultsRaw } = await supabase
+      .from('results')
+      .select('id, score, status, taken_at, exam_id, exams(title)')
+      .eq('user_id', user.id)
+      .order('taken_at', { ascending: false })
+      .limit(3);
+
+    const recentResults = recentResultsRaw ?? [];
+
+    const { count: completedCount } = await supabase
+      .from('results')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id);
+
+    const { data: allResultsRaw } = await supabase
+      .from('results')
+      .select('score')
+      .eq('user_id', user.id);
+
+    const allResults = allResultsRaw ?? [];
+
+    const averageScore =
+      allResults.length > 0
+        ? `${Math.round(allResults.reduce((sum, r) => sum + (r.score || 0), 0) / allResults.length)}%`
+        : 'N/A';
+
+    const { count: totalExams } = await supabase
+      .from('exams')
+      .select('id', { count: 'exact', head: true });
+
+    const courseProgress =
+      totalExams && completedCount
+        ? Math.round((completedCount / totalExams) * 100)
+        : 0;
+
+    let nextExamIn = 'N/A';
+    if (upcomingExams.length > 0) {
+      const nextExamDate = new Date(upcomingExams[0].date);
+      const diffDays = Math.ceil(
+        (nextExamDate.getTime() - new Date(today).getTime()) / (1000 * 60 * 60 * 24)
+      );
+      nextExamIn = diffDays === 0 ? 'Today' : `${diffDays} day(s)`;
+    }
+
+    res.json({
+      name: `${user.first_name} ${user.last_name}`,
+      upcomingExams,
+      recentResults,
+      stats: {
+        upcomingCount: upcomingExams.length,
+        completedCount: completedCount || 0,
+        averageScore,
+        courseProgress,
+        nextExamIn,
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "INTERNAL SERVER ERROR" });
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`ACTIVE ON  ${PORT}`);
