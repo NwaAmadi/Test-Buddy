@@ -39,21 +39,26 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password, role }),
       })
 
+      const data = await res.json()
+
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        setError(data?.message || "Invalid credentials. Please try again.")
+        setError(data?.error || "Invalid credentials. Please try again.")
         setIsLoading(false)
         return
       }
 
-      const data = await res.json()
-      // Save token if provided
-      if (data.token) {
-        localStorage.setItem("token", data.token)
+      // Save accessToken if provided
+      if (data.accessToken) {
+        localStorage.setItem("accessToken", data.accessToken)
+      }
+
+      // Optionally save user info
+      if (data.user) {
+        localStorage.setItem("user", JSON.stringify(data.user))
       }
 
       // Redirect based on role
-      if (role === "admin") {
+      if (data.user?.role === "admin") {
         router.push("/admin/dashboard")
       } else {
         router.push("/student/dashboard")
