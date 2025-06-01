@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
   Card,
+  CardHeader,
   CardContent,
   CardDescription,
   CardFooter,
@@ -98,7 +99,8 @@ export default function VerifyOTPPage() {
 
     try {
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      const role = "student"; // Replace with actual role from API
+      // Simulate getting role from API; can be "admin" or "student"
+      const role = "student" as "admin" | "student"; // Replace with actual role from API
 
       if (role === "admin") {
         router.push("/admin/dashboard");
