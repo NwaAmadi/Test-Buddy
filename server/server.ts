@@ -26,6 +26,7 @@ app.use(cors({
   origin: allowedOrigins,
   credentials: false,
 }));
+app.use(express.json());
 
 const PORT = process.env.PORT;
 const JWT_EXPIRATION = process.env.JWT_EXPIRATION as string;
