@@ -2,6 +2,7 @@ import { generateAdminAccessCode } from './adminAccessCodeGenerator';
 import { AdminAccessCodeEmailTemplate } from './AdminAccessCodeEmailTemplate';
 import { sendMail } from '../mailService/mailTransporter';
 
+
 (async () => {
   try {
     const email = 'chibuisiukegbu@gmail.com';
