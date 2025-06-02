@@ -58,12 +58,3 @@ export async function generateAdminAccessCode(email: string): Promise<string> {
   }
   return accessCode;
 }
-
-(async () => {
-  const email = 'chibuisiukegbu@gmail.com'
-  const code = await generateAdminAccessCode(email);
-  const template = AdminAccessCodeEmailTemplate(code);
-  await sendMail(email, template, 'Admin Access Code');
-  console.log(`Access code generated and sent to ${email}: ${code}`);
-  
-})();
