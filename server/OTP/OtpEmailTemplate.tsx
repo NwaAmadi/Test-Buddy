@@ -33,7 +33,7 @@ export function OtpEmailTemplate(otp: string): string {
   </style>
   <div class="tb-container" style="max-width: 600px; margin: 0 auto;">
     <div style="text-align: center; margin-bottom: 30px;">
-      <img src="https://res.cloudinary.com/dndrfvyn2/image/upload/v1746062725/graduation-hat_scwjdg.png" alt="Company Logo" style="height: 50px; width: auto; border: 0;" />
+      <img src="https://res.cloudinary.com/dndrfvyn2/image/upload/v1746062725/graduation-hat_scwjdg.png" alt="Company Logo" style="height: 40px; width: auto; border: 0; display:block; margin:0 auto;" />
     </div>
     <div style="text-align: center; color: #333333;">
       <h2 class="tb-title" style="font-size: 22px; font-weight: 600; margin-top: 0; margin-bottom: 15px; color: #222222;">Verify Your Action</h2>

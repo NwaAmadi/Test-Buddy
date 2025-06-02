@@ -138,7 +138,7 @@ app.post('/api/otp-verify', async (req: Request, res: Response): Promise<any> =>
   if (!isValid) {
     return res.status(401).json({ error: "OTP IS EXPIRED!" });
   }
-
+  
   try {
     const { data: otpData, error: otpError } = await supabase
       .from('otp_table')
