@@ -74,7 +74,7 @@ export default function LoginPage() {
       const res = await fetch(`${BACKEND_URL}/api/login/otp-verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, otp }),
+        body: JSON.stringify({ email, otp, role }),
       })
       const data = await res.json()
       if (!res.ok) {
