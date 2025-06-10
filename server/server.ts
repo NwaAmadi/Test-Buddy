@@ -45,6 +45,7 @@ app.post('/api/signup', async (req: Request, res: Response): Promise<any> => {
     access_code
   } = req.body as SignupRequest['body'];
 
+  // --- 1. Input Validation ---
   if (
     !first_name ||
     !last_name ||
@@ -55,13 +56,12 @@ app.post('/api/signup', async (req: Request, res: Response): Promise<any> => {
     return res.status(400).json({ error: "ALL FIELDS ARE REQUIRED" });
   }
 
-
   if (role !== "admin" && role !== "student") {
     return res.status(400).json({ message: "INVALID ROLE" });
   }
 
   try {
-
+    // --- 2. Check for Existing User ---
     const { data: existingUser, error: checkError } = await supabase
       .from('users')
       .select('email')
@@ -69,6 +69,7 @@ app.post('/api/signup', async (req: Request, res: Response): Promise<any> => {
       .maybeSingle();
 
     if (checkError) {
+      console.error('Error checking existing user:', checkError); // Add logging
       return res.status(500).json({ message: 'ERROR CHECKING EMAIL', error: checkError.message });
     }
 
@@ -76,31 +77,56 @@ app.post('/api/signup', async (req: Request, res: Response): Promise<any> => {
       return res.status(400).json({ message: 'EMAIL ALREADY REGISTERED' });
     }
 
-
+    // --- 3. Admin Role Specific Logic ---
     if (role === "admin") {
       if (!access_code) {
         return res.status(400).json({ message: 'ACCESS CODE IS REQUIRED FOR ADMIN ROLE' });
       }
 
+      // Assuming verifyAdminCode fetches and validates the code
       const isValidAdminCode = await verifyAdminCode(email, access_code as string);
       if (!isValidAdminCode) {
         return res.status(400).json({ message: 'INVALID ADMIN ACCESS CODE' });
       }
 
-      const setIsused = await supabase
+      // Mark admin access code as used
+      const { error: setIsusedError } = await supabase // Destructure error directly
         .from('admin_access_code')
         .update({ is_used: true })
-        .eq('access_code', access_code)
-        .single();
-      if (setIsused.error) {
-        return res.status(500).json({ message: 'ERROR UPDATING ADMIN ACCESS CODE', error: setIsused.error.message });
+        .eq('access_code', access_code); // No .single() needed for update unless you expect only one row back
+      // If you are relying on is_used for unique code usage, ensure it's not possible to update multiple times
+
+      if (setIsusedError) {
+        console.error('Error updating admin access code:', setIsusedError); // Add logging
+        return res.status(500).json({ message: 'ERROR UPDATING ADMIN ACCESS CODE', error: setIsusedError.message });
       }
     }
 
-    return res.status(201).json({ message: 'USER REGISTERED SUCCESSFULLY!' });
+    // --- !!! THE MISSING PIECE: INSERTING THE NEW USER INTO THE DATABASE !!! ---
+    const { data: newUser, error: insertError } = await supabase
+      .from('users')
+      .insert({
+        first_name,
+        last_name,
+        email,
+        role,
+        verified, // This should be false initially, as per your client-side
+      })
+      .select() // Use .select() to return the inserted data, good for debugging
+      .single(); // Use .single() if you expect only one row inserted, which is standard for signup
+
+    if (insertError) {
+      console.error('Supabase user insertion error:', insertError); // CRITICAL LOGGING
+      // Check for specific error codes like '23505' (unique violation) or '23502' (not null violation)
+      return res.status(500).json({ message: 'FAILED TO CREATE USER ACCOUNT', details: insertError.message });
+    }
+
+    // --- 4. Send Success Response ---
+    // At this point, the user should be in the 'users' table.
+    return res.status(201).json({ message: 'USER REGISTERED SUCCESSFULLY!', user: newUser }); // Optionally return user data
 
   } catch (error: any) {
-    console.error('Signup Error:', error);
+    console.error('Signup Error (Catch Block):', error); // Differentiate between caught errors and Supabase errors
     const errorMessage = error instanceof Error ? error.message : "An unknown error occurred during signup.";
     return res.status(500).json({ error: "INTERNAL SERVER ERROR!", details: errorMessage });
   }
@@ -141,7 +167,7 @@ app.post('/api/otp-verify', async (req: Request, res: Response): Promise<any> =>
       .from('users')
       .update({ verified: true })
       .eq('email', email)
-      //.single();
+      .single();
 
     if (updateError) {
       console.error("Update error:", updateError);
