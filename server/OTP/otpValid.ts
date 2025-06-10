@@ -1,8 +1,12 @@
 import { supabase } from "../db/supabase";
 
-export async function otpValid(email: string, inputOtp: string): Promise<boolean> {
+export async function otpValid(
+  table: string,
+  email: string,
+  inputOtp: string
+): Promise<boolean> {
   const { data, error } = await supabase
-    .from("otp_table")
+    .from(table)
     .select("otp, expires_at, is_used")
     .eq("email", email)
     .order("created_at", { ascending: false })

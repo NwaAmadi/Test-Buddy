@@ -1,22 +1,25 @@
 import dotenv from 'dotenv';
 dotenv.config();
-import {Request, Response} from "express";
+import { Request, Response } from "express";
 import bcrypt from 'bcryptjs';
 import express from "express";
 import { supabase } from "./db/supabase";
 import { SignupRequest, LoginRequest, User, OtpVerify, SendOtp } from "./types/interface";
 import { OtpEmailTemplate } from "./OTP/OtpEmailTemplate";
-import { generateOTP }  from "./OTP/otpGenerator";
+import { generateOTP } from "./OTP/otpGenerator";
 import { canRequestOTP } from "./OTP/canRequestOTP";
 import { cleanupExpiredOTPs } from "./OTP/deleteExpiredOTPs";
 import { otpValid } from "./OTP/otpValid";
-import { verifyToken, isStudent,AuthRequest } from './middleware/auth';
+import { verifyToken, isStudent, AuthRequest } from './middleware/auth';
 import { verifyAdminCode } from './admin/verifyAdminAccessCode';
 import { generateTokens } from './libs/tokenGenerator';
-import  * as jose from 'jose';
+import * as jose from 'jose';
 import nodemailer from 'nodemailer';
 import { sendOtpEmail } from './libs/brevo';
+import { LoginOtpEmailTemplate } from './OTP/loginOtpTemplate';
+import { sendMail } from './mailService/mailTransporter';
 import cors from 'cors';
+import { login } from './controllers/authController';
 
 const app = express();
 
@@ -40,9 +43,9 @@ app.post('/api/signup', async (req: Request, res: Response): Promise<any> => {
     password_hash: rawPassword,
     role,
     verified,
-    access_code 
+    access_code
   } = req.body as SignupRequest['body'];
- 
+
   if (
     !first_name ||
     !last_name ||
@@ -54,16 +57,16 @@ app.post('/api/signup', async (req: Request, res: Response): Promise<any> => {
     return res.status(400).json({ error: "ALL FIELDS ARE REQUIRED" });
   }
 
- 
+
   if (role !== "admin" && role !== "student") {
     return res.status(400).json({ message: "INVALID ROLE" });
   }
 
   try {
-   
+
     const { data: existingUser, error: checkError } = await supabase
       .from('users')
-      .select('email') 
+      .select('email')
       .eq('email', email)
       .maybeSingle();
 
@@ -75,15 +78,15 @@ app.post('/api/signup', async (req: Request, res: Response): Promise<any> => {
       return res.status(400).json({ message: 'EMAIL ALREADY REGISTERED' });
     }
 
-    
+
     if (role === "admin") {
-      if (!access_code) { 
+      if (!access_code) {
         return res.status(400).json({ message: 'ACCESS CODE IS REQUIRED FOR ADMIN ROLE' });
       }
 
       const isValidAdminCode = await verifyAdminCode(email, access_code as string);
       if (!isValidAdminCode) {
-        return res.status(400).json({ message: 'INVALID ADMIN ACCESS CODE' }); 
+        return res.status(400).json({ message: 'INVALID ADMIN ACCESS CODE' });
       }
 
       const setIsused = await supabase
@@ -95,7 +98,7 @@ app.post('/api/signup', async (req: Request, res: Response): Promise<any> => {
         return res.status(500).json({ message: 'ERROR UPDATING ADMIN ACCESS CODE', error: setIsused.error.message });
       }
     }
-    
+
     const passwordHash = await bcrypt.hash(rawPassword, 10);
 
     const { error: insertError } = await supabase
@@ -134,11 +137,11 @@ app.post('/api/otp-verify', async (req: Request, res: Response): Promise<any> =>
     return res.status(400).json({ error: "EMAIL REQUIRED!" });
   }
 
-  const isValid = await otpValid(email, otp);
+  const isValid = await otpValid('otp_table', email, otp);
   if (!isValid) {
     return res.status(401).json({ error: "OTP IS EXPIRED!" });
   }
-  
+
   try {
     const { data: otpData, error: otpError } = await supabase
       .from('otp_table')
@@ -184,7 +187,7 @@ app.post('/api/otp-verify', async (req: Request, res: Response): Promise<any> =>
       REFRESH_EXPIRATION
     );
 
-    await cleanupExpiredOTPs();
+    await cleanupExpiredOTPs('otp_table');
 
     return res.status(200).json({
       message: 'OTP VERIFIED & LOGIN SUCCESSFUL',
@@ -204,62 +207,128 @@ app.post('/api/otp-verify', async (req: Request, res: Response): Promise<any> =>
   }
 });
 
+app.post('/api/login/send-otp', async (req: Request, res: Response): Promise<void> => {
+  const { email, role } = req.body;
+  if (!email || !role) {
+    res.status(400).json({ error: "EMAIL AND ROLE REQUIRED" });
+    return;
+  }
 
-app.post('/api/login', async (req: Request, res: Response): Promise<any> => {
-  const { email, password, role } = req.body as LoginRequest['body'];
+  // Check user exists and role matches
+  const { data: user, error: userError } = await supabase
+    .from('users')
+    .select('role')
+    .eq('email', email)
+    .single();
+  if (userError || !user) {
+    res.status(404).json({ error: "USER NOT FOUND" });
+    return;
+  }
+  if (user.role !== role) {
+    res.status(403).json({ error: "INVALID ROLE" });
+    return;
+  }
 
-  if (!email || !password || !role) {
-    return res.status(400).json({ error: "ALL FIELDS ARE REQUIRED" });
+  // Generate OTP
+  const otp = Math.floor(10000 + Math.random() * 90000).toString();
+  const expiresAt = new Date(Date.now() + 2 * 60 * 1000).toISOString(); // 2 min
+
+  // Save OTP
+  await supabase.from('login_otps').insert([
+    { email, otp, expires_at: expiresAt, is_used: false }
+  ]);
+
+  const template = LoginOtpEmailTemplate(otp);
+  // Send OTP (implement your email logic)
+  const sendLoginOtpResult = await sendMail(email, template, 'Your Login OTP');
+  if (!sendLoginOtpResult.success) {
+    console.error('Failed to send OTP email:', sendLoginOtpResult.message);
+    res.status(500).json({ error: "FAILED TO SEND OTP" });
+    return;
+  }
+  res.json({ message: "OTP sent to your email" });
+});
+
+app.post('/api/login/otp-verify', async (req: Request, res: Response): Promise<any> => {
+  const { otp, email, role } = req.body as { otp: string; email: string; role: string };
+
+  if (!otp || !email || !role) {
+    return res.status(400).json({ error: "OTP, EMAIL, AND ROLE ARE REQUIRED" });
   }
 
   try {
-    const { data, error } = await supabase
+    // Cleanup expired OTPs first
+    await cleanupExpiredOTPs('login_otps');
+
+    // Fetch latest valid OTP
+    const { data: latestOtp, error: otpError } = await supabase
+      .from('login_otps')
+      .select('*')
+      .eq('email', email)
+      .eq('is_used', false)
+      .gt('expires_at', new Date().toISOString())
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (otpError || !latestOtp || latestOtp.otp !== otp) {
+      return res.status(401).json({ error: "INVALID OR EXPIRED OTP" });
+    }
+
+    // Mark OTP as used
+    const { error: updateError } = await supabase
+      .from('login_otps')
+      .update({ is_used: true })
+      .eq('id', latestOtp.id);
+
+    if (updateError) {
+      return res.status(500).json({ error: "FAILED TO MARK OTP AS USED" });
+    }
+
+    // Fetch user
+    const { data: user, error: userError } = await supabase
       .from('users')
       .select('*')
       .eq('email', email)
       .single();
 
-    if (error) {
-      return res.status(500).json({ error: "INTERNAL SERVER ERROR" });
+    if (userError || !user) {
+      return res.status(500).json({ error: "USER NOT FOUND" });
     }
 
-    if (!data) {
-      return res.status(404).json({ error: "USER NOT FOUND!" });
+    if (user.role !== role) {
+      return res.status(403).json({ error: "ROLE MISMATCH" });
     }
 
-    const isMatch = await bcrypt.compare(password, data.password_hash);
-    if (!isMatch) {
-      return res.status(401).json({ error: "INVALID CREDENTIALS!" });
-    }
-
-    if (!data.verified) {
-      return res.status(401).json({ error: "USER NOT VERIFIED!" });
-    }
-    
+    // Generate tokens
     const { accessToken, refreshToken } = await generateTokens(
-      { email: data.email, role: data.role },
+      { email: user.email, role: user.role },
       JWT_SECRET,
       REFRESH_SECRET,
       JWT_EXPIRATION,
       REFRESH_EXPIRATION
     );
+
     return res.status(200).json({
-      message: "LOGIN SUCCESSFUL",
+      message: 'OTP VERIFIED & LOGIN SUCCESSFUL',
       accessToken,
       refreshToken,
       user: {
-        email: data.email,
-        first_name: data.first_name,
-        last_name: data.last_name,
-        role: data.role,
-        verified: data.verified
+        email: user.email,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        role: user.role,
+        verified: user.verified
       }
     });
 
-  } catch (error) {
-    res.status(500).json({ error: "INTERNAL SERVER ERROR" });
+  } catch (err) {
+    console.error("OTP VERIFICATION ERROR", err);
+    return res.status(500).json({ error: "INTERNAL SERVER ERROR" });
   }
 });
+
+
 
 
 app.post('/api/sendOtp', async (req: Request, res: Response): Promise<any> => {
