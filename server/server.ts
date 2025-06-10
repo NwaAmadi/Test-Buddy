@@ -141,7 +141,7 @@ app.post('/api/otp-verify', async (req: Request, res: Response): Promise<any> =>
       .from('users')
       .update({ verified: true })
       .eq('email', email)
-      .single();
+      //.single();
 
     if (updateError) {
       console.error("Update error:", updateError);
