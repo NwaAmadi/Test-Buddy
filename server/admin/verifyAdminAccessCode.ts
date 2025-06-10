@@ -28,7 +28,7 @@ export async function verifyAdminCode(email: string, inputCode: string): Promise
   const now = new Date();
   const expiresAt = new Date(data.expires_at);
   const isExpired = expiresAt < now;
-  const isMatch = data.access_code.toLowerCase() === inputCode.toLowerCase();
+  const isMatch = data.access_code.toUpperCase() === inputCode.toUpperCase();
   const isUsed = data.is_used === true;
 
   return isMatch && !isExpired && !isUsed;

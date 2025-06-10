@@ -44,7 +44,7 @@ export async function generateAdminAccessCode(email: string): Promise<string> {
     .from(TABLE_NAME)
     .insert([
       {
-        access_code: accessCode,
+        access_code: accessCode.toUpperCase(),
         is_used: IS_USED_FALSE,
         user_email: email,
         created_at: now,
