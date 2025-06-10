@@ -14,23 +14,12 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
 import { toast } from "sonner"
 import { GraduationCap, Eye, EyeOff } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import axios from "axios"
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER
-
-const getPasswordStrength = (password: string) => {
-  let strength = 0
-  if (password.length >= 8) strength++
-  if (/[A-Z]/.test(password)) strength++
-  if (/[a-z]/.test(password)) strength++
-  if (/[0-9]/.test(password)) strength++
-  if (/[^A-Za-z0-9]/.test(password)) strength++
-  return strength
-}
 
 const stepVariants = {
   initial: { opacity: 0, x: 50 },
@@ -45,16 +34,11 @@ export default function SignupForm() {
     first_name: "",
     last_name: "",
     email: "",
-    password: "",
-    confirmPassword: "",
     role: "student",
     accessCode: "",
   })
   const [isLoading, setIsLoading] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-
-  const passwordStrength = getPasswordStrength(form.password)
+  const [showAccessCode, setShowAccessCode] = useState(false)
 
   const handleChange = (key: string, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }))
@@ -76,11 +60,9 @@ export default function SignupForm() {
       return
     }
 
-    if (step === 2) {
-      if (!form.password || form.password !== form.confirmPassword) {
-        toast.info("Passwords do not match")
-        return
-      }
+    if (step === 2 && form.role === "admin" && !form.accessCode) {
+      toast.info("Please enter the admin access code")
+      return
     }
 
     setStep(step + 1)
@@ -104,7 +86,6 @@ export default function SignupForm() {
           first_name: form.first_name,
           last_name: form.last_name,
           email: form.email,
-          password_hash: form.password,
           role: form.role,
           verified: false,
           access_code: form.accessCode || null,
@@ -117,15 +98,14 @@ export default function SignupForm() {
         return
       }
 
-      
       const sendOtp = await axios.post(`${BACKEND_URL}/api/sendOtp`, {
-        email: form.email
-      });
+        email: form.email,
+      })
       if (!sendOtp.data.success) {
         toast.success(sendOtp.data.message)
       }
+
       toast.success("Account created! OTP sent to your email. Redirecting...")
-      console.log("Redirecting to verify-otp page...")
       router.push(`/verify-otp?email=${form.email}`)
 
     } catch (error) {
@@ -143,10 +123,10 @@ export default function SignupForm() {
             <GraduationCap className="h-10 w-10 text-primary" />
           </div>
           <CardTitle className="text-2xl font-bold text-center">Create an Account</CardTitle>
-          <CardDescription className="text-center">Step {step} of 3</CardDescription>
+          <CardDescription className="text-center">Step {step} of 2</CardDescription>
         </CardHeader>
 
-        <CardContent className="space-y-4 min-h-[250px]">
+        <CardContent className="space-y-4 min-h-[200px]">
           <AnimatePresence mode="wait">
             {step === 1 && (
               <motion.div
@@ -155,7 +135,7 @@ export default function SignupForm() {
                 initial="initial"
                 animate="animate"
                 exit="exit"
-                transition={{ duration: 0.3 }} 
+                transition={{ duration: 0.3 }}
                 className="space-y-4"
               >
                 <Input
@@ -190,57 +170,6 @@ export default function SignupForm() {
                 transition={{ duration: 0.3 }}
                 className="space-y-4"
               >
-                <div className="relative">
-                  <Input
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Password"
-                    value={form.password}
-                    onChange={(e) => handleChange("password", e.target.value)}
-                    required
-                  />
-                  <div
-                    className="absolute right-3 top-2.5 cursor-pointer"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </div>
-                </div>
-
-                <div className="pt-1">
-                  <Progress value={(passwordStrength / 5) * 100} className="mt-1" />
-                  <p className="text-xs text-center p-2 text-gray-500">
-                    {["Very Weak", "Weak", "Moderate", "Strong", "Very Strong"][passwordStrength - 1] || "Very Weak"}
-                  </p>
-                </div>
-
-                <div className="relative">
-                  <Input
-                    type={showConfirmPassword ? "text" : "password"}
-                    placeholder="Confirm Password"
-                    value={form.confirmPassword}
-                    onChange={(e) => handleChange("confirmPassword", e.target.value)}
-                    required
-                  />
-                  <div
-                    className="absolute right-3 top-2.5 cursor-pointer"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  >
-                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            {step === 3 && (
-              <motion.div
-                key="step3"
-                variants={stepVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                transition={{ duration: 0.3 }}
-                className="space-y-4"
-              >
                 <RadioGroup value={form.role} onValueChange={(val) => handleChange("role", val)}>
                   <div className="flex justify-center gap-x-6">
                     <div className="flex items-center space-x-2">
@@ -255,13 +184,21 @@ export default function SignupForm() {
                 </RadioGroup>
 
                 {form.role === "admin" && (
-                  <Input
-                    type="password"
-                    placeholder="Admin Access Code"
-                    value={form.accessCode}
-                    onChange={(e) => handleChange("accessCode", e.target.value)}
-                    required
-                  />
+                  <div className="relative">
+                    <Input
+                      type={showAccessCode ? "text" : "password"}
+                      placeholder="Admin Access Code"
+                      value={form.accessCode}
+                      onChange={(e) => handleChange("accessCode", e.target.value)}
+                      required
+                    />
+                    <div
+                      className="absolute right-3 top-2.5 cursor-pointer"
+                      onClick={() => setShowAccessCode(!showAccessCode)}
+                    >
+                      {showAccessCode ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </div>
+                  </div>
                 )}
               </motion.div>
             )}
@@ -270,7 +207,7 @@ export default function SignupForm() {
 
         <CardFooter className="flex justify-between">
           {step > 1 && <Button onClick={handlePrev}>Back</Button>}
-          {step < 3 ? (
+          {step < 2 ? (
             <Button onClick={handleNext}>Next</Button>
           ) : (
             <Button onClick={handleSubmit} disabled={isLoading}>
