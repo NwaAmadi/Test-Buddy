@@ -40,7 +40,6 @@ app.post('/api/signup', async (req: Request, res: Response): Promise<any> => {
     email,
     first_name,
     last_name,
-    password_hash: rawPassword,
     role,
     verified,
     access_code
@@ -50,7 +49,6 @@ app.post('/api/signup', async (req: Request, res: Response): Promise<any> => {
     !first_name ||
     !last_name ||
     !email ||
-    !rawPassword ||
     !role ||
     typeof verified !== 'boolean'
   ) {
@@ -97,25 +95,6 @@ app.post('/api/signup', async (req: Request, res: Response): Promise<any> => {
       if (setIsused.error) {
         return res.status(500).json({ message: 'ERROR UPDATING ADMIN ACCESS CODE', error: setIsused.error.message });
       }
-    }
-
-    const passwordHash = await bcrypt.hash(rawPassword, 10);
-
-    const { error: insertError } = await supabase
-      .from('users')
-      .insert([
-        {
-          first_name,
-          last_name,
-          email,
-          password_hash: passwordHash,
-          role,
-          verified
-        }
-      ]);
-
-    if (insertError) {
-      return res.status(500).json({ message: 'COULD NOT REGISTER USER', error: insertError.message });
     }
 
     return res.status(201).json({ message: 'USER REGISTERED SUCCESSFULLY!' });
@@ -348,7 +327,6 @@ app.post('/api/sendOtp', async (req: Request, res: Response): Promise<any> => {
       email,
       first_name: '',
       last_name: '',
-      password_hash: '',
       role: 'admin',
       verified: false,
       access_code: ''
