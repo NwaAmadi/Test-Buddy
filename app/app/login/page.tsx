@@ -38,7 +38,7 @@ export default function LoginPage() {
 
     setIsLoading(true)
     try {
-      const res = await fetch(`${BACKEND_URL}/api/send-otp`, {
+      const res = await fetch(`${BACKEND_URL}/api/login/send-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
