@@ -1,5 +1,5 @@
 export function LoginOtpEmailTemplate(otp: string): string {
-  const otpString = String(otp).padStart(6, '0');
+  const otpString = otp;
   const currentYear = new Date().getFullYear();
   const imgSource = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAMAAAC7IEhfAAAAUVBMVEVHcEwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA3C4bvAAAAGnRSTlMA/Crq07blEJQIITrecfQEfWOnVDAY8MeIRpP6Eg4AAAFuSURBVDjL3ZRHgoQgEEWVnMWIcv+DDkna2LPv2lk+6leCpvlp4wIAwf+jOqCxglDhXnRfsHkciC+mhnF+pqhcUesP1qJV0ifJJf9WTOtBZdZgDbpHSRiSO53zZEie6KySxtmplsuru0VsC266lqOKbfRW254Co41Nxxa8C5wN9DmF1jYxOWXla4f5ZFFEmhCw7b9PQUcmRUR26t4jripFzDnC4TlH0WNYcqTM1CZcqqYbU2VWOPzi9XNxhzmEItweAnl2FohzyKtw9ugdDOfHpa4C6/sq6ZUMGgewATBsgLpsD249inlfQDh9BLOkNAnkQyrmA4JcAjELyetVwM34Vl/A2BQgZbkzBbSxP3fwYAVcA+gqSN7BPoC1GkG8GR+2wQVwZo7VIByHQu3xgnDJlj0SPfg3knqiRwmEAHK0qVNoui/KiHKbF0IINLn1Tj6ulD3fa+P0/PpSrBgRGIy4wW706+MzgymYoN0vP8R/Zzsn7KKC6sMAAAAASUVORK5CYII=";
   const alt = "Test Buddy Logo";
