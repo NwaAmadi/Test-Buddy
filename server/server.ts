@@ -21,6 +21,9 @@ import { sendMail } from './mailService/mailTransporter';
 import cors from 'cors';
 import { login } from './controllers/authController';
 
+
+import studentDashboardRoute from "./routes/student/dashboard";
+
 const app = express();
 
 app.use(cors());
@@ -45,7 +48,7 @@ app.post('/api/signup', async (req: Request, res: Response): Promise<any> => {
     access_code
   } = req.body as SignupRequest['body'];
 
-  // --- 1. Input Validation ---
+
   if (
     !first_name ||
     !last_name ||
@@ -61,7 +64,7 @@ app.post('/api/signup', async (req: Request, res: Response): Promise<any> => {
   }
 
   try {
-    // --- 2. Check for Existing User ---
+
     const { data: existingUser, error: checkError } = await supabase
       .from('users')
       .select('email')
@@ -69,7 +72,7 @@ app.post('/api/signup', async (req: Request, res: Response): Promise<any> => {
       .maybeSingle();
 
     if (checkError) {
-      console.error('Error checking existing user:', checkError); // Add logging
+      console.error('Error checking existing user:', checkError);
       return res.status(500).json({ message: 'ERROR CHECKING EMAIL', error: checkError.message });
     }
 
@@ -77,32 +80,29 @@ app.post('/api/signup', async (req: Request, res: Response): Promise<any> => {
       return res.status(400).json({ message: 'EMAIL ALREADY REGISTERED' });
     }
 
-    // --- 3. Admin Role Specific Logic ---
+
     if (role === "admin") {
       if (!access_code) {
         return res.status(400).json({ message: 'ACCESS CODE IS REQUIRED FOR ADMIN ROLE' });
       }
 
-      // Assuming verifyAdminCode fetches and validates the code
+
       const isValidAdminCode = await verifyAdminCode(email, access_code as string);
       if (!isValidAdminCode) {
         return res.status(400).json({ message: 'INVALID ADMIN ACCESS CODE' });
       }
 
-      // Mark admin access code as used
-      const { error: setIsusedError } = await supabase // Destructure error directly
+      const { error: setIsusedError } = await supabase
         .from('admin_access_code')
         .update({ is_used: true })
-        .eq('access_code', access_code); // No .single() needed for update unless you expect only one row back
-      // If you are relying on is_used for unique code usage, ensure it's not possible to update multiple times
+        .eq('access_code', access_code);
 
       if (setIsusedError) {
-        console.error('Error updating admin access code:', setIsusedError); // Add logging
+        console.error('Error updating admin access code:', setIsusedError);
         return res.status(500).json({ message: 'ERROR UPDATING ADMIN ACCESS CODE', error: setIsusedError.message });
       }
     }
 
-    // --- !!! THE MISSING PIECE: INSERTING THE NEW USER INTO THE DATABASE !!! ---
     const { data: newUser, error: insertError } = await supabase
       .from('users')
       .insert({
@@ -110,23 +110,20 @@ app.post('/api/signup', async (req: Request, res: Response): Promise<any> => {
         last_name,
         email,
         role,
-        verified, // This should be false initially, as per your client-side
+        verified,
       })
-      .select() // Use .select() to return the inserted data, good for debugging
-      .single(); // Use .single() if you expect only one row inserted, which is standard for signup
+      .select()
+      .single();
 
     if (insertError) {
-      console.error('Supabase user insertion error:', insertError); // CRITICAL LOGGING
-      // Check for specific error codes like '23505' (unique violation) or '23502' (not null violation)
+      console.error('Supabase user insertion error:', insertError);
       return res.status(500).json({ message: 'FAILED TO CREATE USER ACCOUNT', details: insertError.message });
     }
 
-    // --- 4. Send Success Response ---
-    // At this point, the user should be in the 'users' table.
-    return res.status(201).json({ message: 'USER REGISTERED SUCCESSFULLY!', user: newUser }); // Optionally return user data
 
+    return res.status(201).json({ message: 'USER REGISTERED SUCCESSFULLY!', user: newUser });
   } catch (error: any) {
-    console.error('Signup Error (Catch Block):', error); // Differentiate between caught errors and Supabase errors
+    console.error('Signup Error (Catch Block):', error);
     const errorMessage = error instanceof Error ? error.message : "An unknown error occurred during signup.";
     return res.status(500).json({ error: "INTERNAL SERVER ERROR!", details: errorMessage });
   }
@@ -394,96 +391,7 @@ app.post('/api/sendOtp', async (req: Request, res: Response): Promise<any> => {
   }
 });
 
-
-
-
-app.get('/api/student/dashboard', verifyToken, isStudent, async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    const email = req.user!.email;
-    const { data: user, error: userError } = await supabase
-      .from('users')
-      .select('id, first_name, last_name')
-      .eq('email', email)
-      .single();
-
-    if (userError || !user) {
-      res.status(404).json({ error: "Student not found" });
-      return;
-    }
-
-    const today = new Date().toISOString().slice(0, 10);
-    const { data: upcomingExamsRaw } = await supabase
-      .from('exams')
-      .select('*')
-      .gte('date', today)
-      .order('date', { ascending: true })
-      .limit(3);
-
-    const upcomingExams = upcomingExamsRaw ?? [];
-
-    const { data: recentResultsRaw } = await supabase
-      .from('results')
-      .select('id, score, status, taken_at, exam_id, exams(title)')
-      .eq('user_id', user.id)
-      .order('taken_at', { ascending: false })
-      .limit(3);
-
-    const recentResults = recentResultsRaw ?? [];
-
-    const { count: completedCount } = await supabase
-      .from('results')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', user.id);
-
-    const { data: allResultsRaw } = await supabase
-      .from('results')
-      .select('score')
-      .eq('user_id', user.id);
-
-    const allResults = allResultsRaw ?? [];
-
-    const averageScore =
-      allResults.length > 0
-        ? `${Math.round(allResults.reduce((sum, r) => sum + (r.score || 0), 0) / allResults.length)}%`
-        : 'N/A';
-
-    const { count: totalExams } = await supabase
-      .from('exams')
-      .select('id', { count: 'exact', head: true });
-
-    const courseProgress =
-      totalExams && completedCount
-        ? Math.round((completedCount / totalExams) * 100)
-        : 0;
-
-    let nextExamIn = 'N/A';
-    if (upcomingExams.length > 0) {
-      const nextExamDate = new Date(upcomingExams[0].date);
-      const diffDays = Math.ceil(
-        (nextExamDate.getTime() - new Date(today).getTime()) / (1000 * 60 * 60 * 24)
-      );
-      nextExamIn = diffDays === 0 ? 'Today' : `${diffDays} day(s)`;
-    }
-
-    res.json({
-      name: `${user.first_name} ${user.last_name}`,
-      upcomingExams,
-      recentResults,
-      stats: {
-        upcomingCount: upcomingExams.length,
-        completedCount: completedCount || 0,
-        averageScore,
-        courseProgress,
-        nextExamIn,
-      },
-    });
-    return;
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "INTERNAL SERVER ERROR" });
-    return;
-  }
-});
+app.use("/api/student", studentDashboardRoute);
 
 app.listen(PORT, () => {
   console.log(`ACTIVE ON  ${PORT}`);

@@ -52,3 +52,13 @@ export interface TokenPair {
   refreshToken: string;
 }
 
+export interface AuthUser {
+  id?: string;
+  email: string;
+  role?: string;
+  [key: string]: any;
+}
+
+export interface AuthRequest extends Request {
+  user?: AuthUser;
+}
