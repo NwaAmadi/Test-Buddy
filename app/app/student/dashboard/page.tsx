@@ -38,7 +38,6 @@ export default function StudentDashboard() {
   const [studentName, setStudentName] = useState<string>("")
 
   useEffect(() => {
-    
     let name = ""
     if (typeof window !== "undefined") {
       const userStr = localStorage.getItem("user")
@@ -51,6 +50,7 @@ export default function StudentDashboard() {
         }
       }
     }
+    setStudentName(name)
 
     fetchStudentDashboard().then(setStudent)
   }, [])
