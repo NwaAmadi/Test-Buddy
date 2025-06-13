@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge"
 import { Calendar, Clock } from "lucide-react"
 import Link from "next/link"
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+
 async function fetchStudentDashboard() {
   
   let accessToken = ""
@@ -15,7 +17,7 @@ async function fetchStudentDashboard() {
     accessToken = localStorage.getItem("accessToken") || ""
   }
 
-  const res = await fetch("/api/student/dashboard", {
+  const res = await fetch(`${BACKEND_URL}/api/student/dashboard`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
