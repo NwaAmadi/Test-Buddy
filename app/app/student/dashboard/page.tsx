@@ -8,29 +8,25 @@ import { Badge } from "@/components/ui/badge"
 import { Calendar, Clock } from "lucide-react"
 import Link from "next/link"
 
-// Mock fetch function (replace with real API call)
 async function fetchStudentDashboard() {
-  // Simulate DB/API call
-  return {
-    availableExams: [
-      {
-        id: 1,
-        title: "Advanced Mathematics",
-        date: "Apr 5, 2025",
-        time: "10:00 AM",
-        duration: "2 hours",
-        status: "Not Started",
-      },
-      {
-        id: 2,
-        title: "Computer Science Fundamentals",
-        date: "Apr 7, 2025",
-        time: "2:00 PM",
-        duration: "1.5 hours",
-        status: "Not Started",
-      },
-    ],
+  
+  let accessToken = ""
+  if (typeof window !== "undefined") {
+    accessToken = localStorage.getItem("accessToken") || ""
   }
+
+  const res = await fetch("/api/student/dashboard", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${accessToken}`,
+    },
+  })
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch dashboard data")
+  }
+  return res.json()
 }
 
 export default function StudentDashboard() {
