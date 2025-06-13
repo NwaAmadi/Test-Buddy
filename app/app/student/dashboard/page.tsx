@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Calendar, Clock } from "lucide-react"
 import Link from "next/link"
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER;
 
 async function fetchStudentDashboard() {
   
