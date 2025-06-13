@@ -2,6 +2,13 @@ import { Router, Response } from "express";
 import { supabase } from "../../db/supabase";
 import { verifyToken, isStudent } from "../../middleware/auth";
 import { AuthRequest } from "../../types/interface";
+import cors from "cors";
+import express from "express";
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
 
 const router = Router();
 
