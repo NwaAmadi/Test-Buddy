@@ -56,7 +56,6 @@ router.get('/dashboard', verifyToken, isStudent, async (req: AuthRequest, res: R
   }
 });
 
-// --- Utility Functions ---
 
 function formatDate(isoDate: string): string {
   const date = new Date(isoDate);
