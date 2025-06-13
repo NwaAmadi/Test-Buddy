@@ -391,7 +391,7 @@ app.post('/api/sendOtp', async (req: Request, res: Response): Promise<any> => {
   }
 });
 
-app.use("/api/student/dashboard", studentDashboardRoute);
+app.use("/api/student", studentDashboardRoute);
 
 app.listen(PORT, () => {
   console.log(`ACTIVE ON  ${PORT}`);
