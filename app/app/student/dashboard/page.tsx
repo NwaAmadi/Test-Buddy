@@ -11,7 +11,6 @@ import Link from "next/link"
 const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER;
 
 async function fetchStudentDashboard() {
-  
   let accessToken = ""
   if (typeof window !== "undefined") {
     accessToken = localStorage.getItem("accessToken") || ""
@@ -102,7 +101,7 @@ export default function StudentDashboard() {
                   <div className="flex flex-col items-end gap-2">
                     <Badge variant="outline">{exam.status}</Badge>
                     <Button size="sm" asChild>
-                      <Link href={`/exam?examId=${exam.id}`}>Start Exam</Link>
+                      <Link href={`/student/exams/${exam.id}`}>Start Exam</Link>
                     </Button>
                   </div>
                 </div>
