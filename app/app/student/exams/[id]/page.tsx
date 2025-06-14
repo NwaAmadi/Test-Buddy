@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -33,20 +33,28 @@ export default function ExamPage({ params }: { params: { id: string } }) {
   const [tabSwitched, setTabSwitched] = useState(false)
   const [examSubmitted, setExamSubmitted] = useState(false)
   const [loading, setLoading] = useState(true)
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
 
   const handleSubmit = async () => {
+    if (examSubmitted) return // Prevent double submit
     setExamSubmitted(true)
-    const accessToken = localStorage.getItem("accessToken") || ""
-    const res = await fetch(`${BACKEND_URL}/api/exam/${params.id}/submit`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ answers }),
-    })
-    const data = await res.json()
-    router.push(`/student/results/${data.resultId}`)
+    try {
+      const accessToken = localStorage.getItem("accessToken") || ""
+      const res = await fetch(`${BACKEND_URL}/api/exam/${params.id}/submit`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ answers }),
+      })
+      if (!res.ok) throw new Error("Submission failed")
+      const data = await res.json()
+      router.push(`/student/results/${data.resultId}`)
+    } catch (err) {
+      setExamSubmitted(false)
+      alert("Failed to submit exam. Please try again.")
+    }
   }
 
   const handleNext = () => {
@@ -98,13 +106,18 @@ export default function ExamPage({ params }: { params: { id: string } }) {
 
   // Timer countdown
   useEffect(() => {
-    if (timeLeft <= 0 || examSubmitted) {
+    if (loading || examSubmitted) return
+    if (timeLeft <= 0) {
       handleSubmit()
       return
     }
-    const timer = setInterval(() => setTimeLeft((prev) => prev - 1), 1000)
-    return () => clearInterval(timer)
-  }, [timeLeft, examSubmitted])
+    timerRef.current = setInterval(() => {
+      setTimeLeft((prev) => prev - 1)
+    }, 1000)
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current)
+    }
+  }, [timeLeft, examSubmitted, loading])
 
   if (loading) return <div>Loading...</div>
   if (!exam) return <div>Exam not found.</div>
@@ -182,13 +195,13 @@ export default function ExamPage({ params }: { params: { id: string } }) {
       </Card>
 
       <div className="flex justify-between">
-        <Button variant="outline" onClick={handlePrevious} disabled={currentQuestion === 0}>
+        <Button variant="outline" onClick={handlePrevious} disabled={currentQuestion === 0 || examSubmitted}>
           Previous
         </Button>
 
         <div className="flex gap-2">
           {currentQuestion < exam.questions.length - 1 ? (
-            <Button onClick={handleNext}>Next</Button>
+            <Button onClick={handleNext} disabled={examSubmitted}>Next</Button>
           ) : (
             <Button onClick={handleSubmit} disabled={examSubmitted}>
               {examSubmitted ? "Submitting..." : "Submit Exam"}
