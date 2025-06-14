@@ -36,7 +36,7 @@ export default function ExamPage({ params }: { params: { id: string } }) {
   const timerRef = useRef<NodeJS.Timeout | null>(null)
 
   const handleSubmit = async () => {
-    if (examSubmitted) return // Prevent double submit
+    if (examSubmitted) return 
     setExamSubmitted(true)
     try {
       const accessToken = localStorage.getItem("accessToken") || ""
