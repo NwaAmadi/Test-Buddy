@@ -24,6 +24,7 @@ import { login } from './controllers/authController';
 
 import studentDashboardRoute from "./routes/student/dashboard";
 import examRoute from "./routes/student/exam";
+import resultRoute from "./routes/student/result";
 
 const app = express();
 
@@ -394,6 +395,7 @@ app.post('/api/sendOtp', async (req: Request, res: Response): Promise<any> => {
 
 app.use("/api/student", studentDashboardRoute);
 app.use('/api/exam', examRoute);
+app.use("/api/result", resultRoute);
 
 app.listen(PORT, () => {
   console.log(`ACTIVE ON  ${PORT}`);

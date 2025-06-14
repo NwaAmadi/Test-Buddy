@@ -34,12 +34,19 @@ export default function ExamPage({ params }: { params: { id: string } }) {
   const [examSubmitted, setExamSubmitted] = useState(false)
   const [loading, setLoading] = useState(true)
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setExamSubmitted(true)
-    // TODO: Send answers to backend for grading/submission
-    setTimeout(() => {
-      router.push(`/student/results/${params.id}`)
-    }, 1500)
+    const accessToken = localStorage.getItem("accessToken") || ""
+    const res = await fetch(`${BACKEND_URL}/api/exam/${params.id}/submit`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ answers }),
+    })
+    const data = await res.json()
+    router.push(`/student/results/${data.resultId}`)
   }
 
   const handleNext = () => {
@@ -61,7 +68,7 @@ export default function ExamPage({ params }: { params: { id: string } }) {
     }))
   }
 
-  
+
   useEffect(() => {
     const accessToken = localStorage.getItem("accessToken") || ""
     fetchExam(params.id, accessToken)
@@ -73,7 +80,7 @@ export default function ExamPage({ params }: { params: { id: string } }) {
       .finally(() => setLoading(false))
   }, [params.id])
 
-  
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
