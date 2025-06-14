@@ -68,7 +68,6 @@ export default function ExamPage({ params }: { params: { id: string } }) {
     }))
   }
 
-
   useEffect(() => {
     const accessToken = localStorage.getItem("accessToken") || ""
     fetchExam(params.id, accessToken)
@@ -79,7 +78,6 @@ export default function ExamPage({ params }: { params: { id: string } }) {
       .catch(() => setExam(null))
       .finally(() => setLoading(false))
   }, [params.id])
-
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
@@ -117,6 +115,10 @@ export default function ExamPage({ params }: { params: { id: string } }) {
 
   // Current question data
   const question = exam.questions[currentQuestion]
+  // Parse options if needed
+  const options = typeof question.options === "string"
+    ? JSON.parse(question.options)
+    : question.options
 
   return (
     <DashboardLayout role="student">
@@ -159,8 +161,8 @@ export default function ExamPage({ params }: { params: { id: string } }) {
         </CardHeader>
         <CardContent>
           <RadioGroup value={answers[question.id] || ""} onValueChange={handleAnswerSelect} className="space-y-3">
-            {question.options && question.options.length > 0 ? (
-              question.options.map((option: any) => (
+            {options && options.length > 0 ? (
+              options.map((option: any) => (
                 <div
                   key={option.id || option}
                   className="flex items-center space-x-2 border p-4 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"

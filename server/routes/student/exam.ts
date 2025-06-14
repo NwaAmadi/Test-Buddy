@@ -1,7 +1,6 @@
 import { Router, Response } from "express";
 import { supabase } from "../../db/supabase";
 import { verifyToken, isStudent } from "../../middleware/auth";
-import { AuthRequest } from "../../types/interface";
 import cors from "cors";
 import express from "express";
 
@@ -30,7 +29,7 @@ router.get("/:examId", verifyToken, isStudent, async (req, res) => {
   // Fetch questions for this exam
   const { data: questions, error: questionsError } = await supabase
     .from("questions")
-    .select("id, text, question_type, position")
+    .select("id, text, question_type, position, options")
     .eq("exam_id", examId)
     .order("position", { ascending: true });
 
