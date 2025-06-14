@@ -34,7 +34,34 @@ export default function ExamPage({ params }: { params: { id: string } }) {
   const [examSubmitted, setExamSubmitted] = useState(false)
   const [loading, setLoading] = useState(true)
 
-  // Fetch exam data
+  const handleSubmit = () => {
+    setExamSubmitted(true)
+    // TODO: Send answers to backend for grading/submission
+    setTimeout(() => {
+      router.push(`/student/results/${params.id}`)
+    }, 1500)
+  }
+
+  const handleNext = () => {
+    if (currentQuestion < exam.questions.length - 1) {
+      setCurrentQuestion((prev) => prev + 1)
+    }
+  }
+
+  const handlePrevious = () => {
+    if (currentQuestion > 0) {
+      setCurrentQuestion((prev) => prev - 1)
+    }
+  }
+
+  const handleAnswerSelect = (value: string) => {
+    setAnswers((prev) => ({
+      ...prev,
+      [exam.questions[currentQuestion].id]: value,
+    }))
+  }
+
+  
   useEffect(() => {
     const accessToken = localStorage.getItem("accessToken") || ""
     fetchExam(params.id, accessToken)
@@ -46,7 +73,7 @@ export default function ExamPage({ params }: { params: { id: string } }) {
       .finally(() => setLoading(false))
   }, [params.id])
 
-  // Format time as MM:SS
+  
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
@@ -80,37 +107,6 @@ export default function ExamPage({ params }: { params: { id: string } }) {
 
   // Calculate progress
   const progress = (currentQuestion / exam.questions.length) * 100
-
-  // Handle answer selection
-  const handleAnswerSelect = (value: string) => {
-    setAnswers((prev) => ({
-      ...prev,
-      [exam.questions[currentQuestion].id]: value,
-    }))
-  }
-
-  // Navigate to next question
-  const handleNext = () => {
-    if (currentQuestion < exam.questions.length - 1) {
-      setCurrentQuestion((prev) => prev + 1)
-    }
-  }
-
-  // Navigate to previous question
-  const handlePrevious = () => {
-    if (currentQuestion > 0) {
-      setCurrentQuestion((prev) => prev - 1)
-    }
-  }
-
-  // Submit exam
-  const handleSubmit = () => {
-    setExamSubmitted(true)
-    // TODO: Send answers to backend for grading/submission
-    setTimeout(() => {
-      router.push(`/student/results/${params.id}`)
-    }, 1500)
-  }
 
   // Current question data
   const question = exam.questions[currentQuestion]
