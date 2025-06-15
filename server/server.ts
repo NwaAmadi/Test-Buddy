@@ -185,7 +185,7 @@ app.post('/api/otp-verify', async (req: Request, res: Response): Promise<any> =>
     }
 
     const { accessToken, refreshToken } = await generateTokens(
-      { email: user.email, role: user.role },
+      { email: user.email, role: user.role, id: user.id },
       JWT_SECRET,
       REFRESH_SECRET,
       JWT_EXPIRATION,
@@ -307,7 +307,7 @@ app.post('/api/login/otp-verify', async (req: Request, res: Response): Promise<a
 
     // Generate tokens
     const { accessToken, refreshToken } = await generateTokens(
-      { email: user.email, role: user.role },
+      { email: user.email, role: user.role, id: user.id },
       JWT_SECRET,
       REFRESH_SECRET,
       JWT_EXPIRATION,
@@ -398,7 +398,7 @@ app.post('/api/sendOtp', async (req: Request, res: Response): Promise<any> => {
 app.use("/api/student", studentDashboardRoute);
 app.use('/api/exam', examRoute);
 app.use("/api/result", resultRoute);
-app.use("/api/exam", submitExamRoute); 
+app.use("/api/submit", submitExamRoute); 
 
 app.listen(PORT, () => {
   console.log(`ACTIVE ON  ${PORT}`);

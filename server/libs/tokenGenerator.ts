@@ -2,7 +2,7 @@ import * as jose from 'jose';
 import { TokenPair  } from '../types/interface';
 
 export async function generateTokens(
-  data: { email: string; role: string },
+  data: { email: string; role: string; id: string },
   accessSecret: string,
   refreshSecret: string,
   accessExp: string,
@@ -13,13 +13,13 @@ export async function generateTokens(
     }
   const alg = 'HS256';
 
-  const accessToken = await new jose.SignJWT({ email: data.email, role: data.role })
+  const accessToken = await new jose.SignJWT({ email: data.email, role: data.role, id: data.id })
     .setProtectedHeader({ alg })
     .setIssuedAt()
     .setExpirationTime(accessExp)
     .sign(new TextEncoder().encode(accessSecret));
 
-  const refreshToken = await new jose.SignJWT({ email: data.email, role: data.role })
+  const refreshToken = await new jose.SignJWT({ email: data.email, role: data.role, id: data.id })
     .setProtectedHeader({ alg })
     .setIssuedAt()
     .setExpirationTime(refreshExp)
