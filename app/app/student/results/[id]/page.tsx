@@ -11,7 +11,7 @@ import { Modal } from "@/components/ui/Modal"
 const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER
 
 async function fetchResults(userId: string, accessToken: string) {
-  const res = await fetch(`${BACKEND_URL}/student/results?userId=${userId}`, {
+  const res = await fetch(`${BACKEND_URL}/student/results`, {
     headers: {
       "Authorization": `Bearer ${accessToken}`,
       "Content-Type": "application/json",

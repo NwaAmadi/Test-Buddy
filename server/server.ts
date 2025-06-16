@@ -236,17 +236,17 @@ app.post('/api/login/send-otp', async (req: Request, res: Response): Promise<voi
     return;
   }
 
-  // Generate OTP
+ 
   const otp = Math.floor(10000 + Math.random() * 90000).toString();
   const expiresAt = new Date(Date.now() + 2 * 60 * 1000).toISOString(); // 2 min
 
-  // Save OTP
+ 
   await supabase.from('login_otps').insert([
     { email, otp, expires_at: expiresAt, is_used: false }
   ]);
 
   const template = LoginOtpEmailTemplate(otp);
-  // Send OTP (implement your email logic)
+ 
   const sendLoginOtpResult = await sendMail(email, template, 'Your Login OTP');
   if (!sendLoginOtpResult.success) {
     console.error('Failed to send OTP email:', sendLoginOtpResult.message);
@@ -282,7 +282,7 @@ app.post('/api/login/otp-verify', async (req: Request, res: Response): Promise<a
       return res.status(401).json({ error: "INVALID OR EXPIRED OTP" });
     }
 
-    // Mark OTP as used
+    
     const { error: updateError } = await supabase
       .from('login_otps')
       .update({ is_used: true })
