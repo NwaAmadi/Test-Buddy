@@ -73,3 +73,12 @@ export type RawResult = {
     title: string;
   }[];
 };
+
+export interface StudentExamResult {
+  id: string;
+  score: number;
+  total: number;
+  passed: boolean;
+  answers: any; 
+  exam_title: string;
+}

@@ -1,7 +1,8 @@
 import { Router, Response } from "express";
 import { supabase } from "../../db/supabase";
 import { verifyToken, isStudent } from "../../middleware/auth";
-import { AuthRequest, RawResult } from "../../types/interface";
+import { AuthRequest, StudentExamResult } from "../../types/interface"; 
+import { PostgrestError } from '@supabase/supabase-js';
 import cors from "cors";
 import express from "express";
 
@@ -12,50 +13,42 @@ app.use(express.json());
 const router = Router();
 
 router.get("/", verifyToken, isStudent, async (req: AuthRequest, res: Response): Promise<void> => {
-  const userId = req.user!.id;
+  const userId = req.user?.id;
   if (!userId) {
+    console.error("User ID is missing or invalid");
     res.status(400).json({ error: "User ID is required" });
     return;
   }
 
-  const { data: results, error } = await supabase
-    .from("results")
-    .select(`
-      id,
-      score,
-      total,
-      passed,
-      answers,
-      exam_id,
-      exams (
-        title
-      )
-    `)
-    .eq("student_id", userId);
+  try {
+    const { data: results, error } = await supabase
+      .rpc('get_student_results_with_exam_title', { p_student_id: userId }) as { data: StudentExamResult[] | null; error: PostgrestError | null };
 
-  if (error) {
-   
-    console.error("Supabase error:", error.message);
-    res.status(500).json({ error: "Failed to fetch results" });
-    return;
+    if (error) {
+      console.error("Supabase RPC error:", error.message, error.details);
+      res.status(500).json({ error: "Failed to fetch results" });
+      return;
+    }
+
+    if (!results || results.length === 0) {
+      res.status(404).json({ error: "No results found for this student" });
+      return;
+    }
+
+    const formattedResults = results.map((result: StudentExamResult) => ({
+      id: result.id,
+      examTitle: result.exam_title ?? "Unknown Exam",
+      score: result.score,
+      total: result.total,
+      passed: result.passed,
+      answers: result.answers,
+    }));
+
+    res.json(formattedResults);
+  } catch (err) {
+    console.error("Unexpected error:", err);
+    res.status(500).json({ error: "Internal server error" });
   }
-  
-  if (!results || results.length === 0) {
-    res.status(404).json({ error: "No results found for this student" });
-    return;
-  }
-
-  
-  const formattedResults = (results as RawResult[]).map((result) => ({
-    id: result.id,
-    examTitle: result.exams?.[0].title ?? "Unknown Exam",
-    score: result.score,
-    total: result.total,
-    passed: result.passed,
-    answers: result.answers,
-  }));
-
-  res.json(formattedResults);
 });
 
 export default router;
