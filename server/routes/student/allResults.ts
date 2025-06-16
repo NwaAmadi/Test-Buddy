@@ -12,7 +12,11 @@ app.use(express.json());
 const router = Router();
 
 router.get("/", verifyToken, isStudent, async (req: AuthRequest, res: Response): Promise<void> => {
-  const userId = req.user!.id;
+  const userId = req.query.userId as string;
+  if (!userId) {
+    res.status(400).json({ error: "User ID is required" });
+    return;
+  }
 
   const { data: results, error } = await supabase
     .from("results")
