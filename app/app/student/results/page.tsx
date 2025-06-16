@@ -48,7 +48,7 @@ export default function ResultsPage() {
           <div className="space-y-6">
             {results.map((result) => (
               <div key={result.id} className="border rounded p-4">
-                <h2 className="text-xl font-bold">{result.examTitle}</h2>
+                <h2 className="text-xl font-bold mb-2">{result.examTitle}</h2>
                 <div>
                   <p className="text-gray-500">Score: <Badge>{((result.score / result.total) * 100).toFixed(2)}%</Badge></p>
                 </div>
