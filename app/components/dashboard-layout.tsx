@@ -96,7 +96,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
     },
     {
       title: "My Exams",
-      href: "/student/exams",
+      href: "/student/[id]/exams",
       icon: FileText,
     },
     {

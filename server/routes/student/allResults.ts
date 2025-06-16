@@ -30,7 +30,7 @@ router.get("/", verifyToken, isStudent, async (req: AuthRequest, res: Response):
 
   const formattedResults = (results as RawResult[]).map((result) => ({
   id: result.id,
-  examTitle: (Array.isArray(result.exams) && result.exams[0]?.title) ? result.exams[0].title : "Unknown Exam",
+  examTitle: result.exams?.[0]?.title ?? "Unknown Exam",
   score: result.score,
   total: result.total,
   passed: result.passed,
