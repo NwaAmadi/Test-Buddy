@@ -10,58 +10,60 @@ import { Modal } from "@/components/ui/Modal"
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER
 
-async function fetchResult(resultId: string, accessToken: string) {
-  const res = await fetch(`${BACKEND_URL}/student/results/${resultId}`, {
+async function fetchResults(accessToken: string) {
+  const res = await fetch(`${BACKEND_URL}/student/results`, {
     headers: {
       "Authorization": `Bearer ${accessToken}`,
       "Content-Type": "application/json",
     },
   })
-  if (!res.ok) throw new Error("Failed to fetch result")
+  if (!res.ok) throw new Error("Failed to fetch results")
   return res.json()
 }
 
-export default function ResultPage({ params }: { params: { id: string } }) {
+export default function ResultsPage() {
   const router = useRouter()
-  const [result, setResult] = useState<any>(null)
+  const [results, setResults] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const accessToken = localStorage.getItem("accessToken") || ""
-    fetchResult(params.id, accessToken)
-      .then(setResult)
-      .catch(() => setResult(null))
+    fetchResults(accessToken)
+      .then(setResults)
+      .catch(() => setResults([]))
       .finally(() => setLoading(false))
-  }, [params.id])
+  }, [])
 
-  if (loading) return <LoadingPopup message="Fetching your result..." />
-  if (!result) return <Modal title="Oops...!" description="Result not found, contact the admin" />
-
-  const scorePercentage = ((result.score / result.total) * 100).toFixed(2)
+  if (loading) return <LoadingPopup message="Fetching your results..." />
+  if (!results || results.length === 0) return <Modal title="Oops...!" description="No results found, contact the admin" />
 
   return (
     <DashboardLayout role="student">
       <Card>
         <CardHeader>
-          <CardTitle>Exam Results</CardTitle>
+          <CardTitle>All Exam Results</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="mb-4">
-            <h2 className="text-xl font-bold">{result.examTitle}</h2>
-            <p className="text-gray-500">Score: <Badge>{scorePercentage}%</Badge></p>
-            <p className="text-gray-500">Status: <Badge variant={result.passed ? "default" : "destructive"}>{result.passed ? "Passed" : "Failed"}</Badge></p>
-          </div>
-          <div>
-            <h3 className="font-semibold mb-2">Your Answers:</h3>
-            <ul className="space-y-2">
-              {result.answers && result.answers.map((ans: any, idx: number) => (
-                <li key={ans.questionId} className="border rounded p-2">
-                  <div className="font-medium">Q{idx + 1}: {ans.question}</div>
-                  <div>Your answer: <Badge>{ans.selectedOption}</Badge></div>
-                  <div>Correct answer: <Badge variant={ans.isCorrect ? "default" : "destructive"}>{ans.correctOption}</Badge></div>
-                </li>
-              ))}
-            </ul>
+          <div className="space-y-6">
+            {results.map((result) => (
+              <div key={result.id} className="border rounded p-4">
+                <h2 className="text-xl font-bold">{result.examTitle}</h2>
+                <p className="text-gray-500">Score: <Badge>{((result.score / result.total) * 100).toFixed(2)}%</Badge></p>
+                <p className="text-gray-500">Status: <Badge variant={result.passed ? "default" : "destructive"}>{result.passed ? "Passed" : "Failed"}</Badge></p>
+                <div>
+                  <h3 className="font-semibold mt-2">Your Answers:</h3>
+                  <ul className="space-y-2">
+                    {result.answers && result.answers.map((ans: any, idx: number) => (
+                      <li key={ans.questionId} className="border rounded p-2">
+                        <div className="font-medium">Q{idx + 1}: {ans.question}</div>
+                        <div>Your answer: <Badge>{ans.selectedOption}</Badge></div>
+                        <div>Correct answer: <Badge variant={ans.isCorrect ? "default" : "destructive"}>{ans.correctOption}</Badge></div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>

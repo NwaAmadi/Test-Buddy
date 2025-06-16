@@ -62,3 +62,14 @@ export interface AuthUser {
 export interface AuthRequest extends Request {
   user?: AuthUser;
 }
+
+export type RawResult = {
+  id: string;
+  score: number;
+  total: number;
+  passed: boolean;
+  answers: any;
+  exams: {
+    title: string;
+  }[];
+};
