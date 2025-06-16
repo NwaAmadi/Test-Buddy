@@ -36,6 +36,7 @@ export default function ExamPage({ params }: { params: { id: string } }) {
   const timerRef = useRef<NodeJS.Timeout | null>(null)
 
   const handleSubmit = async () => {
+    console.log("Exam ID:", params.id)
     if (examSubmitted) return 
     setExamSubmitted(true)
     try {
