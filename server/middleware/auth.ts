@@ -23,10 +23,8 @@ export const verifyToken = async (req: AuthRequest, res: Response, next: NextFun
     const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
     const { payload: decoded } = await jose.jwtVerify<{ email: string; role: string; verified: boolean }>(token, secret);
     req.user = decoded;
-    console.log("Decoded User:", req.user)
     next();
   } catch (err) {
-    console.error("Token Verification Error:", err)
     res.status(401).json({ message: 'INVALID TOKEN' }); 
     return; 
   }
