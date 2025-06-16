@@ -20,7 +20,17 @@ router.get("/", verifyToken, isStudent, async (req: AuthRequest, res: Response):
 
   const { data: results, error } = await supabase
     .from("results")
-    .select("id, score, total, passed, answers, exams(title)")
+    .select(`
+      id,
+      score,
+      total,
+      passed,
+      answers,
+      exam_id,
+      exams (
+        title
+      )
+    `)
     .eq("student_id", userId);
 
   if (error || !results || results.length === 0) {
@@ -29,13 +39,13 @@ router.get("/", verifyToken, isStudent, async (req: AuthRequest, res: Response):
   }
 
   const formattedResults = (results as RawResult[]).map((result) => ({
-  id: result.id,
-  examTitle: result.exams?.[0]?.title ?? "Unknown Exam",
-  score: result.score,
-  total: result.total,
-  passed: result.passed,
-  answers: result.answers,
-}));
+    id: result.id,
+    examTitle: result.exams?.[0]?.title ?? "Unknown Exam",
+    score: result.score,
+    total: result.total,
+    passed: result.passed,
+    answers: result.answers,
+  }));
 
   res.json(formattedResults);
 });

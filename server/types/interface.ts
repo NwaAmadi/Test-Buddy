@@ -69,7 +69,7 @@ export type RawResult = {
   total: number;
   passed: boolean;
   answers: any;
-  exams: {
+  exams?: {
     title: string;
   }[];
 };
