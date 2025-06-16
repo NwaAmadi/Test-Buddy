@@ -28,6 +28,12 @@ import resultRoute from "./routes/student/result";
 import submitExamRoute from "./routes/student/submitExam";
 import allResultsRouter from "./routes/student/allResults";
 
+import getExams from "./routes/admin/getExams";
+import fetchExamById from "./routes/admin/fetchExamById";
+import deleteExam from "./routes/admin/deleteExam";
+import createExam from "./routes/admin/createExam";
+import updateExam from "./routes/admin/updateExam";
+
 const app = express();
 
 app.use(cors());
@@ -402,6 +408,13 @@ app.use('/api/exam', examRoute);
 app.use("/api/result", resultRoute);
 app.use("/api/exam", submitExamRoute);
 app.use("/student/results", allResultsRouter);
+
+
+app.use("/api/admin/exams", getExams);
+app.use("/api/admin/exams/create", createExam);
+app.use("/api/admin/exams/delete", deleteExam);
+app.use("/api/admin/exams/:id", fetchExamById);
+app.use("/api/admin/exams/update", updateExam);
 
 app.listen(PORT, () => {
   console.log(`ACTIVE ON  ${PORT}`);
