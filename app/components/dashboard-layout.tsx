@@ -31,6 +31,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER
+
 interface DashboardLayoutProps {
   children: React.ReactNode
   role: "admin" | "student"
