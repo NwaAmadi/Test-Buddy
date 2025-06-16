@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Calendar, Clock } from "lucide-react"
 import Link from "next/link"
+import { LoadingPopup } from "@/components/ui/loading-popup"
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER;
 
@@ -53,7 +54,7 @@ export default function StudentDashboard() {
   }, [])
 
   if (!student) {
-    return <div>Loading...</div>
+    return <LoadingPopup message="Please wait..." />
   }
 
   return (
