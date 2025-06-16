@@ -12,7 +12,7 @@ app.use(express.json());
 const router = Router();
 
 router.get("/", verifyToken, isStudent, async (req: AuthRequest, res: Response): Promise<void> => {
-  const userId = req.query.userId as string;
+  const userId = req.user!.id;
   if (!userId) {
     res.status(400).json({ error: "User ID is required" });
     return;
@@ -30,7 +30,7 @@ router.get("/", verifyToken, isStudent, async (req: AuthRequest, res: Response):
 
   const formattedResults = (results as RawResult[]).map((result) => ({
   id: result.id,
-  examTitle: result.exams?.[0]?.title ?? "Unknown Exam",
+  examTitle: (Array.isArray(result.exams) && result.exams[0]?.title) ? result.exams[0].title : "Unknown Exam",
   score: result.score,
   total: result.total,
   passed: result.passed,
