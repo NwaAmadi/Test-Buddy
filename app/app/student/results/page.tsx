@@ -49,8 +49,12 @@ export default function ResultsPage() {
             {results.map((result) => (
               <div key={result.id} className="border rounded p-4">
                 <h2 className="text-xl font-bold">{result.examTitle}</h2>
-                <p className="text-gray-500">Score: <Badge>{((result.score / result.total) * 100).toFixed(2)}%</Badge></p>
-                <p className="text-gray-500">Status: <Badge variant={result.passed ? "default" : "destructive"}>{result.passed ? "Passed" : "Failed"}</Badge></p>
+                <div>
+                  <p className="text-gray-500">Score: <Badge>{((result.score / result.total) * 100).toFixed(2)}%</Badge></p>
+                </div>
+                <div className="mt-4">
+                  <p className="text-gray-500">Status: <Badge variant={result.passed ? "default" : "destructive"}>{result.passed ? "Passed" : "Failed"}</Badge></p>
+                </div>
               </div>
             ))}
           </div>
