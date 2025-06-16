@@ -400,7 +400,7 @@ app.use("/api/student", studentDashboardRoute);
 app.use('/api/exam', examRoute);
 app.use("/api/result", resultRoute);
 app.use("/api/exam", submitExamRoute);
-app.use("/api/results", allResultsRouter);
+app.use("/student/results", allResultsRouter);
 
 app.listen(PORT, () => {
   console.log(`ACTIVE ON  ${PORT}`);
