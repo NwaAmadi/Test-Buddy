@@ -5,20 +5,34 @@ import { AuthRequest } from "../../types/interface";
 import cors from "cors";
 import express from "express";
 
-
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 const router = Router();
 
-router.post("/:examId/submit", verifyToken, isStudent, async (req: AuthRequest, res: Response): Promise<void> => {
+router.post("/:examId/submit", verifyToken, isStudent, async (req: AuthRequest, res: Response) => {
   const { examId } = req.params;
-  if (!req.user) {
-    res.status(401).json({ error: "Unauthorized: user not found in request" });
+  const userId = req.user?.id;
+
+  const { data: submission, error: submissionError } = await supabase
+    .from("results")
+    .select("id")
+    .eq("exam_id", examId)
+    .eq("student_id", userId)
+    .single();
+
+  if (submissionError) {
+    res.status(500).json({ error: "Could not check exam submission status" });
     return;
   }
-  const userId = req.user.id;
+
+  if (submission) {
+    res.status(403).json({ error: "You have already submitted this exam" });
+    return;
+  }
+
+  // Proceed with exam submission logic
   const { answers } = req.body;
 
   const { data: exam, error: examError } = await supabase

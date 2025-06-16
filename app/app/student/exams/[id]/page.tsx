@@ -13,16 +13,30 @@ import { AlertCircle, Clock } from "lucide-react"
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER
 
-async function fetchExam(examId: string, accessToken: string) {
-  const res = await fetch(`${BACKEND_URL}/api/exam/${examId}`, {
-    headers: {
-      "Authorization": `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    },
-  })
-  if (!res.ok) throw new Error("Failed to fetch exam")
-  return res.json()
-}
+const fetchExam = async (examId: string, accessToken: string) => {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/exam/${examId}`, {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+      },
+    });
+
+    if (res.status === 403) {
+      throw new Error("You have already submitted this exam.");
+    }
+
+    if (!res.ok) {
+      throw new Error("Failed to fetch exam.");
+    }
+
+    return await res.json();
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : "An unknown error occurred.";
+    alert(errorMessage);
+    throw err;
+  }
+};
 
 export default function ExamPage({ params }: { params: { id: string } }) {
   const router = useRouter()
