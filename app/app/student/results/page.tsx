@@ -52,7 +52,7 @@ export default function ResultsPage() {
                 <div>
                   <p className="text-gray-500">Score: <Badge>{((result.score / result.total) * 100).toFixed(2)}%</Badge></p>
                 </div>
-                <div className="mt-2">
+                <div className="mt-1">
                   <p className="text-gray-500">Status: <Badge variant={result.passed ? "default" : "destructive"}>{result.passed ? "Passed" : "Failed"}</Badge></p>
                 </div>
               </div>
