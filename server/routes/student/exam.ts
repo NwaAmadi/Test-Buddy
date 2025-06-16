@@ -15,7 +15,7 @@ router.get("/:examId", verifyToken, isStudent, async (req: AuthRequest, res: Res
   const { examId } = req.params;
   const userId = req.user?.id;
 
-  // Checking if the student has already submitted the exam
+
   const { data: submission, error: submissionError } = await supabase
     .from("results")
     .select("id")

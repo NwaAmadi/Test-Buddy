@@ -24,7 +24,6 @@ export default function LoginPage() {
 
   const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER
 
-  // Step 1: Send OTP
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
@@ -57,7 +56,6 @@ export default function LoginPage() {
     }
   }
 
-  // Step 2: Verify OTP
   const handleOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
@@ -87,7 +85,6 @@ export default function LoginPage() {
       if (data.refreshToken) localStorage.setItem("refreshToken", data.refreshToken)
       if (data.user) localStorage.setItem("user", JSON.stringify(data.user))
 
-      // Redirect based on role
       if (data.user?.role === "admin") {
         router.push("/admin/dashboard")
       } else {

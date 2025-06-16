@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { LoadingPopup } from "@/components/ui/loading-popup"
+import { Modal } from "@/components/ui/Modal"
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER
 
 async function fetchResult(resultId: string, accessToken: string) {
-  const res = await fetch(`${BACKEND_URL}/api/result/${resultId}`, {
+  const res = await fetch(`${BACKEND_URL}/student/results/${resultId}`, {
     headers: {
       "Authorization": `Bearer ${accessToken}`,
       "Content-Type": "application/json",
@@ -32,8 +34,10 @@ export default function ResultPage({ params }: { params: { id: string } }) {
       .finally(() => setLoading(false))
   }, [params.id])
 
-  if (loading) return <div>Loading...</div>
-  if (!result) return <div>Result not found.</div>
+  if (loading) return <LoadingPopup message="Fetching your result..." />
+  if (!result) return <Modal title="Oops...!" description="Result not found, contact the admin" />
+
+  const scorePercentage = ((result.score / result.total) * 100).toFixed(2)
 
   return (
     <DashboardLayout role="student">
@@ -44,7 +48,7 @@ export default function ResultPage({ params }: { params: { id: string } }) {
         <CardContent>
           <div className="mb-4">
             <h2 className="text-xl font-bold">{result.examTitle}</h2>
-            <p className="text-gray-500">Score: <Badge>{result.score} / {result.total}</Badge></p>
+            <p className="text-gray-500">Score: <Badge>{scorePercentage}%</Badge></p>
             <p className="text-gray-500">Status: <Badge variant={result.passed ? "default" : "destructive"}>{result.passed ? "Passed" : "Failed"}</Badge></p>
           </div>
           <div>
