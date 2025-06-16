@@ -33,7 +33,6 @@ router.get("/:examId", verifyToken, isStudent, async (req: AuthRequest, res: Res
     return;
   }
 
-  // Fetch exam details
   const { data: exam, error: examError } = await supabase
     .from("exams")
     .select("id, title, date, time, duration")

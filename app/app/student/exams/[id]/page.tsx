@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AlertCircle, Clock } from "lucide-react"
+import { Modal } from "@/components/ui/Modal"
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER
 
@@ -20,23 +21,22 @@ const fetchExam = async (examId: string, accessToken: string) => {
       headers: {
         "Authorization": `Bearer ${accessToken}`,
       },
-    });
+    })
 
     if (res.status === 403) {
-      throw new Error("You have already submitted this exam.");
+      throw new Error("You have already submitted this exam.")
     }
 
     if (!res.ok) {
-      throw new Error("Failed to fetch exam.");
+      throw new Error("Failed to fetch exam.")
     }
 
-    return await res.json();
+    return await res.json()
   } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : "An unknown error occurred.";
-    alert(errorMessage);
-    throw err;
+    const errorMessage = err instanceof Error ? err.message : "An unknown error occurred."
+    throw new Error(errorMessage)
   }
-};
+}
 
 export default function ExamPage({ params }: { params: { id: string } }) {
   const router = useRouter()
@@ -47,7 +47,27 @@ export default function ExamPage({ params }: { params: { id: string } }) {
   const [tabSwitched, setTabSwitched] = useState(false)
   const [examSubmitted, setExamSubmitted] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
+
+  const handleAnswerSelect = (value: string) => {
+    setAnswers((prev: Record<string, string>) => ({
+      ...prev,
+      [exam.questions[currentQuestion].id]: value,
+    }))
+  }
+
+  const handlePrevious = () => {
+    if (currentQuestion > 0) {
+      setCurrentQuestion((prev: number) => prev - 1)
+    }
+  }
+
+  const handleNext = () => {
+    if (currentQuestion < exam.questions.length - 1) {
+      setCurrentQuestion((prev: number) => prev + 1)
+    }
+  }
 
   const handleSubmit = async () => {
     console.log("Exam ID:", params.id)
@@ -68,37 +88,21 @@ export default function ExamPage({ params }: { params: { id: string } }) {
       router.push(`/student/results/${data.resultId}`)
     } catch (err) {
       setExamSubmitted(false)
-      alert("Failed to submit exam. Please try again.")
+      setError("Failed to submit exam. Please try again.")
     }
-  }
-
-  const handleNext = () => {
-    if (currentQuestion < exam.questions.length - 1) {
-      setCurrentQuestion((prev) => prev + 1)
-    }
-  }
-
-  const handlePrevious = () => {
-    if (currentQuestion > 0) {
-      setCurrentQuestion((prev) => prev - 1)
-    }
-  }
-
-  const handleAnswerSelect = (value: string) => {
-    setAnswers((prev) => ({
-      ...prev,
-      [exam.questions[currentQuestion].id]: value,
-    }))
   }
 
   useEffect(() => {
     const accessToken = localStorage.getItem("accessToken") || ""
     fetchExam(params.id, accessToken)
-      .then((data) => {
+      .then((data: any) => {
         setExam(data)
         setTimeLeft((parseInt(data.duration, 10) || 60) * 60)
       })
-      .catch(() => setExam(null))
+      .catch((err: Error) => {
+        setError(err.message)
+        setLoading(false)
+      })
       .finally(() => setLoading(false))
   }, [params.id])
 
@@ -108,42 +112,34 @@ export default function ExamPage({ params }: { params: { id: string } }) {
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
   }
 
-  // Handle tab visibility change
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "hidden") {
-        setTabSwitched(true)
-      }
-    }
-    document.addEventListener("visibilitychange", handleVisibilityChange)
-    return () => document.removeEventListener("visibilitychange", handleVisibilityChange)
-  }, [])
+  if (loading) return <Modal title="Loading..." description="Please wait while the exam is being loaded." />
 
-  // Timer countdown
-  useEffect(() => {
-    if (loading || examSubmitted) return
-    if (timeLeft <= 0) {
-      handleSubmit()
-      return
-    }
-    timerRef.current = setInterval(() => {
-      setTimeLeft((prev) => prev - 1)
-    }, 1000)
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current)
-    }
-  }, [timeLeft, examSubmitted, loading])
+  if (error) return (
+    <Modal
+      title="Error"
+      description={error}
+      onClose={() => router.push("/student/dashboard")}
+    />
+  )
 
-  if (loading) return <div>Loading...</div>
-  if (!exam) return <div>Exam not found.</div>
-  if (!exam.questions || exam.questions.length === 0) return <div>No questions for this exam.</div>
+  if (!exam) return (
+    <Modal
+      title="Exam Not Found"
+      description="The requested exam could not be found."
+      onClose={() => router.push("/student/dashboard")}
+    />
+  )
 
-  // Calculate progress
+  if (!exam.questions || exam.questions.length === 0) return (
+    <Modal
+      title="No Questions"
+      description="There are no questions available for this exam."
+      onClose={() => router.push("/student/dashboard")}
+    />
+  )
+
   const progress = (currentQuestion / exam.questions.length) * 100
-
-  // Current question data
   const question = exam.questions[currentQuestion]
-  // Parse options if needed
   const options = typeof question.options === "string"
     ? JSON.parse(question.options)
     : question.options
