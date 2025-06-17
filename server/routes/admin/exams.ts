@@ -14,12 +14,15 @@ router.get("/", verifyToken, isAdmin, async (req, res) => {
   try {
     const { data: exams, error } = await supabase.from("exams").select("*")
     if (error) {
+      console.error("Supabase Error:", error) // Log Supabase error
       res.status(500).json({ error: error.message })
       return
     }
     res.json(exams)
-  } catch (err) {
-    res.status(500).json({ error: "An unexpected error occurred." })
+  } catch (err: unknown) {
+    console.error("Unexpected Error:", err) // Log unexpected errors
+    const error = err as Error
+    res.status(500).json({ error: error.message || "An unexpected error occurred." })
   }
 })
 
