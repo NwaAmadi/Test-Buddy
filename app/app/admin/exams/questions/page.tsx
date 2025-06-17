@@ -175,9 +175,26 @@ export default function QuestionsPage() {
       return;
     }
 
+    // Validate that all questions have text
     const invalidQuestions = questions.filter((q) => !q.text.trim());
     if (invalidQuestions.length > 0) {
       toast.error("All questions must have text.");
+      return;
+    }
+
+    // Validate that all options have text
+    const invalidOptions = questions.some((q) =>
+      q.options.some((option) => !option.text.trim())
+    );
+    if (invalidOptions) {
+      toast.error("All options must have text.");
+      return;
+    }
+
+    // Validate that a correct answer is selected for each question
+    const missingCorrectAnswers = questions.some((q) => !q.correct_answer);
+    if (missingCorrectAnswers) {
+      toast.error("Each question must have a correct answer selected.");
       return;
     }
 
