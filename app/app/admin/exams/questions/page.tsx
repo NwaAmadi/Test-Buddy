@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER
+const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER;
 
 type Option = {
   id: string;
@@ -32,21 +32,21 @@ export default function Page() {
       try {
         const res = await fetch(`${BACKEND_URL}/api/admin/exams`, {
           headers: {
-            "Authorization": `Bearer ${localStorage.getItem("accessToken")}`,
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
           },
         });
         const data = await res.json();
         setExams(data);
       } catch (err) {
         console.error("Failed to fetch exams:", err);
-        toast.error("Failed to load exams");
+        toast.error("Failed to load exams. Please try again.");
       }
     };
     fetchExams();
   }, []);
 
-  const handleExamSelection = async (examId: string) => {
-    const exam = exams.find(e => e.id === examId);
+  const handleExamSelection = (examId: string) => {
+    const exam = exams.find((e) => e.id === examId);
     if (exam) {
       setSelectedExam(exam);
       setQuestions([
@@ -61,11 +61,7 @@ export default function Page() {
     }
   };
 
-  const handleQuestionChange = (
-    index: number,
-    key: keyof Question,
-    value: string | number
-  ) => {
+  const handleQuestionChange = (index: number, key: keyof Question, value: string | number) => {
     const updatedQuestions = [...questions];
     updatedQuestions[index] = {
       ...updatedQuestions[index],
@@ -76,10 +72,10 @@ export default function Page() {
 
   const addQuestion = () => {
     if (questions.length >= 100) {
-      toast.error("Maximum 100 questions allowed per exam");
+      toast.error("Maximum 100 questions allowed per exam.");
       return;
     }
-    
+
     setQuestions([
       ...questions,
       {
@@ -93,7 +89,6 @@ export default function Page() {
 
   const removeQuestion = (index: number) => {
     const updatedQuestions = questions.filter((_, i) => i !== index);
-    // Reorder positions
     const reorderedQuestions = updatedQuestions.map((q, i) => ({
       ...q,
       position: i + 1,
@@ -103,33 +98,31 @@ export default function Page() {
 
   const handleSubmit = async () => {
     if (!selectedExam) {
-      toast.error("No exam selected");
+      toast.error("Please select an exam.");
       return;
     }
 
-    // Validate that all questions have text
-    const invalidQuestions = questions.filter(q => !q.text.trim());
+    const invalidQuestions = questions.filter((q) => !q.text.trim());
     if (invalidQuestions.length > 0) {
-      toast.error("All questions must have text");
+      toast.error("All questions must have text.");
       return;
     }
 
     try {
-      
       const formattedQuestions = questions.map((q) => {
         let parsedOptions;
         try {
           parsedOptions = JSON.parse(q.options);
         } catch (e) {
-          throw new Error(`Invalid JSON in question ${q.position} options`);
+          throw new Error(`Invalid JSON format in options for question ${q.position}.`);
         }
-        
+
         return {
           exam_id: selectedExam.id,
           text: q.text,
           question_type: q.question_type,
           position: q.position,
-          options: JSON.stringify(parsedOptions), // Keep as string for database
+          options: JSON.stringify(parsedOptions),
         };
       });
 
@@ -137,27 +130,23 @@ export default function Page() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("accessToken")}`,
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
-        body: JSON.stringify({
-          questions: formattedQuestions,
-        }),
+        body: JSON.stringify({ questions: formattedQuestions }),
       });
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || "Failed to insert questions");
+        throw new Error(errorData.message || "Failed to submit questions.");
       }
 
-      toast.success(`${questions.length} questions inserted successfully!`);
-      
-      // Reset form
+      toast.success(`${questions.length} questions added successfully!`);
       setShowQuestionForm(false);
       setSelectedExam(null);
       setQuestions([]);
     } catch (err) {
       console.error(err);
-      toast.error(err instanceof Error ? err.message : "Failed to insert questions");
+      toast.error(err instanceof Error ? err.message : "Failed to submit questions.");
     }
   };
 
@@ -167,7 +156,6 @@ export default function Page() {
     setQuestions([]);
   };
 
-  // Exam Selection Screen
   if (!showQuestionForm) {
     return (
       <div className="p-6 max-w-2xl mx-auto">
@@ -191,7 +179,6 @@ export default function Page() {
     );
   }
 
-  // Question Entry Screen
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-6">
@@ -200,9 +187,7 @@ export default function Page() {
           <p className="text-gray-600 mt-2">
             Adding questions to: <span className="font-semibold">{selectedExam?.name}</span>
           </p>
-          <p className="text-sm text-gray-500">
-            {questions.length}/100 questions added
-          </p>
+          <p className="text-sm text-gray-500">{questions.length}/100 questions added</p>
         </div>
         <Button variant="outline" onClick={goBack}>
           ← Back to Exam Selection
@@ -215,11 +200,7 @@ export default function Page() {
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">Question {index + 1}</h3>
               {questions.length > 1 && (
-                <Button 
-                  variant="destructive" 
-                  size="sm"
-                  onClick={() => removeQuestion(index)}
-                >
+                <Button variant="destructive" size="sm" onClick={() => removeQuestion(index)}>
                   Remove
                 </Button>
               )}
@@ -283,19 +264,11 @@ export default function Page() {
       </div>
 
       <div className="flex gap-4 mt-8">
-        <Button 
-          onClick={addQuestion} 
-          variant="outline"
-          disabled={questions.length >= 100}
-        >
+        <Button onClick={addQuestion} variant="outline" disabled={questions.length >= 100}>
           + Add Another Question
         </Button>
-        <Button 
-          onClick={handleSubmit} 
-          className="ml-auto"
-          disabled={questions.length === 0}
-        >
-          Submit {questions.length} Question{questions.length !== 1 ? 's' : ''}
+        <Button onClick={handleSubmit} className="ml-auto" disabled={questions.length === 0}>
+          Submit {questions.length} Question{questions.length !== 1 ? "s" : ""}
         </Button>
       </div>
     </div>
