@@ -17,20 +17,14 @@ type Question = {
   text: string;
   question_type: string;
   position: number;
-  options: string;
+  options: string; // stored as string in form, parsed to Option[] before sending
 };
 
 export default function Page() {
   const [exams, setExams] = useState<{ id: string; name: string }[]>([]);
-  const [selectedExamId, setSelectedExamId] = useState<string>("");
-  const [questions, setQuestions] = useState<Question[]>([
-    {
-      text: "",
-      question_type: "multiple_choice",
-      position: 1,
-      options: '[{"id":"a","text":""},{"id":"b","text":""},{"id":"c","text":""}]',
-    },
-  ]);
+  const [selectedExam, setSelectedExam] = useState<{ id: string; name: string } | null>(null);
+  const [showQuestionForm, setShowQuestionForm] = useState(false);
+  const [questions, setQuestions] = useState<Question[]>([]);
 
   useEffect(() => {
     const fetchExams = async () => {
@@ -40,10 +34,28 @@ export default function Page() {
         setExams(data);
       } catch (err) {
         console.error("Failed to fetch exams:", err);
+        toast.error("Failed to load exams");
       }
     };
     fetchExams();
   }, []);
+
+  const handleExamSelection = async (examId: string) => {
+    const exam = exams.find(e => e.id === examId);
+    if (exam) {
+      setSelectedExam(exam);
+      // Initialize with one empty question
+      setQuestions([
+        {
+          text: "",
+          question_type: "multiple_choice",
+          position: 1,
+          options: '[{"id":"a","text":""},{"id":"b","text":""},{"id":"c","text":""}]',
+        },
+      ]);
+      setShowQuestionForm(true);
+    }
+  };
 
   const handleQuestionChange = (
     index: number,
@@ -59,6 +71,11 @@ export default function Page() {
   };
 
   const addQuestion = () => {
+    if (questions.length >= 100) {
+      toast.error("Maximum 100 questions allowed per exam");
+      return;
+    }
+    
     setQuestions([
       ...questions,
       {
@@ -70,15 +87,47 @@ export default function Page() {
     ]);
   };
 
+  const removeQuestion = (index: number) => {
+    const updatedQuestions = questions.filter((_, i) => i !== index);
+    // Reorder positions
+    const reorderedQuestions = updatedQuestions.map((q, i) => ({
+      ...q,
+      position: i + 1,
+    }));
+    setQuestions(reorderedQuestions);
+  };
+
   const handleSubmit = async () => {
+    if (!selectedExam) {
+      toast.error("No exam selected");
+      return;
+    }
+
+    // Validate that all questions have text
+    const invalidQuestions = questions.filter(q => !q.text.trim());
+    if (invalidQuestions.length > 0) {
+      toast.error("All questions must have text");
+      return;
+    }
+
     try {
-      const formattedQuestions = questions.map((q) => ({
-        exam_id: selectedExamId,
-        text: q.text,
-        question_type: q.question_type,
-        position: q.position,
-        options: JSON.stringify(JSON.parse(q.options)), // Ensure options are a valid JSON string
-      }));
+      // Format questions to match the expected API format
+      const formattedQuestions = questions.map((q) => {
+        let parsedOptions;
+        try {
+          parsedOptions = JSON.parse(q.options);
+        } catch (e) {
+          throw new Error(`Invalid JSON in question ${q.position} options`);
+        }
+        
+        return {
+          exam_id: selectedExam.id,
+          text: q.text,
+          question_type: q.question_type,
+          position: q.position,
+          options: JSON.stringify(parsedOptions), // Keep as string for database
+        };
+      });
 
       const res = await fetch("/api/questions", {
         method: "POST",
@@ -86,91 +135,164 @@ export default function Page() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          exam_id: selectedExamId,
           questions: formattedQuestions,
         }),
       });
 
       if (!res.ok) {
-        throw new Error("Failed to insert questions.");
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to insert questions");
       }
 
-      toast.success("Questions inserted successfully!");
+      toast.success(`${questions.length} questions inserted successfully!`);
+      
+      // Reset form
+      setShowQuestionForm(false);
+      setSelectedExam(null);
+      setQuestions([]);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to insert questions.");
+      toast.error(err instanceof Error ? err.message : "Failed to insert questions");
     }
   };
 
-  return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Add Questions</h1>
+  const goBack = () => {
+    setShowQuestionForm(false);
+    setSelectedExam(null);
+    setQuestions([]);
+  };
 
-      <div className="mb-4">
-        <Label>Select Exam</Label>
-        <Select onValueChange={(value) => setSelectedExamId(value)}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Choose an exam" />
-          </SelectTrigger>
-          <SelectContent>
-            {exams.map((exam) => (
-              <SelectItem key={exam.id} value={exam.id}>
-                {exam.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {questions.map((question, index) => (
-        <div key={index} className="border p-4 mb-4 rounded-md shadow-sm">
-          <Label className="block mb-2">Question Text</Label>
-          <Textarea
-            value={question.text}
-            onChange={(e) => handleQuestionChange(index, "text", e.target.value)}
-            className="mb-4"
-          />
-
-          <Label className="block mb-2">Question Type</Label>
-          <Select
-            value={question.question_type}
-            onValueChange={(value) => handleQuestionChange(index, "question_type", value)}
-          >
-            <SelectTrigger className="w-full mb-4">
-              <SelectValue placeholder="Choose question type" />
+  // Exam Selection Screen
+  if (!showQuestionForm) {
+    return (
+      <div className="p-6 max-w-2xl mx-auto">
+        <h1 className="text-3xl font-bold mb-6">Select Exam</h1>
+        <div className="space-y-4">
+          <Label className="text-lg">Choose an exam to add questions to:</Label>
+          <Select onValueChange={handleExamSelection}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select an exam..." />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="multiple_choice">Multiple Choice</SelectItem>
-              <SelectItem value="true_false">True / False</SelectItem>
-              <SelectItem value="short_answer">Short Answer</SelectItem>
+              {exams.map((exam) => (
+                <SelectItem key={exam.id} value={exam.id}>
+                  {exam.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
-
-          <Label className="block mb-2">Position</Label>
-          <Input
-            type="number"
-            value={question.position}
-            onChange={(e) => handleQuestionChange(index, "position", Number(e.target.value))}
-            className="mb-4"
-          />
-
-          <Label className="block mb-2">Options (JSON format)</Label>
-          <Textarea
-            value={question.options}
-            onChange={(e) => handleQuestionChange(index, "options", e.target.value)}
-            placeholder='[{"id":"a","text":"Option A"},{"id":"b","text":"Option B"}]'
-            className="mb-4"
-          />
         </div>
-      ))}
+      </div>
+    );
+  }
 
-      <Button onClick={addQuestion} className="mb-4">
-        Add Another Question
-      </Button>
+  // Question Entry Screen
+  return (
+    <div className="p-6 max-w-4xl mx-auto">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-3xl font-bold">Add Questions</h1>
+          <p className="text-gray-600 mt-2">
+            Adding questions to: <span className="font-semibold">{selectedExam?.name}</span>
+          </p>
+          <p className="text-sm text-gray-500">
+            {questions.length}/100 questions added
+          </p>
+        </div>
+        <Button variant="outline" onClick={goBack}>
+          ← Back to Exam Selection
+        </Button>
+      </div>
 
-      <Button onClick={handleSubmit} disabled={!selectedExamId}>
-        Submit Questions
-      </Button>
+      <div className="space-y-6">
+        {questions.map((question, index) => (
+          <div key={index} className="border p-6 rounded-lg shadow-sm bg-white">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Question {index + 1}</h3>
+              {questions.length > 1 && (
+                <Button 
+                  variant="destructive" 
+                  size="sm"
+                  onClick={() => removeQuestion(index)}
+                >
+                  Remove
+                </Button>
+              )}
+            </div>
+
+            <div className="grid gap-4">
+              <div>
+                <Label className="block mb-2">Question Text</Label>
+                <Textarea
+                  value={question.text}
+                  onChange={(e) => handleQuestionChange(index, "text", e.target.value)}
+                  placeholder="Enter your question here..."
+                  className="min-h-[100px]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="block mb-2">Question Type</Label>
+                  <Select
+                    value={question.question_type}
+                    onValueChange={(value) => handleQuestionChange(index, "question_type", value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="multiple_choice">Multiple Choice</SelectItem>
+                      <SelectItem value="true_false">True / False</SelectItem>
+                      <SelectItem value="short_answer">Short Answer</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label className="block mb-2">Position</Label>
+                  <Input
+                    type="number"
+                    value={question.position}
+                    onChange={(e) => handleQuestionChange(index, "position", Number(e.target.value))}
+                    min="1"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label className="block mb-2">Options (JSON format)</Label>
+                <Textarea
+                  value={question.options}
+                  onChange={(e) => handleQuestionChange(index, "options", e.target.value)}
+                  placeholder='[{"id":"a","text":"Option A"},{"id":"b","text":"Option B"},{"id":"c","text":"Option C"}]'
+                  className="font-mono text-sm"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Format: {'[{"id":"a","text":"Option A"},{"id":"b","text":"Option B"}]'}
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex gap-4 mt-8">
+        <Button 
+          onClick={addQuestion} 
+          variant="outline"
+          disabled={questions.length >= 100}
+        >
+          + Add Another Question
+        </Button>
+        <Button 
+          onClick={handleSubmit} 
+          className="ml-auto"
+          disabled={questions.length === 0}
+        >
+          Submit {questions.length} Question{questions.length !== 1 ? 's' : ''}
+        </Button>
+      </div>
     </div>
   );
 }
