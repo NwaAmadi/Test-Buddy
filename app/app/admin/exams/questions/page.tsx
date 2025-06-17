@@ -13,6 +13,7 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER;
 type Option = {
   id: string;
   text: string;
+  correct?: boolean; // Added to handle correctAnswer
 };
 
 type Question = {
@@ -22,24 +23,28 @@ type Question = {
   options: string;
 };
 
+type Exam = {
+  id: string;
+  name: string;
+};
+
 export default function Page() {
-  const [exams, setExams] = useState<{ id: string; name: string }[]>([]);
-  const [selectedExam, setSelectedExam] = useState<{ id: string; name: string } | null>(null);
+  const [exams, setExams] = useState<Exam[]>([]);
+  const [selectedExam, setSelectedExam] = useState<Exam | null>(null);
   const [showQuestionForm, setShowQuestionForm] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [isLoading, setIsLoading] = useState(false); // New loading state
+  const [isLoading, setIsLoading] = useState(false);
 
+  // Fetch exams on component mount
   useEffect(() => {
     const fetchExams = async () => {
       if (!BACKEND_URL) {
-        console.error("BACKEND_URL is not defined in environment variables.");
         toast.error("Server configuration error. Please contact support.");
         return;
       }
 
       const token = localStorage.getItem("accessToken");
       if (!token) {
-        console.error("No access token found in localStorage.");
         toast.error("Please log in to access exams.");
         return;
       }
@@ -59,14 +64,10 @@ export default function Page() {
         }
 
         const data = await res.json();
-        console.log("Fetched exams:", data); // Debugging log
-
-        // Validate data structure
         if (!Array.isArray(data)) {
           throw new Error("Expected an array of exams, but received invalid data.");
         }
 
-        // Ensure data contains objects with id and name
         const validExams = data.filter(
           (exam: any) => typeof exam === "object" && exam.id && exam.name
         );
@@ -77,8 +78,7 @@ export default function Page() {
 
         setExams(validExams);
       } catch (err) {
-        console.error("Failed to fetch exams:", err);
-        toast.error(err instanceof Error ? err.message : "Failed to load exams. Please try again.");
+        toast.error(err instanceof Error ? err.message : "Failed to load exams.");
       } finally {
         setIsLoading(false);
       }
@@ -87,6 +87,7 @@ export default function Page() {
     fetchExams();
   }, []);
 
+  // Handle exam selection
   const handleExamSelection = (examId: string) => {
     const exam = exams.find((e) => e.id === examId);
     if (exam) {
@@ -96,7 +97,7 @@ export default function Page() {
           text: "",
           question_type: "multiple_choice",
           position: 1,
-          options: '[{"id":"a","text":""},{"id":"b","text":""},{"id":"c","text":""}]',
+          options: '[{"id":"a","text":"","correct":false},{"id":"b","text":"","correct":false},{"id":"c","text":"","correct":false}]',
         },
       ]);
       setShowQuestionForm(true);
@@ -105,6 +106,7 @@ export default function Page() {
     }
   };
 
+  // Handle question field changes
   const handleQuestionChange = (index: number, key: keyof Question, value: string | number) => {
     const updatedQuestions = [...questions];
     updatedQuestions[index] = {
@@ -114,6 +116,7 @@ export default function Page() {
     setQuestions(updatedQuestions);
   };
 
+  // Add a new question
   const addQuestion = () => {
     if (questions.length >= 100) {
       toast.error("Maximum 100 questions allowed per exam.");
@@ -126,11 +129,12 @@ export default function Page() {
         text: "",
         question_type: "multiple_choice",
         position: questions.length + 1,
-        options: '[{"id":"a","text":""},{"id":"b","text":""},{"id":"c","text":""}]',
+        options: '[{"id":"a","text":"","correct":false},{"id":"b","text":"","correct":false},{"id":"c","text":"","correct":false}]',
       },
     ]);
   };
 
+  // Remove a question
   const removeQuestion = (index: number) => {
     const updatedQuestions = questions.filter((_, i) => i !== index);
     const reorderedQuestions = updatedQuestions.map((q, i) => ({
@@ -140,6 +144,7 @@ export default function Page() {
     setQuestions(reorderedQuestions);
   };
 
+  // Submit questions to the backend
   const handleSubmit = async () => {
     if (!selectedExam) {
       toast.error("Please select an exam.");
@@ -154,11 +159,17 @@ export default function Page() {
 
     try {
       const formattedQuestions = questions.map((q) => {
-        let parsedOptions;
+        let parsedOptions: Option[];
         try {
           parsedOptions = JSON.parse(q.options);
         } catch (e) {
           throw new Error(`Invalid JSON format in options for question ${q.position}.`);
+        }
+
+        // Validate options
+        const invalidOptions = parsedOptions.filter((opt) => !opt.text.trim());
+        if (invalidOptions.length > 0) {
+          throw new Error(`All options for question ${q.position} must have text.`);
         }
 
         return {
@@ -184,22 +195,23 @@ export default function Page() {
         throw new Error(errorData.message || "Failed to submit questions.");
       }
 
-      toast.success(`${questions.length} questions added successfully!`);
+      toast.success(`${questions.length} question${questions.length !== 1 ? "s" : ""} added successfully!`);
       setShowQuestionForm(false);
       setSelectedExam(null);
       setQuestions([]);
     } catch (err) {
-      console.error(err);
       toast.error(err instanceof Error ? err.message : "Failed to submit questions.");
     }
   };
 
+  // Go back to exam selection
   const goBack = () => {
     setShowQuestionForm(false);
     setSelectedExam(null);
     setQuestions([]);
   };
 
+  // Exam selection screen
   if (!showQuestionForm) {
     return (
       <div className="p-6 max-w-2xl mx-auto">
@@ -229,6 +241,7 @@ export default function Page() {
     );
   }
 
+  // Question addition screen
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-6">
@@ -301,11 +314,11 @@ export default function Page() {
                 <Textarea
                   value={question.options}
                   onChange={(e) => handleQuestionChange(index, "options", e.target.value)}
-                  placeholder='[{"id":"a","text":"Option A"},{"id":"b","text":"Option B"},{"id":"c","text":"Option C"}]'
+                  placeholder='[{"id":"a","text":"Option A","correct":false},{"id":"b","text":"Option B","correct":false},{"id":"c","text":"Option C","correct":false}]'
                   className="font-mono text-sm"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Format: {'[{"id":"a","text":"Option A"},{"id":"b","text":"Option B"}]'}
+                  Format: {'[{"id":"a","text":"Option A","correct":false},{"id":"b","text":"Option B","correct":true}]'}
                 </p>
               </div>
             </div>
