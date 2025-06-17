@@ -12,7 +12,7 @@ const router = Router()
 
 router.get("/", verifyToken, isAdmin, async (req: Request, res: Response): Promise<void> => {
   try {
-    const { data: exams, error } = await supabase.from("exams").select("*")
+    const { data: exams, error } = await supabase.from("exams").select("*").eq("deleted", false);
     if (error) {
       console.error("Supabase Error:", error)
       res.status(500).json({ error: error.message })
@@ -56,44 +56,17 @@ router.post("/", verifyToken, isAdmin, async (req: Request, res: Response): Prom
   }
 })
 
-router.delete(
-  "/:id",
-  verifyToken,
-  isAdmin,
-  async (req: Request, res: Response): Promise<void> => {
-    const { id } = req.params
-
-    try {
-      // Trying to delete related questions
-      const { error: questionError } = await supabase
-        .from("questions")
-        .delete()
-        .eq("exam_id", id)
-
-      if (questionError) {
-        console.error("Failed to delete related questions:", questionError.message)
-        throw questionError
-      }
-
-      
-      const { error: examError } = await supabase
-        .from("exams")
-        .delete()
-        .eq("id", id)
-
-      if (examError) {
-        console.error("Failed to delete exam:", examError.message)
-        throw examError
-      }
-
-      res.status(204).send()
-    } catch (err: unknown) {
-      const error = err as Error
-      console.error("Delete Error:", error.message)
-      res.status(500).json({ error: error.message || "Unexpected error." })
-    }
+router.delete("/:id", verifyToken, isAdmin, async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params
+  try {
+    const { error } = await supabase.from("exams").update({ deleted: true }).eq("id", id)
+    if (error) throw error
+    res.status(204).send()
+  } catch (err: unknown) {
+    const error = err as Error
+    console.error("Delete Error:", error.message)
+    res.status(500).json({ error: error.message || "Unexpected error." })
   }
-)
-
+})
 
 export default router
