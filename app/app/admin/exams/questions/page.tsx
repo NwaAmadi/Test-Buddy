@@ -17,7 +17,7 @@ type Question = {
   text: string;
   question_type: string;
   position: number;
-  options: string; // stored as string in form, parsed to Option[] before sending
+  options: string;
 };
 
 export default function Page() {
@@ -73,8 +73,11 @@ export default function Page() {
   const handleSubmit = async () => {
     try {
       const formattedQuestions = questions.map((q) => ({
-        ...q,
-        options: JSON.parse(q.options),
+        exam_id: selectedExamId,
+        text: q.text,
+        question_type: q.question_type,
+        position: q.position,
+        options: JSON.stringify(JSON.parse(q.options)), // Ensure options are a valid JSON string
       }));
 
       const res = await fetch("/api/questions", {
