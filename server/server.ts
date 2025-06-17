@@ -28,6 +28,10 @@ import resultRoute from "./routes/student/result";
 import submitExamRoute from "./routes/student/submitExam";
 import allResultsRouter from "./routes/student/allResults";
 
+import examsRoutes from "./routes/admin/exams"
+import questionsRoutes from "./routes/admin/questions"
+import resultsRoutes from "./routes/admin/results"
+
 const app = express();
 
 app.use(cors());
@@ -402,6 +406,10 @@ app.use('/api/exam', examRoute);
 app.use("/api/result", resultRoute);
 app.use("/api/exam", submitExamRoute);
 app.use("/student/results", allResultsRouter);
+
+app.use("/api/admin/exams", examsRoutes)
+app.use("/api/admin/questions", questionsRoutes)
+app.use("/api/admin/results", resultsRoutes)
 
 app.listen(PORT, () => {
   console.log(`ACTIVE ON  ${PORT}`);

@@ -82,3 +82,15 @@ export interface StudentExamResult {
   answers: any; 
   exam_title: string;
 }
+export interface ExamResult {
+  student_id: string;
+  first_name: string;
+  last_name: string;
+  score: number;
+  total: number;
+  passed: boolean;
+  submitted_at: string;
+}
+export interface GetExamResultsParams {
+  exam_id: string;
+}
