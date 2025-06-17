@@ -46,7 +46,7 @@ export default function Page() {
 
       setIsLoading(true);
       try {
-        const res = await fetch(`${BACKEND_URL}/api/admin/exams`, {
+        const res = await fetch(`${BACKEND_URL}/api/admin/exam`, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
