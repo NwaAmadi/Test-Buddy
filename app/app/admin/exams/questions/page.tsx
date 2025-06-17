@@ -98,21 +98,24 @@ export default function QuestionsPage() {
     }
   };
 
-  // Handle question field changes
+  // Handle question field changes with defensive programming
   const handleQuestionChange = (index: number, key: keyof Question, value: string | number) => {
     const updatedQuestions = [...questions];
     updatedQuestions[index] = {
       ...updatedQuestions[index],
-      [key]: value,
+      [key]: key === "text" ? (value || "") : value, // Ensure text is never null/undefined
     };
     setQuestions(updatedQuestions);
   };
 
-  // Handle option field changes
+  // Handle option field changes with defensive programming
   const handleOptionChange = (questionIndex: number, optionIndex: number, key: keyof Option, value: string) => {
     const updatedQuestions = [...questions];
     const options = [...updatedQuestions[questionIndex].options];
-    options[optionIndex] = { ...options[optionIndex], [key]: value };
+    options[optionIndex] = { 
+      ...options[optionIndex], 
+      [key]: value || "" // Ensure option values are never null/undefined
+    };
     updatedQuestions[questionIndex].options = options;
     setQuestions(updatedQuestions);
   };
@@ -130,6 +133,13 @@ export default function QuestionsPage() {
   const removeOption = (questionIndex: number, optionIndex: number) => {
     const updatedQuestions = [...questions];
     const options = [...updatedQuestions[questionIndex].options];
+    
+    // Don't allow removing if only one option remains
+    if (options.length <= 1) {
+      toast.error("Each question must have at least one option.");
+      return;
+    }
+    
     options.splice(optionIndex, 1);
     updatedQuestions[questionIndex].options = options;
     setQuestions(updatedQuestions);
@@ -168,23 +178,23 @@ export default function QuestionsPage() {
     setQuestions(reorderedQuestions);
   };
 
-  // Submit questions to the backend
+  // Submit questions to the backend with improved validation
   const handleSubmit = async () => {
     if (!selectedExam) {
       toast.error("Please select an exam.");
       return;
     }
 
-    // Validate that all questions have text
-    const invalidQuestions = questions.filter((q) => !q.text.trim());
+    // Improved validation - handle null/undefined values
+    const invalidQuestions = questions.filter((q) => !q.text || !q.text.trim());
     if (invalidQuestions.length > 0) {
       toast.error("All questions must have text.");
       return;
     }
 
-    // Validate that all options have text
+    // Improved option validation
     const invalidOptions = questions.some((q) =>
-      q.options.some((option) => !option.text.trim())
+      q.options.some((option) => !option.text || !option.text.trim())
     );
     if (invalidOptions) {
       toast.error("All options must have text.");
@@ -198,14 +208,30 @@ export default function QuestionsPage() {
       return;
     }
 
+    // Validate that correct answers match existing option IDs
+    const invalidCorrectAnswers = questions.some((q) => 
+      !q.options.some(option => option.id === q.correct_answer)
+    );
+    if (invalidCorrectAnswers) {
+      toast.error("Some questions have invalid correct answers selected.");
+      return;
+    }
+
     try {
+      // Ensure all text fields are properly trimmed and not null
       const formattedQuestions = questions.map((q) => ({
-        text: q.text,
+        text: (q.text || "").trim(), // Ensure text is never null/undefined
         question_type: q.question_type,
         position: q.position,
-        options: q.options,
+        options: q.options.map(option => ({
+          ...option,
+          text: (option.text || "").trim() // Ensure option text is never null/undefined
+        })),
         correct_answer: q.correct_answer,
       }));
+
+      // Debug log to see what's being sent
+      console.log("Formatted questions being sent:", formattedQuestions);
 
       const res = await fetch(`${BACKEND_URL}/api/admin/questions/${selectedExam.id}`, {
         method: "POST",
@@ -225,6 +251,7 @@ export default function QuestionsPage() {
       setSelectedExam(null);
       setQuestions([]);
     } catch (err) {
+      console.error("Submit error:", err);
       toast.error(err instanceof Error ? err.message : "Failed to submit questions.");
     }
   };
@@ -253,7 +280,25 @@ export default function QuestionsPage() {
         </div>
       ) : (
         <div>
-          <h1 className="text-3xl font-bold mb-6">Add Questions</h1>
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-3xl font-bold">Add Questions</h1>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setSelectedExam(null);
+                setQuestions([]);
+              }}
+            >
+              Back to Exam Selection
+            </Button>
+          </div>
+          
+          <div className="mb-4 p-4 bg-blue-50 rounded-lg">
+            <p className="text-sm text-blue-700">
+              <strong>Selected Exam:</strong> {selectedExam.title}
+            </p>
+          </div>
+
           <div className="space-y-6">
             {questions.map((question, index) => (
               <div key={index} className="border p-6 rounded-lg shadow-sm bg-white">
@@ -270,7 +315,7 @@ export default function QuestionsPage() {
                   <div>
                     <Label>Question Text</Label>
                     <Textarea
-                      value={question.text}
+                      value={question.text || ""} // Defensive programming
                       onChange={(e) => handleQuestionChange(index, "text", e.target.value)}
                       placeholder="Enter your question here..."
                     />
@@ -280,24 +325,26 @@ export default function QuestionsPage() {
                     {question.options.map((option, optionIndex) => (
                       <div key={optionIndex} className="flex items-center gap-4 mb-2">
                         <Input
-                          value={option.id}
+                          value={option.id || ""} // Defensive programming
                           onChange={(e) => handleOptionChange(index, optionIndex, "id", e.target.value)}
                           placeholder="Option ID (e.g., a, b, c)"
                           className="w-16"
                         />
                         <Input
-                          value={option.text}
+                          value={option.text || ""} // Defensive programming
                           onChange={(e) => handleOptionChange(index, optionIndex, "text", e.target.value)}
                           placeholder="Option Text"
                           className="flex-1"
                         />
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => removeOption(index, optionIndex)}
-                        >
-                          Remove
-                        </Button>
+                        {question.options.length > 1 && (
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => removeOption(index, optionIndex)}
+                          >
+                            Remove
+                          </Button>
+                        )}
                       </div>
                     ))}
                     <Button variant="outline" size="sm" onClick={() => addOption(index)}>
@@ -313,7 +360,9 @@ export default function QuestionsPage() {
                       {question.options.map((option) => (
                         <div key={option.id} className="flex items-center gap-2">
                           <RadioGroupItem value={option.id} id={`correct-${index}-${option.id}`} />
-                          <Label htmlFor={`correct-${index}-${option.id}`}>{option.text || `Option ${option.id}`}</Label>
+                          <Label htmlFor={`correct-${index}-${option.id}`}>
+                            {option.text || `Option ${option.id}`}
+                          </Label>
                         </div>
                       ))}
                     </RadioGroup>
@@ -326,7 +375,9 @@ export default function QuestionsPage() {
             <Button variant="outline" onClick={addQuestion}>
               + Add Question
             </Button>
-            <Button onClick={handleSubmit}>Submit Questions</Button>
+            <Button onClick={handleSubmit}>
+              Submit Questions ({questions.length})
+            </Button>
           </div>
         </div>
       )}
