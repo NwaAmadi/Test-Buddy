@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+
 const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER;
 
 type Option = {
@@ -26,22 +27,63 @@ export default function Page() {
   const [selectedExam, setSelectedExam] = useState<{ id: string; name: string } | null>(null);
   const [showQuestionForm, setShowQuestionForm] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [isLoading, setIsLoading] = useState(false); // New loading state
 
   useEffect(() => {
     const fetchExams = async () => {
+      if (!BACKEND_URL) {
+        console.error("BACKEND_URL is not defined in environment variables.");
+        toast.error("Server configuration error. Please contact support.");
+        return;
+      }
+
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        console.error("No access token found in localStorage.");
+        toast.error("Please log in to access exams.");
+        return;
+      }
+
+      setIsLoading(true);
       try {
         const res = await fetch(`${BACKEND_URL}/api/admin/exams`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
         });
+
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.message || `HTTP error: ${res.status}`);
+        }
+
         const data = await res.json();
-        setExams(data);
+        console.log("Fetched exams:", data); // Debugging log
+
+        // Validate data structure
+        if (!Array.isArray(data)) {
+          throw new Error("Expected an array of exams, but received invalid data.");
+        }
+
+        // Ensure data contains objects with id and name
+        const validExams = data.filter(
+          (exam: any) => typeof exam === "object" && exam.id && exam.name
+        );
+
+        if (validExams.length === 0) {
+          toast.warning("No valid exams found.");
+        }
+
+        setExams(validExams);
       } catch (err) {
         console.error("Failed to fetch exams:", err);
-        toast.error("Failed to load exams. Please try again.");
+        toast.error(err instanceof Error ? err.message : "Failed to load exams. Please try again.");
+      } finally {
+        setIsLoading(false);
       }
     };
+
     fetchExams();
   }, []);
 
@@ -58,6 +100,8 @@ export default function Page() {
         },
       ]);
       setShowQuestionForm(true);
+    } else {
+      toast.error("Selected exam not found.");
     }
   };
 
@@ -162,18 +206,24 @@ export default function Page() {
         <h1 className="text-3xl font-bold mb-6">Select Exam</h1>
         <div className="space-y-4">
           <Label className="text-lg">Choose an exam to add questions to:</Label>
-          <Select onValueChange={handleExamSelection}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select an exam..." />
-            </SelectTrigger>
-            <SelectContent>
-              {exams.map((exam) => (
-                <SelectItem key={exam.id} value={exam.id}>
-                  {exam.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {isLoading ? (
+            <p>Loading exams...</p>
+          ) : exams.length === 0 ? (
+            <p>No exams available. Please try again later.</p>
+          ) : (
+            <Select onValueChange={handleExamSelection}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select an exam..." />
+              </SelectTrigger>
+              <SelectContent>
+                {exams.map((exam) => (
+                  <SelectItem key={exam.id} value={exam.id}>
+                    {exam.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
       </div>
     );
