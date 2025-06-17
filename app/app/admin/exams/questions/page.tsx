@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER
 
 type Option = {
   id: string;
@@ -17,7 +18,7 @@ type Question = {
   text: string;
   question_type: string;
   position: number;
-  options: string; // stored as string in form, parsed to Option[] before sending
+  options: string;
 };
 
 export default function Page() {
@@ -29,7 +30,11 @@ export default function Page() {
   useEffect(() => {
     const fetchExams = async () => {
       try {
-        const res = await fetch("/api/exams");
+        const res = await fetch(`${BACKEND_URL}/api/admin/exams`, {
+          headers: {
+            "Authorization": `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        });
         const data = await res.json();
         setExams(data);
       } catch (err) {
@@ -44,7 +49,6 @@ export default function Page() {
     const exam = exams.find(e => e.id === examId);
     if (exam) {
       setSelectedExam(exam);
-      // Initialize with one empty question
       setQuestions([
         {
           text: "",
@@ -111,7 +115,7 @@ export default function Page() {
     }
 
     try {
-      // Format questions to match the expected API format
+      
       const formattedQuestions = questions.map((q) => {
         let parsedOptions;
         try {
@@ -129,10 +133,11 @@ export default function Page() {
         };
       });
 
-      const res = await fetch("/api/questions", {
+      const res = await fetch(`${BACKEND_URL}/api/admin/questions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("accessToken")}`,
         },
         body: JSON.stringify({
           questions: formattedQuestions,
