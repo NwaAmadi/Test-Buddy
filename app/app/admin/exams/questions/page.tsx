@@ -69,7 +69,7 @@ export default function Page() {
         }
 
         const validExams = data.filter(
-          (exam: any) => typeof exam === "object" && exam.id && exam.name
+          (exam: any) => typeof exam === "object" && exam.id && exam.title
         );
 
         if (validExams.length === 0) {
