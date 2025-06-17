@@ -78,5 +78,5 @@ export default function AdminDashboard() {
         </CardContent>
       </Card>
     </DashboardLayout>
-  )
+  );
 }
