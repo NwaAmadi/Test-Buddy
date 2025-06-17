@@ -29,7 +29,7 @@ export default function AdminDashboard() {
 
   const fetchExams = async () => {
     const accessToken = localStorage.getItem("accessToken") || ""
-    const res = await fetch(`${BACKEND_URL}/api/admin/exams`, {
+    const res = await fetch(`${BACKEND_URL}/api/admin/exam`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
