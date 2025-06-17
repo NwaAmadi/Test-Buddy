@@ -20,6 +20,7 @@ import {
   GraduationCap,
   Video,
   FileSpreadsheet,
+  NotebookPen,
 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -80,6 +81,11 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
       title: "Results",
       href: "/admin/results",
       icon: FileSpreadsheet,
+    },
+    {
+      title: "Questions",
+      href: "/admin/exams/questions",
+      icon: NotebookPen,
     },
     {
       title: "Settings",
