@@ -63,7 +63,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
     },
     {
       title: "Exams",
-      href: "/admin/exams",
+      href: "/admin/exams/create",
       icon: FileText,
     },
     {
@@ -77,8 +77,8 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
       icon: Video,
     },
     {
-      title: "Reports",
-      href: "/admin/reports",
+      title: "Results",
+      href: "/admin/results",
       icon: FileSpreadsheet,
     },
     {
