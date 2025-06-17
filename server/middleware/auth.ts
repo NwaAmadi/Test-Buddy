@@ -46,7 +46,7 @@ export const isAdmin = async (req: AuthRequest, res: Response, next: NextFunctio
     return;
   }
 
-  const access_code = req.body.accessCode;
+  /*const access_code = req.body.accessCode;
 
   if (!access_code) {
     res.status(401).json({ message: 'ACCESS CODE REQUIRED!' });
@@ -58,7 +58,7 @@ export const isAdmin = async (req: AuthRequest, res: Response, next: NextFunctio
   if (!trueCode) {
     res.status(401).json({ message: 'INVALID ACCESS CODE!' });
     return;
-  }
+  }*/
 
   next();
 };
