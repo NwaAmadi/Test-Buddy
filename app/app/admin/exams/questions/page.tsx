@@ -188,7 +188,7 @@ export default function QuestionsPage() {
         options: JSON.stringify(q.options),
       }));
 
-      const res = await fetch(`${BACKEND_URL}/api/admin/questions`, {
+      const res = await fetch(`${BACKEND_URL}/api/admin/questions/${selectedExam.id}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
