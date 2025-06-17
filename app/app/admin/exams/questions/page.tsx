@@ -181,11 +181,11 @@ export default function QuestionsPage() {
 
     try {
       const formattedQuestions = questions.map((q) => ({
-        exam_id: selectedExam.id,
         text: q.text,
         question_type: q.question_type,
         position: q.position,
-        options: JSON.stringify(q.options),
+        options: q.options,
+        correct_answer: q.options.find((o) => o.correct)?.id || null,
       }));
 
       const res = await fetch(`${BACKEND_URL}/api/admin/questions/${selectedExam.id}`, {
@@ -194,12 +194,12 @@ export default function QuestionsPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
-        body: JSON.stringify({ questions: formattedQuestions }),
+        body: JSON.stringify(formattedQuestions),
       });
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || "Failed to submit questions.");
+        throw new Error(errorData.error || "Failed to submit questions.");
       }
 
       toast.success(`${questions.length} question${questions.length !== 1 ? "s" : ""} added successfully!`);
@@ -209,7 +209,6 @@ export default function QuestionsPage() {
       toast.error(err instanceof Error ? err.message : "Failed to submit questions.");
     }
   };
-
   return (
     <div className="p-6 max-w-4xl mx-auto">
       {!selectedExam ? (
