@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER;
@@ -14,6 +14,7 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER;
 type Option = {
   id: string;
   text: string;
+  correct?: boolean;
 };
 
 type Question = {
@@ -21,7 +22,6 @@ type Question = {
   question_type: string;
   position: number;
   options: Option[];
-  correct_answer: string | null; // Stores the ID of the correct option
 };
 
 type Exam = {
@@ -86,11 +86,10 @@ export default function QuestionsPage() {
           question_type: "multiple_choice",
           position: 1,
           options: [
-            { id: "a", text: "" },
-            { id: "b", text: "" },
-            { id: "c", text: "" },
+            { id: "a", text: "", correct: false },
+            { id: "b", text: "", correct: false },
+            { id: "c", text: "", correct: false },
           ],
-          correct_answer: null,
         },
       ]);
     } else {
@@ -109,7 +108,7 @@ export default function QuestionsPage() {
   };
 
   // Handle option field changes
-  const handleOptionChange = (questionIndex: number, optionIndex: number, key: keyof Option, value: string) => {
+  const handleOptionChange = (questionIndex: number, optionIndex: number, key: keyof Option, value: string | boolean) => {
     const updatedQuestions = [...questions];
     const options = [...updatedQuestions[questionIndex].options];
     options[optionIndex] = { ...options[optionIndex], [key]: value };
@@ -121,7 +120,7 @@ export default function QuestionsPage() {
   const addOption = (questionIndex: number) => {
     const updatedQuestions = [...questions];
     const options = [...updatedQuestions[questionIndex].options];
-    options.push({ id: String.fromCharCode(97 + options.length), text: "" });
+    options.push({ id: String.fromCharCode(97 + options.length), text: "", correct: false });
     updatedQuestions[questionIndex].options = options;
     setQuestions(updatedQuestions);
   };
@@ -149,11 +148,10 @@ export default function QuestionsPage() {
         question_type: "multiple_choice",
         position: questions.length + 1,
         options: [
-          { id: "a", text: "" },
-          { id: "b", text: "" },
-          { id: "c", text: "" },
+          { id: "a", text: "", correct: false },
+          { id: "b", text: "", correct: false },
+          { id: "c", text: "", correct: false },
         ],
-        correct_answer: null,
       },
     ]);
   };
@@ -187,7 +185,7 @@ export default function QuestionsPage() {
         question_type: q.question_type,
         position: q.position,
         options: q.options,
-        correct_answer: q.correct_answer,
+        correct_answer: q.options.find((o) => o.correct)?.id || null,
       }));
 
       const res = await fetch(`${BACKEND_URL}/api/admin/questions/${selectedExam.id}`, {
@@ -211,7 +209,6 @@ export default function QuestionsPage() {
       toast.error(err instanceof Error ? err.message : "Failed to submit questions.");
     }
   };
-
   return (
     <div className="p-6 max-w-4xl mx-auto">
       {!selectedExam ? (
@@ -274,6 +271,12 @@ export default function QuestionsPage() {
                           placeholder="Option Text"
                           className="flex-1"
                         />
+                        <Checkbox
+                          checked={option.correct || false}
+                          onCheckedChange={(checked) =>
+                            handleOptionChange(index, optionIndex, "correct", checked as boolean)
+                          }
+                        />
                         <Button
                           variant="destructive"
                           size="sm"
@@ -286,20 +289,6 @@ export default function QuestionsPage() {
                     <Button variant="outline" size="sm" onClick={() => addOption(index)}>
                       + Add Option
                     </Button>
-                  </div>
-                  <div>
-                    <Label>Correct Answer</Label>
-                    <RadioGroup
-                      value={question.correct_answer || ""}
-                      onValueChange={(value) => handleQuestionChange(index, "correct_answer", value)}
-                    >
-                      {question.options.map((option) => (
-                        <div key={option.id} className="flex items-center gap-2">
-                          <RadioGroupItem value={option.id} id={`correct-${index}-${option.id}`} />
-                          <Label htmlFor={`correct-${index}-${option.id}`}>{option.text || `Option ${option.id}`}</Label>
-                        </div>
-                      ))}
-                    </RadioGroup>
                   </div>
                 </div>
               </div>
