@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import Link from "next/link"
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER
@@ -12,31 +13,48 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER
 export default function AdminDashboard() {
   const [userName, setUserName] = useState("")
   const [exams, setExams] = useState<any[]>([])
+  const [openDialog, setOpenDialog] = useState(false)
+  const [selectedExam, setSelectedExam] = useState<any | null>(null)
+  const router = useRouter()
 
   useEffect(() => {
-    // Fetch user details from localStorage
     const userStr = localStorage.getItem("user")
     if (userStr) {
       const user = JSON.parse(userStr)
       setUserName(user.first_name)
     }
 
-    // Fetch exams from the backend
-    const fetchExams = async () => {
-      const accessToken = localStorage.getItem("accessToken") || ""
-      const res = await fetch(`${BACKEND_URL}/api/admin/exams`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      })
-      if (res.ok) {
-        const data = await res.json()
-        setExams(data)
-      }
-    }
-
     fetchExams()
   }, [])
+
+  const fetchExams = async () => {
+    const accessToken = localStorage.getItem("accessToken") || ""
+    const res = await fetch(`${BACKEND_URL}/api/admin/exams`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    })
+    if (res.ok) {
+      const data = await res.json()
+      setExams(data)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!selectedExam) return
+    const accessToken = localStorage.getItem("accessToken") || ""
+    const res = await fetch(`${BACKEND_URL}/api/admin/exams/${selectedExam.id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    })
+
+    if (res.ok) {
+      setExams((prev) => prev.filter((exam) => exam.id !== selectedExam.id))
+      setOpenDialog(false)
+    }
+  }
 
   return (
     <DashboardLayout role="admin">
@@ -69,14 +87,39 @@ export default function AdminDashboard() {
                     {exam.date} at {exam.time} • {exam.duration} minutes
                   </p>
                 </div>
-                <Button variant="outline" size="sm" asChild>
-                  <Link href={`/admin/exams/${exam.id}`}>View</Link>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => {
+                    setSelectedExam(exam)
+                    setOpenDialog(true)
+                  }}
+                >
+                  Delete
                 </Button>
               </div>
             ))}
           </div>
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Modal */}
+      <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+        <DialogContent className="backdrop-blur">
+          <DialogHeader>
+            <DialogTitle>Are you absolutely sure?</DialogTitle>
+          </DialogHeader>
+          <p>This action cannot be undone. This will permanently delete the exam.</p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpenDialog(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDelete}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
-  );
+  )
 }
