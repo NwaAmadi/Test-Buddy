@@ -31,8 +31,9 @@ router.get('/dashboard', verifyToken, isStudent, async (req: AuthRequest, res: R
 
     const { data: examsRaw, error: examsError } = await supabase
       .from('exams')
-      .select('id, title, date, time, duration')
+      .select('id, title, date, time, duration, status')
       .gte('date', today)
+      .eq("deleted", false)
       .order('date', { ascending: true });
 
     if (examsError || !examsRaw) {
@@ -46,7 +47,7 @@ router.get('/dashboard', verifyToken, isStudent, async (req: AuthRequest, res: R
       date: formatDate(exam.date),
       time: formatTime(exam.time),
       duration: formatDuration(exam.duration),
-      status: "Not Started",
+      status: exam.status,
     }));
 
     res.json({ availableExams });
