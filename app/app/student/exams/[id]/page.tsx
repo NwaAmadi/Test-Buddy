@@ -75,7 +75,7 @@ export default function ExamPage({ params }: { params: { id: string } }) {
     setExamSubmitted(true)
     try {
       const accessToken = localStorage.getItem("accessToken") || ""
-      const res = await fetch(`${BACKEND_URL}/api/exam/${params.id}/submit`, {
+      const res = await fetch(`${BACKEND_URL}/api/exam-submission/${params.id}/submit`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${accessToken}`,
