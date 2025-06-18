@@ -74,14 +74,22 @@ export default function ExamPage({ params }: { params: { id: string } }) {
     setExamSubmitted(true)
     try {
       const accessToken = localStorage.getItem("accessToken") || ""
+
+      // Fill in unanswered questions with empty strings
+      const allAnswers: Record<string, string> = {}
+      exam.questions.forEach((q: any) => {
+        allAnswers[q.id] = answers[q.id] || ""
+      })
+
       const res = await fetch(`${BACKEND_URL}/api/exam-submission/${params.id}/submit`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ answers }),
+        body: JSON.stringify({ answers: allAnswers }),
       })
+
       if (!res.ok) throw new Error("Submission failed")
       await res.json()
       router.push(`/student/results/`)
@@ -91,7 +99,6 @@ export default function ExamPage({ params }: { params: { id: string } }) {
     }
   }
 
- 
   useEffect(() => {
     const accessToken = localStorage.getItem("accessToken") || ""
     fetchExam(params.id, accessToken)
@@ -106,7 +113,6 @@ export default function ExamPage({ params }: { params: { id: string } }) {
       .finally(() => setLoading(false))
   }, [params.id])
 
-  
   useEffect(() => {
     if (!timeLeft) return
 
@@ -124,12 +130,10 @@ export default function ExamPage({ params }: { params: { id: string } }) {
     return () => clearInterval(timerRef.current!)
   }, [timeLeft])
 
-  // 
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.hidden) {
         setTabSwitched(true)
-        // TODO: Log this incident to the server
       }
     }
 
@@ -137,20 +141,18 @@ export default function ExamPage({ params }: { params: { id: string } }) {
     return () => document.removeEventListener("visibilitychange", handleVisibilityChange)
   }, [])
 
- 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       e.preventDefault()
-      e.returnValue = "" // Required for Chrome
+      e.returnValue = ""
     }
 
     const handlePopState = () => {
-      console.warn("User attempted to go back. Auto-submitting exam.")
       handleSubmit()
       history.pushState(null, "", window.location.href)
     }
 
-    history.pushState(null, "", window.location.href) // Prevent back
+    history.pushState(null, "", window.location.href)
     window.addEventListener("beforeunload", handleBeforeUnload)
     window.addEventListener("popstate", handlePopState)
 
