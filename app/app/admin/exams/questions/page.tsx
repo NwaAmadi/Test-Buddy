@@ -112,8 +112,8 @@ export default function QuestionsPage() {
   const handleOptionChange = (questionIndex: number, optionIndex: number, key: keyof Option, value: string) => {
     const updatedQuestions = [...questions];
     const options = [...updatedQuestions[questionIndex].options];
-    options[optionIndex] = { 
-      ...options[optionIndex], 
+    options[optionIndex] = {
+      ...options[optionIndex],
       [key]: value || "" // Ensure option values are never null/undefined
     };
     updatedQuestions[questionIndex].options = options;
@@ -133,13 +133,12 @@ export default function QuestionsPage() {
   const removeOption = (questionIndex: number, optionIndex: number) => {
     const updatedQuestions = [...questions];
     const options = [...updatedQuestions[questionIndex].options];
-    
-    // Don't allow removing if only one option remains
+
     if (options.length <= 1) {
       toast.error("Each question must have at least one option.");
       return;
     }
-    
+
     options.splice(optionIndex, 1);
     updatedQuestions[questionIndex].options = options;
     setQuestions(updatedQuestions);
@@ -209,7 +208,7 @@ export default function QuestionsPage() {
     }
 
     // Validate that correct answers match existing option IDs
-    const invalidCorrectAnswers = questions.some((q) => 
+    const invalidCorrectAnswers = questions.some((q) =>
       !q.options.some(option => option.id === q.correct_answer)
     );
     if (invalidCorrectAnswers) {
@@ -220,18 +219,23 @@ export default function QuestionsPage() {
     try {
       // Ensure all text fields are properly trimmed and not null
       const formattedQuestions = questions.map((q) => ({
-        text: (q.text || "").trim(), // Ensure text is never null/undefined
+        text: (q.text || "").trim(),
         question_type: q.question_type,
         position: q.position,
         options: q.options.map(option => ({
           ...option,
-          text: (option.text || "").trim() // Ensure option text is never null/undefined
+          text: (option.text || "").trim()
         })),
         correct_answer: q.correct_answer,
       }));
 
-      // Debug log to see what's being sent
-      console.log("Formatted questions being sent:", formattedQuestions);
+      // --- THE FIX IS HERE ---
+      // Wrap the array in an object to match common backend expectations
+      const payload = {
+        questions: formattedQuestions,
+      };
+      
+      console.log("Payload being sent to backend:", payload);
 
       const res = await fetch(`${BACKEND_URL}/api/admin/questions/${selectedExam.id}`, {
         method: "POST",
@@ -239,7 +243,8 @@ export default function QuestionsPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
-        body: JSON.stringify(formattedQuestions),
+        // Send the new wrapped payload
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
@@ -282,8 +287,8 @@ export default function QuestionsPage() {
         <div>
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-3xl font-bold">Add Questions</h1>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => {
                 setSelectedExam(null);
                 setQuestions([]);
@@ -292,7 +297,7 @@ export default function QuestionsPage() {
               Back to Exam Selection
             </Button>
           </div>
-          
+
           <div className="mb-4 p-4 bg-blue-50 rounded-lg">
             <p className="text-sm text-blue-700">
               <strong>Selected Exam:</strong> {selectedExam.title}
@@ -315,7 +320,7 @@ export default function QuestionsPage() {
                   <div>
                     <Label>Question Text</Label>
                     <Textarea
-                      value={question.text || ""} // Defensive programming
+                      value={question.text || ""}
                       onChange={(e) => handleQuestionChange(index, "text", e.target.value)}
                       placeholder="Enter your question here..."
                     />
@@ -325,13 +330,13 @@ export default function QuestionsPage() {
                     {question.options.map((option, optionIndex) => (
                       <div key={optionIndex} className="flex items-center gap-4 mb-2">
                         <Input
-                          value={option.id || ""} // Defensive programming
+                          value={option.id || ""}
                           onChange={(e) => handleOptionChange(index, optionIndex, "id", e.target.value)}
                           placeholder="Option ID (e.g., a, b, c)"
                           className="w-16"
                         />
                         <Input
-                          value={option.text || ""} // Defensive programming
+                          value={option.text || ""}
                           onChange={(e) => handleOptionChange(index, optionIndex, "text", e.target.value)}
                           placeholder="Option Text"
                           className="flex-1"
