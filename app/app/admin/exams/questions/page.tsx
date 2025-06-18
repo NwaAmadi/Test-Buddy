@@ -11,7 +11,6 @@ import { toast } from "sonner";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { Modal } from "@/components/ui/Modal";
 
-
 const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER;
 
 type Option = {
@@ -24,7 +23,7 @@ type Question = {
   question_type: string;
   position: number;
   options: Option[];
-  correct_answer: string | null; // Stores the ID of the correct option
+  correct_answer: string | null;
 };
 
 type Exam = {
@@ -38,7 +37,6 @@ export default function QuestionsPage() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Fetch exams on component mount
   useEffect(() => {
     const fetchExams = async () => {
       if (!BACKEND_URL) {
@@ -78,7 +76,6 @@ export default function QuestionsPage() {
     fetchExams();
   }, []);
 
-  // Handle exam selection
   const handleExamSelection = (examId: string) => {
     const exam = exams.find((e) => e.id === examId);
     if (exam) {
@@ -101,29 +98,26 @@ export default function QuestionsPage() {
     }
   };
 
-  // Handle question field changes with defensive programming
   const handleQuestionChange = (index: number, key: keyof Question, value: string | number) => {
     const updatedQuestions = [...questions];
     updatedQuestions[index] = {
       ...updatedQuestions[index],
-      [key]: key === "text" ? (value || "") : value, // Ensure text is never null/undefined
+      [key]: key === "text" ? (value || "") : value,
     };
     setQuestions(updatedQuestions);
   };
 
-  // Handle option field changes with defensive programming
   const handleOptionChange = (questionIndex: number, optionIndex: number, key: keyof Option, value: string) => {
     const updatedQuestions = [...questions];
     const options = [...updatedQuestions[questionIndex].options];
     options[optionIndex] = {
       ...options[optionIndex],
-      [key]: value || "" // Ensure option values are never null/undefined
+      [key]: value || ""
     };
     updatedQuestions[questionIndex].options = options;
     setQuestions(updatedQuestions);
   };
 
-  // Add a new option
   const addOption = (questionIndex: number) => {
     const updatedQuestions = [...questions];
     const options = [...updatedQuestions[questionIndex].options];
@@ -132,7 +126,6 @@ export default function QuestionsPage() {
     setQuestions(updatedQuestions);
   };
 
-  // Remove an option
   const removeOption = (questionIndex: number, optionIndex: number) => {
     const updatedQuestions = [...questions];
     const options = [...updatedQuestions[questionIndex].options];
@@ -147,7 +140,6 @@ export default function QuestionsPage() {
     setQuestions(updatedQuestions);
   };
 
-  // Add a new question
   const addQuestion = () => {
     if (questions.length >= 100) {
       toast.error("Maximum 100 questions allowed per exam.");
@@ -170,7 +162,6 @@ export default function QuestionsPage() {
     ]);
   };
 
-  // Remove a question
   const removeQuestion = (index: number) => {
     const updatedQuestions = questions.filter((_, i) => i !== index);
     const reorderedQuestions = updatedQuestions.map((q, i) => ({
@@ -180,21 +171,18 @@ export default function QuestionsPage() {
     setQuestions(reorderedQuestions);
   };
 
-  // Submit questions to the backend with improved validation
   const handleSubmit = async () => {
     if (!selectedExam) {
       toast.error("Please select an exam.");
       return;
     }
 
-    // Improved validation - handle null/undefined values
     const invalidQuestions = questions.filter((q) => !q.text || !q.text.trim());
     if (invalidQuestions.length > 0) {
       toast.error("All questions must have text.");
       return;
     }
 
-    // Improved option validation
     const invalidOptions = questions.some((q) =>
       q.options.some((option) => !option.text || !option.text.trim())
     );
@@ -203,14 +191,12 @@ export default function QuestionsPage() {
       return;
     }
 
-    // Validate that a correct answer is selected for each question
     const missingCorrectAnswers = questions.some((q) => !q.correct_answer);
     if (missingCorrectAnswers) {
       toast.error("Each question must have a correct answer selected.");
       return;
     }
 
-    // Validate that correct answers match existing option IDs
     const invalidCorrectAnswers = questions.some((q) =>
       !q.options.some(option => option.id === q.correct_answer)
     );
@@ -220,7 +206,6 @@ export default function QuestionsPage() {
     }
 
     try {
-      // Ensure all text fields are properly trimmed and not null
       const formattedQuestions = questions.map((q) => ({
         text: (q.text || "").trim(),
         question_type: q.question_type,
@@ -232,8 +217,6 @@ export default function QuestionsPage() {
         correct_answer: q.correct_answer,
       }));
 
-      // --- THE FIX IS HERE ---
-      // Wrap the array in an object to match common backend expectations
       const payload = {
         questions: formattedQuestions,
       };
@@ -246,7 +229,6 @@ export default function QuestionsPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
-        // Send the new wrapped payload
         body: JSON.stringify(payload),
       });
 
@@ -269,7 +251,7 @@ export default function QuestionsPage() {
       <div className="p-6 max-w-4xl mx-auto">
         {!selectedExam ? (
           <div>
-            <h1 className="text-3xl font-bold mb-6">Select Exam</h1>
+            <h1 className="text-3xl font-bold mb-6 text-gray-900 dark:text-gray-100">Select Exam</h1>
             {isLoading ? (
               <Modal
                 title="Loading Exams"
@@ -277,12 +259,16 @@ export default function QuestionsPage() {
               />
             ) : (
               <Select onValueChange={handleExamSelection}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full bg-white dark:bg-gray-900 border dark:border-gray-700 text-gray-900 dark:text-gray-100">
                   <SelectValue placeholder="Select an exam..." />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white dark:bg-gray-900 border dark:border-gray-700">
                   {exams.map((exam) => (
-                    <SelectItem key={exam.id} value={exam.id}>
+                    <SelectItem
+                      key={exam.id}
+                      value={exam.id}
+                      className="text-gray-900 dark:text-gray-100"
+                    >
                       {exam.title}
                     </SelectItem>
                   ))}
@@ -293,9 +279,10 @@ export default function QuestionsPage() {
         ) : (
           <div>
             <div className="flex items-center justify-between mb-6">
-              <h1 className="text-3xl font-bold">Add Questions</h1>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Add Questions</h1>
               <Button
                 variant="outline"
+                className="border-gray-300 dark:border-gray-700 dark:text-gray-100"
                 onClick={() => {
                   setSelectedExam(null);
                   setQuestions([]);
@@ -305,19 +292,29 @@ export default function QuestionsPage() {
               </Button>
             </div>
 
-            <div className="mb-4 p-4 bg-blue-50 rounded-lg">
-              <p className="text-sm text-blue-700">
+            <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-950 rounded-lg">
+              <p className="text-sm text-blue-700 dark:text-blue-200">
                 <strong>Selected Exam:</strong> {selectedExam.title}
               </p>
             </div>
 
             <div className="space-y-6">
               {questions.map((question, index) => (
-                <div key={index} className="border p-6 rounded-lg shadow-sm bg-white">
+                <div
+                  key={index}
+                  className="border p-6 rounded-lg shadow-sm bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700"
+                >
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold">Question {index + 1}</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                      Question {index + 1}
+                    </h3>
                     {questions.length > 1 && (
-                      <Button variant="destructive" size="sm" onClick={() => removeQuestion(index)}>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="dark:bg-red-900 dark:text-red-200"
+                        onClick={() => removeQuestion(index)}
+                      >
                         Remove
                       </Button>
                     )}
@@ -325,33 +322,35 @@ export default function QuestionsPage() {
 
                   <div className="grid gap-4">
                     <div>
-                      <Label>Question Text</Label>
+                      <Label className="text-gray-800 dark:text-gray-200">Question Text</Label>
                       <Textarea
                         value={question.text || ""}
                         onChange={(e) => handleQuestionChange(index, "text", e.target.value)}
                         placeholder="Enter your question here..."
+                        className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100"
                       />
                     </div>
                     <div>
-                      <Label>Options</Label>
+                      <Label className="text-gray-800 dark:text-gray-200">Options</Label>
                       {question.options.map((option, optionIndex) => (
                         <div key={optionIndex} className="flex items-center gap-4 mb-2">
                           <Input
                             value={option.id || ""}
                             onChange={(e) => handleOptionChange(index, optionIndex, "id", e.target.value)}
                             placeholder="Option ID (e.g., a, b, c)"
-                            className="w-16"
+                            className="w-16 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100"
                           />
                           <Input
                             value={option.text || ""}
                             onChange={(e) => handleOptionChange(index, optionIndex, "text", e.target.value)}
                             placeholder="Option Text"
-                            className="flex-1"
+                            className="flex-1 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100"
                           />
                           {question.options.length > 1 && (
                             <Button
                               variant="destructive"
                               size="sm"
+                              className="dark:bg-red-900 dark:text-red-200"
                               onClick={() => removeOption(index, optionIndex)}
                             >
                               Remove
@@ -359,20 +358,33 @@ export default function QuestionsPage() {
                           )}
                         </div>
                       ))}
-                      <Button variant="outline" size="sm" onClick={() => addOption(index)}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mt-2 border-gray-300 dark:border-gray-700 dark:text-gray-100"
+                        onClick={() => addOption(index)}
+                      >
                         + Add Option
                       </Button>
                     </div>
                     <div>
-                      <Label>Correct Answer</Label>
+                      <Label className="text-gray-800 dark:text-gray-200">Correct Answer</Label>
                       <RadioGroup
                         value={question.correct_answer || ""}
                         onValueChange={(value) => handleQuestionChange(index, "correct_answer", value)}
+                        className="flex flex-col gap-2"
                       >
                         {question.options.map((option) => (
                           <div key={option.id} className="flex items-center gap-2">
-                            <RadioGroupItem value={option.id} id={`correct-${index}-${option.id}`} />
-                            <Label htmlFor={`correct-${index}-${option.id}`}>
+                            <RadioGroupItem
+                              value={option.id}
+                              id={`correct-${index}-${option.id}`}
+                              className="dark:bg-gray-800 dark:border-gray-600"
+                            />
+                            <Label
+                              htmlFor={`correct-${index}-${option.id}`}
+                              className="text-gray-700 dark:text-gray-300"
+                            >
                               {option.text || `Option ${option.id}`}
                             </Label>
                           </div>
@@ -384,10 +396,17 @@ export default function QuestionsPage() {
               ))}
             </div>
             <div className="flex justify-between mt-6">
-              <Button variant="outline" onClick={addQuestion}>
+              <Button
+                variant="outline"
+                className="border-gray-300 dark:border-gray-700 dark:text-gray-100"
+                onClick={addQuestion}
+              >
                 + Add Question
               </Button>
-              <Button onClick={handleSubmit}>
+              <Button
+                className="bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-800 dark:hover:bg-blue-900"
+                onClick={handleSubmit}
+              >
                 Submit Questions ({questions.length})
               </Button>
             </div>
