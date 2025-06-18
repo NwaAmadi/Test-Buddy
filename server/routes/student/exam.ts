@@ -21,10 +21,10 @@ router.get("/:examId", verifyToken, isStudent, async (req: AuthRequest, res: Res
     .select("id")
     .eq("exam_id", examId)
     .eq("student_id", userId)
-    .single();
+    .maybeSingle();
 
   if (submissionError) {
-    res.status(500).json({ error: "Could not check exam submission status" });
+    res.status(500).json({ error: "Could not check exam submission status" }); 
     return;
   }
 

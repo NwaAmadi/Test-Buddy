@@ -23,7 +23,7 @@ router.post("/:examId/submit", verifyToken, isStudent, async (req: AuthRequest, 
     .single();
 
   if (submissionError) {
-    res.status(500).json({ error: "Could not check exam submission status" });
+    res.status(500).json({ error: "Could not check exam submission status" }); 
     return;
   }
 
