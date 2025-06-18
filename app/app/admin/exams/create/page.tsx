@@ -108,7 +108,12 @@ export default function CreateExamPage() {
           <Button
             onClick={handleSubmit}
             disabled={loading}
-            className="w-full h-14 text-lg bg-blue-600 hover:bg-blue-700 dark:bg-blue-800 dark:hover:bg-blue-900"
+            className={`
+              w-full h-14 text-lg
+              bg-black hover:bg-gray-900 text-white
+              dark:bg-white dark:hover:bg-gray-200 dark:text-black
+              transition-colors
+            `}
           >
             {loading ? "Creating..." : "Create Exam"}
           </Button>
