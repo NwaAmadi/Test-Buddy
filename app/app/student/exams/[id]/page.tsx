@@ -51,7 +51,7 @@ export default function ExamPage({ params }: { params: { id: string } }) {
   const timerRef = useRef<NodeJS.Timeout | null>(null)
 
   const handleAnswerSelect = (value: string) => {
-    setAnswers((prev: Record<string, string>) => ({
+    setAnswers((prev) => ({
       ...prev,
       [exam.questions[currentQuestion].id]: value,
     }))
@@ -59,23 +59,24 @@ export default function ExamPage({ params }: { params: { id: string } }) {
 
   const handlePrevious = () => {
     if (currentQuestion > 0) {
-      setCurrentQuestion((prev: number) => prev - 1)
+      setCurrentQuestion((prev) => prev - 1)
     }
   }
 
   const handleNext = () => {
     if (currentQuestion < exam.questions.length - 1) {
-      setCurrentQuestion((prev: number) => prev + 1)
+      setCurrentQuestion((prev) => prev + 1)
     }
   }
 
   const handleSubmit = async () => {
-    if (examSubmitted) return
+    if (examSubmitted || !exam) return
     setExamSubmitted(true)
+
     try {
       const accessToken = localStorage.getItem("accessToken") || ""
 
-      // Fill in unanswered questions with empty strings
+      // Ensure all questions are included (even unanswered ones)
       const allAnswers: Record<string, string> = {}
       exam.questions.forEach((q: any) => {
         allAnswers[q.id] = answers[q.id] || ""
@@ -91,6 +92,7 @@ export default function ExamPage({ params }: { params: { id: string } }) {
       })
 
       if (!res.ok) throw new Error("Submission failed")
+
       await res.json()
       router.push(`/student/results/`)
     } catch (err) {
@@ -102,11 +104,11 @@ export default function ExamPage({ params }: { params: { id: string } }) {
   useEffect(() => {
     const accessToken = localStorage.getItem("accessToken") || ""
     fetchExam(params.id, accessToken)
-      .then((data: any) => {
+      .then((data) => {
         setExam(data)
         setTimeLeft((parseInt(data.duration, 10) || 60) * 60)
       })
-      .catch((err: Error) => {
+      .catch((err) => {
         setError(err.message)
         setLoading(false)
       })
@@ -114,10 +116,10 @@ export default function ExamPage({ params }: { params: { id: string } }) {
   }, [params.id])
 
   useEffect(() => {
-    if (!timeLeft) return
+    if (!timeLeft || !exam) return
 
     timerRef.current = setInterval(() => {
-      setTimeLeft(prev => {
+      setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timerRef.current!)
           handleSubmit()
@@ -128,7 +130,7 @@ export default function ExamPage({ params }: { params: { id: string } }) {
     }, 1000)
 
     return () => clearInterval(timerRef.current!)
-  }, [timeLeft])
+  }, [timeLeft, exam])
 
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -160,7 +162,7 @@ export default function ExamPage({ params }: { params: { id: string } }) {
       window.removeEventListener("beforeunload", handleBeforeUnload)
       window.removeEventListener("popstate", handlePopState)
     }
-  }, [])
+  }, [exam])
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
@@ -178,18 +180,10 @@ export default function ExamPage({ params }: { params: { id: string } }) {
     />
   )
 
-  if (!exam) return (
+  if (!exam || !exam.questions || exam.questions.length === 0) return (
     <Modal
       title="Exam Not Found"
-      description="The requested exam could not be found."
-      onClose={() => router.push("/student/dashboard")}
-    />
-  )
-
-  if (!exam.questions || exam.questions.length === 0) return (
-    <Modal
-      title="No Questions"
-      description="There are no questions available for this exam."
+      description="This exam could not be found or has no questions."
       onClose={() => router.push("/student/dashboard")}
     />
   )
@@ -218,7 +212,7 @@ export default function ExamPage({ params }: { params: { id: string } }) {
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Warning!</AlertTitle>
           <AlertDescription>
-            Tab switching detected. This incident has been logged. Multiple violations may result in exam termination.
+            Tab switching detected. This incident has been logged.
           </AlertDescription>
         </Alert>
       )}
@@ -240,7 +234,11 @@ export default function ExamPage({ params }: { params: { id: string } }) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <RadioGroup value={answers[question.id] || ""} onValueChange={handleAnswerSelect} className="space-y-3">
+          <RadioGroup
+            value={answers[question.id] || ""}
+            onValueChange={handleAnswerSelect}
+            className="space-y-3"
+          >
             {options && options.length > 0 ? (
               options.map((option: any) => (
                 <div
