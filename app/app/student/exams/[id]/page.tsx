@@ -76,7 +76,7 @@ export default function ExamPage({ params }: { params: { id: string } }) {
     try {
       const accessToken = localStorage.getItem("accessToken") || ""
 
-      // Ensure all questions are included (even unanswered ones)
+     
       const allAnswers: Record<string, string> = {}
       exam.questions.forEach((q: any) => {
         allAnswers[q.id] = answers[q.id] || ""
