@@ -85,7 +85,7 @@ export default function ExamPage({ params }: { params: { id: string } }) {
       })
       if (!res.ok) throw new Error("Submission failed")
       const data = await res.json()
-      router.push(`/student/results/${data.resultId}`)
+      router.push(`/student/results/`)
     } catch (err) {
       setExamSubmitted(false)
       setError("Failed to submit exam. Please try again.")
