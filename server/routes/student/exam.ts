@@ -11,29 +11,19 @@ app.use(express.json());
 
 const router = Router();
 
-router.get("/:examId", verifyToken, isStudent, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get("/:examId", verifyToken, isStudent, async (req: AuthRequest, res: Response) => {
   const { examId } = req.params;
   const userId = req.user?.id;
 
-  // ✅ Log the values
-  console.log("Exam ID from URL param:", examId);
-  console.log("User ID from token:", userId);
-
-  // ✅ Check if userId is missing
-  if (!userId) {
-    res.status(401).json({ error: "Unauthorized: User ID not found." });
-    return;
-  }
 
   const { data: submission, error: submissionError } = await supabase
     .from("results")
     .select("id")
     .eq("exam_id", examId)
     .eq("student_id", userId)
-    .maybeSingle(); // use maybeSingle to avoid error if multiple rows exist
+    .maybeSingle();
 
   if (submissionError) {
-    console.error("Supabase error during submission check:", submissionError);
     res.status(500).json({ error: "Could not check exam submission status" }); 
     return;
   }
