@@ -404,7 +404,7 @@ app.post('/api/sendOtp', async (req: Request, res: Response): Promise<any> => {
 app.use("/api/student", studentDashboardRoute);
 app.use('/api/exam', examRoute);
 app.use("/api/result", resultRoute);
-app.use("/api/exam", submitExamRoute);
+app.use("/api/submit", submitExamRoute);
 app.use("/student/results", allResultsRouter);
 
 app.use("/api/admin/exam", examsRoutes)
