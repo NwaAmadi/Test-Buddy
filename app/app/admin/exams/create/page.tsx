@@ -59,29 +59,57 @@ export default function CreateExamPage() {
 
   return (
     <DashboardLayout role="admin">
-      <div className="max-w-lg mx-auto">
-        <h1 className="text-2xl font-bold mb-4">Create Exam</h1>
-        <div className="space-y-4">
+      <div className="max-w-2xl mx-auto mt-10 bg-white dark:bg-gray-900 rounded-xl shadow-lg p-8">
+        <h1 className="text-3xl font-bold mb-8 text-center text-gray-900 dark:text-gray-100">Create Exam</h1>
+        <div className="space-y-6">
           <div>
-            <Label>Title</Label>
-            <Input placeholder="e.g., Linear Algebra" value={title} onChange={(e) => setTitle(e.target.value)} />
+            <Label className="text-lg text-gray-800 dark:text-gray-200">Title</Label>
+            <Input
+              className="mt-2 h-14 text-lg px-4 bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100 w-full"
+              placeholder="e.g., Linear Algebra"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
+          </div>
+          <div className="flex flex-col md:flex-row gap-6">
+            <div className="flex-1">
+              <Label className="text-lg text-gray-800 dark:text-gray-200">Date</Label>
+              <Input
+                type="date"
+                className="mt-2 h-14 text-lg px-4 bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100 w-full"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+              />
+            </div>
+            <div className="flex-1">
+              <Label className="text-lg text-gray-800 dark:text-gray-200">Time</Label>
+              <Input
+                type="time"
+                className="mt-2 h-14 text-lg px-4 bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100 w-full"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+              />
+            </div>
           </div>
           <div>
-            <Label>Date</Label>
-            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-          </div>
-          <div>
-            <Label>Time</Label>
-            <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
-          </div>
-          <div>
-            <Label>Duration (minutes)</Label>
-            <Input type="number" min="0" placeholder="e.g., 120" value={duration} onChange={(e) => setDuration(e.target.value)} />
+            <Label className="text-lg text-gray-800 dark:text-gray-200">Duration (minutes)</Label>
+            <Input
+              type="number"
+              min="0"
+              className="mt-2 h-14 text-lg px-4 bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100 w-full"
+              placeholder="e.g., 120"
+              value={duration}
+              onChange={(e) => setDuration(e.target.value)}
+            />
           </div>
 
-          {error && <p className="text-red-500">{error}</p>}
+          {error && <p className="text-red-500 text-center">{error}</p>}
 
-          <Button onClick={handleSubmit} disabled={loading}>
+          <Button
+            onClick={handleSubmit}
+            disabled={loading}
+            className="w-full h-14 text-lg bg-blue-600 hover:bg-blue-700 dark:bg-blue-800 dark:hover:bg-blue-900"
+          >
             {loading ? "Creating..." : "Create Exam"}
           </Button>
         </div>
