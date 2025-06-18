@@ -17,6 +17,9 @@ router.post("/:examId/submit", verifyToken, isStudent, async (req: AuthRequest, 
     const userId = req.user?.id;
     const { answers } = req.body;
 
+    console.log("Exam ID:", examId);
+    console.log("User ID:", userId);
+
     if (!answers || Object.keys(answers).length === 0) {
       res.status(400).json({ error: "Answers are required" });
       return;
@@ -29,7 +32,12 @@ router.post("/:examId/submit", verifyToken, isStudent, async (req: AuthRequest, 
       .eq("student_id", userId)
       .single();
 
-    if (submissionError) throw new Error("Could not check exam submission status");
+    if (submissionError) {
+      console.error("Supabase Query Error:", submissionError);
+      res.status(500).json({ error: "Internal Server Error: Could not check exam submission status" });
+      return;
+    }
+
     if (submission) {
       res.status(403).json({ error: "You have already submitted this exam" });
       return;
