@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, Request, Response } from "express";
 import { supabase } from "../../db/supabase";
 import { verifyToken, isAdmin } from "../../middleware/auth";
 import cors from "cors";
@@ -24,17 +24,41 @@ router.get("/:examId", verifyToken, isAdmin, async (req, res) => {
 });
 
 
-router.post("/:examId", verifyToken, isAdmin, async (req, res) => {
+router.post("/:examId", verifyToken, isAdmin, async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   const { examId } = req.params;
-  const { text, question_type, position, options, correct_answer } = req.body;
+  const { questions } = req.body;
+
+  if (!questions || !Array.isArray(questions) || questions.length === 0) {
+    res.status(400).json({ error: "Request body must contain a non-empty 'questions' array." });
+    return; // ensure we return void
+  }
+
   try {
-    const { data, error } = await supabase.from("questions").insert([
-      { exam_id: examId, text, question_type, position, options, correct_answer },
-    ]);
-    if (error) throw error;
+    const questionsToInsert = questions.map((question: any) => ({
+      exam_id: examId,
+      text: question.text,
+      question_type: question.question_type,
+      position: question.position,
+      options: question.options,
+      correct_answer: question.correct_answer,
+    }));
+
+    const { data, error } = await supabase
+      .from("questions")
+      .insert(questionsToInsert)
+      .select();
+
+    if (error) {
+      throw error;
+    }
+
     res.status(201).json(data);
   } catch (err: unknown) {
     const error = err as Error;
+    console.error("Error inserting questions:", error);
     res.status(500).json({ error: error.message || "An unexpected error occurred." });
   }
 });
