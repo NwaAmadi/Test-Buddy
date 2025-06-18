@@ -8,6 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
+import { DashboardLayout } from "@/components/dashboard-layout";
+import { Modal } from "@/components/ui/Modal";
+
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER;
 
@@ -234,7 +237,7 @@ export default function QuestionsPage() {
       const payload = {
         questions: formattedQuestions,
       };
-      
+
       console.log("Payload being sent to backend:", payload);
 
       const res = await fetch(`${BACKEND_URL}/api/admin/questions/${selectedExam.id}`, {
@@ -262,130 +265,135 @@ export default function QuestionsPage() {
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      {!selectedExam ? (
-        <div>
-          <h1 className="text-3xl font-bold mb-6">Select Exam</h1>
-          {isLoading ? (
-            <p>Loading exams...</p>
-          ) : (
-            <Select onValueChange={handleExamSelection}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select an exam..." />
-              </SelectTrigger>
-              <SelectContent>
-                {exams.map((exam) => (
-                  <SelectItem key={exam.id} value={exam.id}>
-                    {exam.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-        </div>
-      ) : (
-        <div>
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-3xl font-bold">Add Questions</h1>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setSelectedExam(null);
-                setQuestions([]);
-              }}
-            >
-              Back to Exam Selection
-            </Button>
+    <DashboardLayout role='admin'>
+      <div className="p-6 max-w-4xl mx-auto">
+        {!selectedExam ? (
+          <div>
+            <h1 className="text-3xl font-bold mb-6">Select Exam</h1>
+            {isLoading ? (
+              <Modal
+                title="Loading Exams"
+                description="Please wait while we fetch the list of exams."
+              />
+            ) : (
+              <Select onValueChange={handleExamSelection}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select an exam..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {exams.map((exam) => (
+                    <SelectItem key={exam.id} value={exam.id}>
+                      {exam.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
+        ) : (
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <h1 className="text-3xl font-bold">Add Questions</h1>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSelectedExam(null);
+                  setQuestions([]);
+                }}
+              >
+                Back to Exam Selection
+              </Button>
+            </div>
 
-          <div className="mb-4 p-4 bg-blue-50 rounded-lg">
-            <p className="text-sm text-blue-700">
-              <strong>Selected Exam:</strong> {selectedExam.title}
-            </p>
-          </div>
+            <div className="mb-4 p-4 bg-blue-50 rounded-lg">
+              <p className="text-sm text-blue-700">
+                <strong>Selected Exam:</strong> {selectedExam.title}
+              </p>
+            </div>
 
-          <div className="space-y-6">
-            {questions.map((question, index) => (
-              <div key={index} className="border p-6 rounded-lg shadow-sm bg-white">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold">Question {index + 1}</h3>
-                  {questions.length > 1 && (
-                    <Button variant="destructive" size="sm" onClick={() => removeQuestion(index)}>
-                      Remove
-                    </Button>
-                  )}
-                </div>
-
-                <div className="grid gap-4">
-                  <div>
-                    <Label>Question Text</Label>
-                    <Textarea
-                      value={question.text || ""}
-                      onChange={(e) => handleQuestionChange(index, "text", e.target.value)}
-                      placeholder="Enter your question here..."
-                    />
+            <div className="space-y-6">
+              {questions.map((question, index) => (
+                <div key={index} className="border p-6 rounded-lg shadow-sm bg-white">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold">Question {index + 1}</h3>
+                    {questions.length > 1 && (
+                      <Button variant="destructive" size="sm" onClick={() => removeQuestion(index)}>
+                        Remove
+                      </Button>
+                    )}
                   </div>
-                  <div>
-                    <Label>Options</Label>
-                    {question.options.map((option, optionIndex) => (
-                      <div key={optionIndex} className="flex items-center gap-4 mb-2">
-                        <Input
-                          value={option.id || ""}
-                          onChange={(e) => handleOptionChange(index, optionIndex, "id", e.target.value)}
-                          placeholder="Option ID (e.g., a, b, c)"
-                          className="w-16"
-                        />
-                        <Input
-                          value={option.text || ""}
-                          onChange={(e) => handleOptionChange(index, optionIndex, "text", e.target.value)}
-                          placeholder="Option Text"
-                          className="flex-1"
-                        />
-                        {question.options.length > 1 && (
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => removeOption(index, optionIndex)}
-                          >
-                            Remove
-                          </Button>
-                        )}
-                      </div>
-                    ))}
-                    <Button variant="outline" size="sm" onClick={() => addOption(index)}>
-                      + Add Option
-                    </Button>
-                  </div>
-                  <div>
-                    <Label>Correct Answer</Label>
-                    <RadioGroup
-                      value={question.correct_answer || ""}
-                      onValueChange={(value) => handleQuestionChange(index, "correct_answer", value)}
-                    >
-                      {question.options.map((option) => (
-                        <div key={option.id} className="flex items-center gap-2">
-                          <RadioGroupItem value={option.id} id={`correct-${index}-${option.id}`} />
-                          <Label htmlFor={`correct-${index}-${option.id}`}>
-                            {option.text || `Option ${option.id}`}
-                          </Label>
+
+                  <div className="grid gap-4">
+                    <div>
+                      <Label>Question Text</Label>
+                      <Textarea
+                        value={question.text || ""}
+                        onChange={(e) => handleQuestionChange(index, "text", e.target.value)}
+                        placeholder="Enter your question here..."
+                      />
+                    </div>
+                    <div>
+                      <Label>Options</Label>
+                      {question.options.map((option, optionIndex) => (
+                        <div key={optionIndex} className="flex items-center gap-4 mb-2">
+                          <Input
+                            value={option.id || ""}
+                            onChange={(e) => handleOptionChange(index, optionIndex, "id", e.target.value)}
+                            placeholder="Option ID (e.g., a, b, c)"
+                            className="w-16"
+                          />
+                          <Input
+                            value={option.text || ""}
+                            onChange={(e) => handleOptionChange(index, optionIndex, "text", e.target.value)}
+                            placeholder="Option Text"
+                            className="flex-1"
+                          />
+                          {question.options.length > 1 && (
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => removeOption(index, optionIndex)}
+                            >
+                              Remove
+                            </Button>
+                          )}
                         </div>
                       ))}
-                    </RadioGroup>
+                      <Button variant="outline" size="sm" onClick={() => addOption(index)}>
+                        + Add Option
+                      </Button>
+                    </div>
+                    <div>
+                      <Label>Correct Answer</Label>
+                      <RadioGroup
+                        value={question.correct_answer || ""}
+                        onValueChange={(value) => handleQuestionChange(index, "correct_answer", value)}
+                      >
+                        {question.options.map((option) => (
+                          <div key={option.id} className="flex items-center gap-2">
+                            <RadioGroupItem value={option.id} id={`correct-${index}-${option.id}`} />
+                            <Label htmlFor={`correct-${index}-${option.id}`}>
+                              {option.text || `Option ${option.id}`}
+                            </Label>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+            <div className="flex justify-between mt-6">
+              <Button variant="outline" onClick={addQuestion}>
+                + Add Question
+              </Button>
+              <Button onClick={handleSubmit}>
+                Submit Questions ({questions.length})
+              </Button>
+            </div>
           </div>
-          <div className="flex justify-between mt-6">
-            <Button variant="outline" onClick={addQuestion}>
-              + Add Question
-            </Button>
-            <Button onClick={handleSubmit}>
-              Submit Questions ({questions.length})
-            </Button>
-          </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </DashboardLayout>
   );
 }
