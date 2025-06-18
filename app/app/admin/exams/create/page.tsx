@@ -35,7 +35,7 @@ export default function CreateExamPage() {
     const accessToken = localStorage.getItem("accessToken") || ""
 
     try {
-      const res = await fetch(`${BACKEND_URL}/api/admin/exams`, {
+      const res = await fetch(`${BACKEND_URL}/api/admin/exam`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${accessToken}`,
