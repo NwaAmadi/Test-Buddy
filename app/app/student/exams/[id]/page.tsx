@@ -70,8 +70,7 @@ export default function ExamPage({ params }: { params: { id: string } }) {
   }
 
   const handleSubmit = async () => {
-    console.log("Exam ID:", params.id)
-    if (examSubmitted) return 
+    if (examSubmitted) return
     setExamSubmitted(true)
     try {
       const accessToken = localStorage.getItem("accessToken") || ""
@@ -84,7 +83,7 @@ export default function ExamPage({ params }: { params: { id: string } }) {
         body: JSON.stringify({ answers }),
       })
       if (!res.ok) throw new Error("Submission failed")
-      const data = await res.json()
+      await res.json()
       router.push(`/student/results/`)
     } catch (err) {
       setExamSubmitted(false)
@@ -105,6 +104,36 @@ export default function ExamPage({ params }: { params: { id: string } }) {
       })
       .finally(() => setLoading(false))
   }, [params.id])
+
+  useEffect(() => {
+    if (!timeLeft) return
+
+    timerRef.current = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current!)
+          handleSubmit()
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+
+    return () => clearInterval(timerRef.current!)
+  }, [timeLeft])
+
+ 
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        setTabSwitched(true)
+        // TODO: Log this incident to the server
+      }
+    }
+
+    document.addEventListener("visibilitychange", handleVisibilityChange)
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange)
+  }, [])
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
