@@ -75,7 +75,7 @@ export default function ExamPage({ params }: { params: { id: string } }) {
     try {
       const accessToken = localStorage.getItem("accessToken") || ""
       const res = await fetch(`${BACKEND_URL}/api/exam-submission/${params.id}/submit`, {
-        method: "POST", 
+        method: "POST",
         headers: {
           "Authorization": `Bearer ${accessToken}`,
           "Content-Type": "application/json",
@@ -91,6 +91,7 @@ export default function ExamPage({ params }: { params: { id: string } }) {
     }
   }
 
+ 
   useEffect(() => {
     const accessToken = localStorage.getItem("accessToken") || ""
     fetchExam(params.id, accessToken)
@@ -105,6 +106,7 @@ export default function ExamPage({ params }: { params: { id: string } }) {
       .finally(() => setLoading(false))
   }, [params.id])
 
+  
   useEffect(() => {
     if (!timeLeft) return
 
@@ -122,7 +124,7 @@ export default function ExamPage({ params }: { params: { id: string } }) {
     return () => clearInterval(timerRef.current!)
   }, [timeLeft])
 
- 
+  // 
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.hidden) {
@@ -133,6 +135,29 @@ export default function ExamPage({ params }: { params: { id: string } }) {
 
     document.addEventListener("visibilitychange", handleVisibilityChange)
     return () => document.removeEventListener("visibilitychange", handleVisibilityChange)
+  }, [])
+
+ 
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+      e.returnValue = "" // Required for Chrome
+    }
+
+    const handlePopState = () => {
+      console.warn("User attempted to go back. Auto-submitting exam.")
+      handleSubmit()
+      history.pushState(null, "", window.location.href)
+    }
+
+    history.pushState(null, "", window.location.href) // Prevent back
+    window.addEventListener("beforeunload", handleBeforeUnload)
+    window.addEventListener("popstate", handlePopState)
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload)
+      window.removeEventListener("popstate", handlePopState)
+    }
   }, [])
 
   const formatTime = (seconds: number) => {
