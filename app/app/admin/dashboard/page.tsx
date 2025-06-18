@@ -43,7 +43,7 @@ export default function AdminDashboard() {
   const handleDelete = async () => {
     if (!selectedExam) return
     const accessToken = localStorage.getItem("accessToken") || ""
-    const res = await fetch(`${BACKEND_URL}/api/admin/exams/${selectedExam.id}`, {
+    const res = await fetch(`${BACKEND_URL}/api/admin/exam/${selectedExam.id}`, {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${accessToken}`,
