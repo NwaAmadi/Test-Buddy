@@ -30,7 +30,7 @@ router.post("/:examId/submit", verifyToken, isStudent, async (req: AuthRequest, 
       .select("id")
       .eq("exam_id", examId)
       .eq("student_id", userId)
-      .single();
+      .maybeSingle();
 
     if (submissionError) {
       console.error("Supabase Query Error:", submissionError);
