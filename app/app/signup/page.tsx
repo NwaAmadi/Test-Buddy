@@ -74,7 +74,7 @@ export default function SignupForm() {
     setIsLoading(true)
     try {
       if (!BACKEND_URL) {
-        toast.error("Backend URL is not configured")
+        toast.info("Backend URL is not configured")
         setIsLoading(false)
         return
       }
@@ -94,7 +94,7 @@ export default function SignupForm() {
 
       const data = await response.json()
       if (!response.ok) {
-        toast.error(data.message || "Signup failed")
+        toast.info(data.message || "Signup failed")
         return
       }
 
@@ -109,7 +109,7 @@ export default function SignupForm() {
       router.push(`/verify-otp?email=${form.email}`)
 
     } catch (error) {
-      toast.error("An error occurred. Please try again.")
+      toast.info("An error occurred. Please try again.")
     } finally {
       setIsLoading(false)
     }

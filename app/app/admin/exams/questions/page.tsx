@@ -40,13 +40,13 @@ export default function QuestionsPage() {
   useEffect(() => {
     const fetchExams = async () => {
       if (!BACKEND_URL) {
-        toast.error("Server configuration error. Please contact support.");
+        toast.info("Server configuration error. Please contact support.");
         return;
       }
 
       const token = localStorage.getItem("accessToken");
       if (!token) {
-        toast.error("Please log in to access exams.");
+        toast.info("Please log in to access exams.");
         return;
       }
 
@@ -67,7 +67,7 @@ export default function QuestionsPage() {
         const data = await res.json();
         setExams(data);
       } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Failed to load exams.");
+        toast.info(err instanceof Error ? err.message : "Failed to load exams.");
       } finally {
         setIsLoading(false);
       }
@@ -94,7 +94,7 @@ export default function QuestionsPage() {
         },
       ]);
     } else {
-      toast.error("Selected exam not found.");
+      toast.info("Selected exam not found.");
     }
   };
 
@@ -131,7 +131,7 @@ export default function QuestionsPage() {
     const options = [...updatedQuestions[questionIndex].options];
 
     if (options.length <= 1) {
-      toast.error("Each question must have at least one option.");
+      toast.info("Each question must have at least one option.");
       return;
     }
 
@@ -142,7 +142,7 @@ export default function QuestionsPage() {
 
   const addQuestion = () => {
     if (questions.length >= 100) {
-      toast.error("Maximum 100 questions allowed per exam.");
+      toast.info("Maximum 100 questions allowed per exam.");
       return;
     }
 
@@ -173,13 +173,13 @@ export default function QuestionsPage() {
 
   const handleSubmit = async () => {
     if (!selectedExam) {
-      toast.error("Please select an exam.");
+      toast.info("Please select an exam.");
       return;
     }
 
     const invalidQuestions = questions.filter((q) => !q.text || !q.text.trim());
     if (invalidQuestions.length > 0) {
-      toast.error("All questions must have text.");
+      toast.info("All questions must have text.");
       return;
     }
 
@@ -187,13 +187,13 @@ export default function QuestionsPage() {
       q.options.some((option) => !option.text || !option.text.trim())
     );
     if (invalidOptions) {
-      toast.error("All options must have text.");
+      toast.info("All options must have text.");
       return;
     }
 
     const missingCorrectAnswers = questions.some((q) => !q.correct_answer);
     if (missingCorrectAnswers) {
-      toast.error("Each question must have a correct answer selected.");
+      toast.info("Each question must have a correct answer selected.");
       return;
     }
 
@@ -201,7 +201,7 @@ export default function QuestionsPage() {
       !q.options.some(option => option.id === q.correct_answer)
     );
     if (invalidCorrectAnswers) {
-      toast.error("Some questions have invalid correct answers selected.");
+      toast.info("Some questions have invalid correct answers selected.");
       return;
     }
 
@@ -242,7 +242,7 @@ export default function QuestionsPage() {
       setQuestions([]);
     } catch (err) {
       console.error("Submit error:", err);
-      toast.error(err instanceof Error ? err.message : "Failed to submit questions.");
+      toast.info(err instanceof Error ? err.message : "Failed to submit questions.");
     }
   };
 

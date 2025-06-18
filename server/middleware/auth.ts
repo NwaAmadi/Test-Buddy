@@ -2,7 +2,6 @@ import dotenv from 'dotenv';
 dotenv.config();
 import { Request, Response, NextFunction } from 'express';
 import * as jose from 'jose';
-import { verifyAdminCode } from '../admin/verifyAdminAccessCode';
 
 export interface AuthRequest extends Request {
   user?: { email: string; role: string; verified: boolean };
@@ -25,7 +24,7 @@ export const verifyToken = async (req: AuthRequest, res: Response, next: NextFun
     req.user = decoded;
     next();
   } catch (err) {
-    res.status(401).json({ message: 'INVALID TOKEN' }); 
+    res.status(401).json({ message: 'INVALID TOKEN' });
     return; 
   }
 };
@@ -45,20 +44,6 @@ export const isAdmin = async (req: AuthRequest, res: Response, next: NextFunctio
     res.status(403).json({ message: 'ACCESS DENIED: UNAUTHORIZED' });
     return;
   }
-
-  /*const access_code = req.body.accessCode;
-
-  if (!access_code) {
-    res.status(401).json({ message: 'ACCESS CODE REQUIRED!' });
-    return;
-  }
-
-  const trueCode = await verifyAdminCode(req.user.email, access_code);
-
-  if (!trueCode) {
-    res.status(401).json({ message: 'INVALID ACCESS CODE!' });
-    return;
-  }*/
 
   next();
 };
