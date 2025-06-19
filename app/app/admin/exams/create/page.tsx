@@ -6,6 +6,7 @@ import { DashboardLayout } from "@/components/dashboard-layout"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { toast } from "sonner"
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER
 
@@ -46,9 +47,9 @@ export default function CreateExamPage() {
 
       if (!res.ok) {
         const { error } = await res.json()
-        throw new Error(error || "Failed to create exam.")
+        toast.info(error || "Failed to create exam")
       }
-
+      toast.success("Exam created successfully")
       router.push("/admin/dashboard")
     } catch (err: any) {
       setError(err.message)
