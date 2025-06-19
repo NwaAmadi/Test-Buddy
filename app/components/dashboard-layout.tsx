@@ -75,6 +75,8 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
     } catch (err) {
       console.error("Logout error", err)
     } finally {
+      localStorage.removeItem("accessToken")
+      localStorage.removeItem("refreshToken")
       localStorage.removeItem("user")
       router.push("/")
     }
