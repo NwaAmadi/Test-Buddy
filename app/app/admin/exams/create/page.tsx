@@ -20,6 +20,13 @@ export default function CreateExamPage() {
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async () => {
+    const accessToken = localStorage.getItem("accessToken")
+    if (!accessToken) {
+      toast.error("UNAUTHORIZED!")
+      router.push("/login")
+      return
+    }
+
     setError("")
     if (!title || !date || !time || !duration) {
       toast.info("All fields are required.")
@@ -33,8 +40,6 @@ export default function CreateExamPage() {
     }
 
     setLoading(true)
-    const accessToken = localStorage.getItem("accessToken") || ""
-
     try {
       const res = await fetch(`${BACKEND_URL}/api/admin/exam`, {
         method: "POST",
@@ -42,6 +47,7 @@ export default function CreateExamPage() {
           "Authorization": `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
+        
         body: JSON.stringify({ title, date, time, duration: parsedDuration }),
       })
 

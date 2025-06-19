@@ -4,15 +4,24 @@ import { useEffect, useState } from "react"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { Button } from "@/components/ui/button"
 import { saveAs } from "file-saver"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER
+const router = useRouter()
 
 export default function ExamResultsPage({ params }: { params: { id: string } }) {
   const [results, setResults] = useState<any[]>([])
 
   useEffect(() => {
     const fetchResults = async () => {
-      const accessToken = localStorage.getItem("accessToken") || ""
+      const accessToken = localStorage.getItem("accessToken")
+      if (!accessToken) {
+        toast.error("UNAUTHORIZED!")
+        router.push("/login")
+        return
+      }
+
       const res = await fetch(`${BACKEND_URL}/api/admin/exams/${params.id}/results`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,

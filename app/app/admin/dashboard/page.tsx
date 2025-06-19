@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import Link from "next/link"
+import { toast } from "sonner"
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER
 
@@ -28,7 +29,13 @@ export default function AdminDashboard() {
   }, [])
 
   const fetchExams = async () => {
-    const accessToken = localStorage.getItem("accessToken") || ""
+    const accessToken = localStorage.getItem("accessToken")
+    if (!accessToken) {
+      toast.error("UNAUTHORIZED!")
+      router.push("/login")
+      return
+    }
+
     const res = await fetch(`${BACKEND_URL}/api/admin/exam`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,

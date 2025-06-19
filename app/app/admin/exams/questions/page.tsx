@@ -10,8 +10,10 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { Modal } from "@/components/ui/Modal";
+import { useRouter } from "next/navigation"
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER;
+const router = useRouter()
 
 type Option = {
   id: string;
@@ -172,6 +174,13 @@ export default function QuestionsPage() {
   };
 
   const handleSubmit = async () => {
+    const accessToken = localStorage.getItem("accessToken")
+    if (!accessToken) {
+      toast.error("UNAUTHORIZED!")
+      router.push("/login")
+      return
+    }
+
     if (!selectedExam) {
       toast.info("Please select an exam.");
       return;
@@ -221,7 +230,6 @@ export default function QuestionsPage() {
         questions: formattedQuestions,
       };
 
-      console.log("Payload being sent to backend:", payload);
 
       const res = await fetch(`${BACKEND_URL}/api/admin/questions/${selectedExam.id}`, {
         method: "POST",
