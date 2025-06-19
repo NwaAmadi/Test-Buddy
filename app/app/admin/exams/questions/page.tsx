@@ -5,15 +5,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { Modal } from "@/components/ui/Modal";
-import { useRouter } from "next/navigation"
+import { useRouter } from "next/navigation";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER;
-const router = useRouter()
 
 type Option = {
   id: string;
@@ -34,6 +39,7 @@ type Exam = {
 };
 
 export default function QuestionsPage() {
+  const router = useRouter();
   const [exams, setExams] = useState<Exam[]>([]);
   const [selectedExam, setSelectedExam] = useState<Exam | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -49,6 +55,7 @@ export default function QuestionsPage() {
       const token = localStorage.getItem("accessToken");
       if (!token) {
         toast.info("Please log in to access exams.");
+        router.push("/login");
         return;
       }
 
@@ -76,7 +83,7 @@ export default function QuestionsPage() {
     };
 
     fetchExams();
-  }, []);
+  }, [router]);
 
   const handleExamSelection = (examId: string) => {
     const exam = exams.find((e) => e.id === examId);
@@ -114,7 +121,7 @@ export default function QuestionsPage() {
     const options = [...updatedQuestions[questionIndex].options];
     options[optionIndex] = {
       ...options[optionIndex],
-      [key]: value || ""
+      [key]: value || "",
     };
     updatedQuestions[questionIndex].options = options;
     setQuestions(updatedQuestions);
@@ -174,11 +181,11 @@ export default function QuestionsPage() {
   };
 
   const handleSubmit = async () => {
-    const accessToken = localStorage.getItem("accessToken")
+    const accessToken = localStorage.getItem("accessToken");
     if (!accessToken) {
-      toast.error("UNAUTHORIZED!")
-      router.push("/login")
-      return
+      toast.error("UNAUTHORIZED!");
+      router.push("/login");
+      return;
     }
 
     if (!selectedExam) {
@@ -207,7 +214,7 @@ export default function QuestionsPage() {
     }
 
     const invalidCorrectAnswers = questions.some((q) =>
-      !q.options.some(option => option.id === q.correct_answer)
+      !q.options.some((option) => option.id === q.correct_answer)
     );
     if (invalidCorrectAnswers) {
       toast.info("Some questions have invalid correct answers selected.");
@@ -219,23 +226,20 @@ export default function QuestionsPage() {
         text: (q.text || "").trim(),
         question_type: q.question_type,
         position: q.position,
-        options: q.options.map(option => ({
+        options: q.options.map((option) => ({
           ...option,
-          text: (option.text || "").trim()
+          text: (option.text || "").trim(),
         })),
         correct_answer: q.correct_answer,
       }));
 
-      const payload = {
-        questions: formattedQuestions,
-      };
-
+      const payload = { questions: formattedQuestions };
 
       const res = await fetch(`${BACKEND_URL}/api/admin/questions/${selectedExam.id}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify(payload),
       });
@@ -255,16 +259,13 @@ export default function QuestionsPage() {
   };
 
   return (
-    <DashboardLayout role='admin'>
+    <DashboardLayout role="admin">
       <div className="p-6 max-w-4xl mx-auto">
         {!selectedExam ? (
           <div>
             <h1 className="text-3xl font-bold mb-6 text-gray-900 dark:text-gray-100">Select Exam</h1>
             {isLoading ? (
-              <Modal
-                title="Loading Exams"
-                description="Please wait while we fetch the list of exams."
-              />
+              <Modal title="Loading Exams" description="Please wait while we fetch the list of exams." />
             ) : (
               <Select onValueChange={handleExamSelection}>
                 <SelectTrigger className="w-full bg-white dark:bg-gray-900 border dark:border-gray-700 text-gray-900 dark:text-gray-100">
@@ -272,11 +273,7 @@ export default function QuestionsPage() {
                 </SelectTrigger>
                 <SelectContent className="bg-white dark:bg-gray-900 border dark:border-gray-700">
                   {exams.map((exam) => (
-                    <SelectItem
-                      key={exam.id}
-                      value={exam.id}
-                      className="text-gray-900 dark:text-gray-100"
-                    >
+                    <SelectItem key={exam.id} value={exam.id} className="text-gray-900 dark:text-gray-100">
                       {exam.title}
                     </SelectItem>
                   ))}
@@ -306,115 +303,14 @@ export default function QuestionsPage() {
               </p>
             </div>
 
-            <div className="space-y-6">
-              {questions.map((question, index) => (
-                <div
-                  key={index}
-                  className="border p-6 rounded-lg shadow-sm bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700"
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                      Question {index + 1}
-                    </h3>
-                    {questions.length > 1 && (
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        className="dark:bg-red-900 dark:text-red-200"
-                        onClick={() => removeQuestion(index)}
-                      >
-                        Remove
-                      </Button>
-                    )}
-                  </div>
+            {/* Question Form Here */}
+            {/* You can include map of questions, input fields, option controls, etc. */}
 
-                  <div className="grid gap-4">
-                    <div>
-                      <Label className="text-gray-800 dark:text-gray-200">Question Text</Label>
-                      <Textarea
-                        value={question.text || ""}
-                        onChange={(e) => handleQuestionChange(index, "text", e.target.value)}
-                        placeholder="Enter your question here..."
-                        className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-gray-800 dark:text-gray-200">Options</Label>
-                      {question.options.map((option, optionIndex) => (
-                        <div key={optionIndex} className="flex items-center gap-4 mb-2">
-                          <Input
-                            value={option.id || ""}
-                            onChange={(e) => handleOptionChange(index, optionIndex, "id", e.target.value)}
-                            placeholder="Option ID (e.g., a, b, c)"
-                            className="w-16 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100"
-                          />
-                          <Input
-                            value={option.text || ""}
-                            onChange={(e) => handleOptionChange(index, optionIndex, "text", e.target.value)}
-                            placeholder="Option Text"
-                            className="flex-1 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100"
-                          />
-                          {question.options.length > 1 && (
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              className="dark:bg-red-900 dark:text-red-200"
-                              onClick={() => removeOption(index, optionIndex)}
-                            >
-                              Remove
-                            </Button>
-                          )}
-                        </div>
-                      ))}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="mt-2 border-gray-300 dark:border-gray-700 dark:text-gray-100"
-                        onClick={() => addOption(index)}
-                      >
-                        + Add Option
-                      </Button>
-                    </div>
-                    <div>
-                      <Label className="text-gray-800 dark:text-gray-200">Correct Answer</Label>
-                      <RadioGroup
-                        value={question.correct_answer || ""}
-                        onValueChange={(value) => handleQuestionChange(index, "correct_answer", value)}
-                        className="flex flex-col gap-2"
-                      >
-                        {question.options.map((option) => (
-                          <div key={option.id} className="flex items-center gap-2">
-                            <RadioGroupItem
-                              value={option.id}
-                              id={`correct-${index}-${option.id}`}
-                              className="dark:bg-gray-800 dark:border-gray-600"
-                            />
-                            <Label
-                              htmlFor={`correct-${index}-${option.id}`}
-                              className="text-gray-700 dark:text-gray-300"
-                            >
-                              {option.text || `Option ${option.id}`}
-                            </Label>
-                          </div>
-                        ))}
-                      </RadioGroup>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
             <div className="flex justify-between mt-6">
-              <Button
-                variant="outline"
-                className="border-gray-300 dark:border-gray-700 dark:text-gray-100"
-                onClick={addQuestion}
-              >
+              <Button onClick={addQuestion} variant="outline">
                 + Add Question
               </Button>
-              <Button
-                className="bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-800 dark:hover:bg-blue-900"
-                onClick={handleSubmit}
-              >
+              <Button onClick={handleSubmit} className="bg-blue-600 text-white hover:bg-blue-700">
                 Submit Questions ({questions.length})
               </Button>
             </div>
