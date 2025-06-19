@@ -29,6 +29,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+
+// ✅ Use renamed dialog2
 import { Dialog, DialogContent } from "@/components/ui/dialog2"
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER
@@ -98,7 +100,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
 
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Logout Modal */}
+      {/* ✅ Logout Loading Modal */}
       <Dialog open={loadingLogout}>
         <DialogContent
           className="flex flex-col items-center justify-center space-y-3 py-10"
@@ -109,7 +111,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
         </DialogContent>
       </Dialog>
 
-      {/* Sidebar */}
+      {/* Sidebar for desktop */}
       <aside className="hidden md:flex flex-col w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
         <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
           <GraduationCap className="h-6 w-6 text-primary" />
@@ -124,6 +126,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
         <nav className="flex-1 p-4 space-y-1">
           {navItems.map((item) => {
             const isActive = pathname === item.href
+
             return (
               <Link
                 key={item.href}
@@ -149,9 +152,11 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
         </div>
       </aside>
 
-      {/* Main Content */}
+      {/* Main content */}
       <div className="flex-1 flex flex-col">
+        {/* Header */}
         <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-16 flex items-center px-4 justify-between">
+          {/* Mobile menu */}
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon" className="md:hidden">
@@ -168,9 +173,11 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
                   </p>
                 </div>
               </div>
+
               <nav className="flex-1 p-4 space-y-1">
                 {navItems.map((item) => {
                   const isActive = pathname === item.href
+
                   return (
                     <Link
                       key={item.href}
@@ -187,6 +194,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
                   )
                 })}
               </nav>
+
               <div className="p-4 border-t border-gray-200 dark:border-gray-700">
                 <Button variant="outline" className="w-full justify-start gap-2" onClick={handleLogout}>
                   <LogOut className="h-4 w-4" />
@@ -238,6 +246,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
           </div>
         </header>
 
+        {/* Page content */}
         <main className="flex-1 p-6 overflow-auto">{children}</main>
       </div>
     </div>
