@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import Link from "next/link"
 import { toast } from "sonner"
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER
+const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER 
 
 export default function AdminDashboard() {
   const [userName, setUserName] = useState("")
