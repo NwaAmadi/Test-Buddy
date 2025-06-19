@@ -29,7 +29,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { Dialog, DialogContent } from "@/components/ui/dialog" // Ensure DialogClose is NOT imported if you want to explicitly avoid it
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER
 
@@ -149,13 +149,14 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Logout Loading Modal */}
       <Dialog open={loadingLogout}>
-        <DialogContent className="flex flex-col items-center justify-center space-y-3 py-10">
+        <DialogContent
+          className="flex flex-col items-center justify-center space-y-3 py-10 [&>button]:hidden"
+        >
           <div className="w-8 h-8 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
           <p className="text-lg font-semibold">Logging out...</p>
         </DialogContent>
       </Dialog>
 
-      {/* Sidebar */}
       <aside className="hidden md:flex flex-col w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
         <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
           <GraduationCap className="h-6 w-6 text-primary" />
@@ -175,11 +176,10 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
-                  isActive
+                className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${isActive
                     ? "bg-gray-100 dark:bg-gray-700 text-primary"
                     : "hover:bg-gray-100 dark:hover:bg-gray-700"
-                }`}
+                  }`}
               >
                 <item.icon className="h-5 w-5" />
                 <span>{item.title}</span>
@@ -225,11 +225,10 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
                     <Link
                       key={item.href}
                       href={item.href}
-                      className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
-                        isActive
+                      className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${isActive
                           ? "bg-gray-100 dark:bg-gray-700 text-primary"
                           : "hover:bg-gray-100 dark:hover:bg-gray-700"
-                      }`}
+                        }`}
                     >
                       <item.icon className="h-5 w-5" />
                       <span>{item.title}</span>
