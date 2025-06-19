@@ -18,6 +18,13 @@ export default function AdminDashboard() {
   const [selectedExam, setSelectedExam] = useState<any | null>(null)
   const router = useRouter()
 
+  const accessToken = localStorage.getItem("accessToken")
+  if (!accessToken) {
+    toast.error("UNAUTHORIZED!")
+    router.push("/login")
+    return
+  }
+
   useEffect(() => {
     const userStr = localStorage.getItem("user")
     if (userStr) {
@@ -29,12 +36,7 @@ export default function AdminDashboard() {
   }, [])
 
   const fetchExams = async () => {
-    const accessToken = localStorage.getItem("accessToken")
-    if (!accessToken) {
-      toast.error("UNAUTHORIZED!")
-      router.push("/login")
-      return
-    }
+
 
     const res = await fetch(`${BACKEND_URL}/api/admin/exam`, {
       headers: {
