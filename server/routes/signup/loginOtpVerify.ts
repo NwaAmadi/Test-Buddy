@@ -72,7 +72,7 @@ router.post("/", async (req: Request, res: Response): Promise<any> => {
       .eq("role", user.role);
 
     if (data) res.status(200).json({ success: true, message: "SESSION UPDATED SUCCESSFULLY" });
-    else res.status(500).json({ success: false, error: error?.message || "FAILED TO UPDATE SESSION" });
+    //else res.status(500).json({ success: false, error: error?.message || "FAILED TO UPDATE SESSION" });
 
     const { accessToken, refreshToken } = await generateTokens(
       { email: user.email, role: user.role, id: user.id },
