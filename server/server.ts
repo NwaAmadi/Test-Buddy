@@ -9,6 +9,7 @@ import otpVerifyRoute from "./routes/signup/otpVerify";
 import loginSendOtpRoute from "./routes/signup/loginSendOtp";
 import loginOtpVerifyRoute from "./routes/signup/loginOtpVerify";
 import sendOtpRoute from "./routes/signup/sendOtp";
+import Session from "./routes/active/verify";
 
 
 import studentDashboardRoute from "./routes/student/dashboard";
@@ -43,6 +44,8 @@ app.use("/student/results", allResultsRouter);
 app.use("/api/admin/exam", examsRoutes)
 app.use("/api/admin/questions", questionsRoutes)
 app.use("/api/admin/results", resultsRoutes)
+
+app.use("/api/active", Session);
 
 app.listen(PORT, () => {
   console.log(`ACTIVE ON  ${PORT}`);

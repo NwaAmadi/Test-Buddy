@@ -21,10 +21,11 @@ export default function LoginPage() {
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [info, setInfo] = useState("")
+  const [isVerified, setIsVerified] = useState(false)
 
   const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER
 
-  const handleEmailSubmit = async (e: React.FormEvent) => {
+  const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
     setInfo("")
@@ -33,6 +34,39 @@ export default function LoginPage() {
       setError("Please enter your email")
       return
     }
+
+    setIsLoading(true)
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/active/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, role }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data?.error || "Verification failed. Please try again.")
+        setIsLoading(false)
+        return
+      }
+
+      if (data.success) {
+        setError(data.message)
+        setIsVerified(false)
+      } else {
+        setInfo("Verification successful. You can now send the OTP.")
+        setIsVerified(true)
+      }
+    } catch (err) {
+      setError("Network error. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleEmailSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError("")
+    setInfo("")
 
     setIsLoading(true)
     try {
@@ -80,7 +114,6 @@ export default function LoginPage() {
         return
       }
 
-      // Save tokens and user info
       if (data.accessToken) localStorage.setItem("accessToken", data.accessToken)
       if (data.refreshToken) localStorage.setItem("refreshToken", data.refreshToken)
       if (data.user) localStorage.setItem("user", JSON.stringify(data.user))
@@ -113,7 +146,7 @@ export default function LoginPage() {
         </CardHeader>
         <CardContent>
           {step === "email" && (
-            <form onSubmit={handleEmailSubmit} className="space-y-4">
+            <form onSubmit={isVerified ? handleEmailSubmit : handleVerify} className="space-y-4">
               {error && (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
@@ -132,13 +165,28 @@ export default function LoginPage() {
                   type="email"
                   placeholder="name@example.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value)
+                    setIsVerified(false) 
+                    setError("")
+                    setInfo("")
+                  }}
                   required
                 />
               </div>
               <div className="space-y-2">
                 <Label>Role</Label>
-                <RadioGroup defaultValue="student" value={role} onValueChange={setRole} className="flex space-x-4">
+                <RadioGroup
+                  defaultValue="student"
+                  value={role}
+                  onValueChange={(value) => {
+                    setRole(value)
+                    setIsVerified(false)
+                    setError("")
+                    setInfo("")
+                  }}
+                  className="flex space-x-4"
+                >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="student" id="student" />
                     <Label htmlFor="student">Student</Label>
@@ -150,7 +198,13 @@ export default function LoginPage() {
                 </RadioGroup>
               </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Sending OTP..." : "Send OTP"}
+                {isLoading
+                  ? isVerified
+                    ? "Sending OTP..."
+                    : "Verifying..."
+                  : isVerified
+                  ? "Send OTP"
+                  : "Verify Email"}
               </Button>
             </form>
           )}
@@ -185,7 +239,12 @@ export default function LoginPage() {
                 type="button"
                 variant="link"
                 className="w-full"
-                onClick={() => setStep("email")}
+                onClick={() => {
+                  setStep("email")
+                  setIsVerified(false)
+                  setError("")
+                  setInfo("")
+                }}
               >
                 Back to Email
               </Button>
