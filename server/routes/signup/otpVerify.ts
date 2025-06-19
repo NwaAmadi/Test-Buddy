@@ -62,17 +62,20 @@ router.post("/", async (req: Request, res: Response): Promise<any> => {
     }
 
     const { data, error } = await supabase
-    .from("active")
-    .insert([
-      {
-        user_email: user.email,
-        role: user.role,
-        status: true
-      }
-    ]);
+      .from("active")
+      .upsert(
+        [
+          {
+            user_email: user.email,
+            role: user.role,
+            status: true
+          }
+        ],
+        { onConflict: "user_email" }
+      );
 
-    if (data)  res.status(200).json({ success: true, message: "SESSION UPDATED SUCCESSFULLY" });
-    else  res.status(500).json({ success: false, error: error?.message || "FAILED TO UPDATE SESSION" });
+    if (data) res.status(200).json({ success: true, message: "SESSION UPDATED SUCCESSFULLY" });
+    else res.status(500).json({ success: false, error: error?.message || "FAILED TO UPDATE SESSION" });
 
     const { accessToken, refreshToken } = await generateTokens(
       { email: user.email, role: user.role, id: user.id },
