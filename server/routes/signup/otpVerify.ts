@@ -66,12 +66,12 @@ router.post("/", async (req: Request, res: Response): Promise<any> => {
       .upsert(
         [
           {
-            user_email: user.email,
+            email: user.email,
             role: user.role,
             status: true
           }
         ],
-        { onConflict: "email" }
+        { onConflict: "email"}
       );
 
     if (data) res.status(200).json({ success: true, message: "SESSION UPDATED SUCCESSFULLY" });
