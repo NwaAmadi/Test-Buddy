@@ -7,7 +7,7 @@ import { cleanupExpiredOTPs } from "../../OTP/deleteExpiredOTPs";
 import { generateTokens } from "../../libs/tokenGenerator";
 import express from "express";
 import cors from 'cors';
-import { OtpVerify } from '../../types/interface';
+import { OtpVerify, ActiveState } from '../../types/interface';
 
 const app = express();
 app.use(cors());
@@ -22,6 +22,7 @@ const router = Router();
 
 router.post("/", async (req: Request, res: Response): Promise<any> => {
   const { otp, email } = req.body as OtpVerify['body'];
+  const { user_email, role, status } = req.body as ActiveState;
 
   if (!otp) return res.status(400).json({ error: "OTP REQUIRED!" });
   if (!email) return res.status(400).json({ error: "EMAIL REQUIRED!" });
@@ -59,6 +60,19 @@ router.post("/", async (req: Request, res: Response): Promise<any> => {
     if (userError || !user) {
       return res.status(500).json({ error: "COULD NOT FETCH USER AFTER VERIFICATION" });
     }
+
+    const { data, error } = await supabase
+    .from("active")
+    .insert([
+      {
+        user_email: user.email,
+        role: user.role,
+        status: true
+      }
+    ]);
+
+    if (data)  res.status(200).json({ success: true, message: "SESSION UPDATED SUCCESSFULLY" });
+    else  res.status(500).json({ success: false, error: error?.message || "FAILED TO UPDATE SESSION" });
 
     const { accessToken, refreshToken } = await generateTokens(
       { email: user.email, role: user.role, id: user.id },

@@ -4,33 +4,38 @@ import { supabase } from "../../db/supabase";
 
 const router = express.Router();
 
-
-
 router.post("/", async (req: Request, res: Response): Promise<any> => {
-  const { email, role } = req.body;
+    const { email, role } = req.body;
 
-  if (!email || !role) {
-    return res.status(400).json({ success: false, error: " MISSING EMAIL OR ROLE " });
-  }
+    if (!email || !role) {
+        return res.status(400).json({ success: false, error: "Missing email or role" });
+    }
 
-  const { data, error } = await supabase
-    .from("active")
-    .select("id")
-    .eq("email", email)
-    .eq("role", role)
-    .eq("status", true)
-    .maybeSingle();
+    const { data, error } = await supabase
+        .from("active")
+        .select("id")
+        .eq("email", email)
+        .eq("role", role)
+        .eq("status", true)
+        .maybeSingle();
 
-  
-  if (error) {
-    return res.status(500).json({ success: false, message: error.message });
-  }
+    if (error) {
+        return res.status(500).json({ success: false, error: "Server error" });
+    }
 
-  if (data) {
-    return res.json({ success: true, message: "Please log out from your other device" });
-  }
+    if (data) {
+        return res.json({
+            success: true,
+            active: true,
+            message: "PLEASE LOGOUT FROM YOUR OTHER DEVICE!",
+        });
+    }
 
-  return res.json({ success: false, message: "PROCEED" });
+    return res.json({
+        success: true,
+        active: false,
+        message: "PROCEED"
+    });
 });
 
 export default router;

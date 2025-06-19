@@ -10,6 +10,7 @@ import loginSendOtpRoute from "./routes/signup/loginSendOtp";
 import loginOtpVerifyRoute from "./routes/signup/loginOtpVerify";
 import sendOtpRoute from "./routes/signup/sendOtp";
 import Session from "./routes/active/verify";
+import logoutRouter from "./routes/active/logout";
 
 
 import studentDashboardRoute from "./routes/student/dashboard";
@@ -46,6 +47,7 @@ app.use("/api/admin/questions", questionsRoutes)
 app.use("/api/admin/results", resultsRoutes)
 
 app.use("/api/active", Session);
+app.use("/api/logout", logoutRouter);
 
 app.listen(PORT, () => {
   console.log(`ACTIVE ON  ${PORT}`);

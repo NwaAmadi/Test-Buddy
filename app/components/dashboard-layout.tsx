@@ -1,10 +1,8 @@
 "use client"
 
-import type React from "react"
-
-import { useState, useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { ModeToggle } from "@/components/mode-toggle"
@@ -31,6 +29,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER
 
@@ -41,21 +40,48 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children, role }: DashboardLayoutProps) {
   const pathname = usePathname()
+  const router = useRouter()
   const [isMounted, setIsMounted] = useState(false)
-  
-    {
-  const pathname = usePathname()
-  const [isMounted, setIsMounted] = useState(false)
-  
-  // Prevent hydration errors
+  const [loadingLogout, setLoadingLogout] = useState(false)
+
   useEffect(() => {
     setIsMounted(true)
   }, [])
-  
-  if (!isMounted) {
-    return null
+
+  const handleLogout = async () => {
+    const user = JSON.parse(localStorage.getItem("user") || "{}")
+
+    if (!user?.email || !user?.role) {
+      localStorage.removeItem("user")
+      router.push("/")
+      return
+    }
+
+    setLoadingLogout(true)
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/logout`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: user.email,
+          role: user.role,
+        }),
+      })
+
+      if (!res.ok) {
+        console.error("Logout failed")
+      }
+    } catch (err) {
+      console.error("Logout error", err)
+    } finally {
+      localStorage.removeItem("user")
+      router.push("/")
+    }
   }
-  
+
+  if (!isMounted) return null
+
   const adminNavItems = [
     {
       title: "Dashboard",
@@ -93,7 +119,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
       icon: Settings,
     },
   ]
-  
+
   const studentNavItems = [
     {
       title: "Dashboard",
@@ -108,7 +134,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
     {
       title: "Results",
       href: "/student/results",
-      icon: FileText,
+      icon: FileSpreadsheet,
     },
     {
       title: "Settings",
@@ -116,12 +142,20 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
       icon: Settings,
     },
   ]
-  
+
   const navItems = role === "admin" ? adminNavItems : studentNavItems
-  
+
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Sidebar for desktop */}
+      {/* Logout Loading Modal */}
+      <Dialog open={loadingLogout}>
+        <DialogContent className="flex flex-col items-center justify-center space-y-3 py-10">
+          <div className="w-8 h-8 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
+          <p className="text-lg font-semibold">Logging out...</p>
+        </DialogContent>
+      </Dialog>
+
+      {/* Sidebar */}
       <aside className="hidden md:flex flex-col w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
         <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
           <GraduationCap className="h-6 w-6 text-primary" />
@@ -132,18 +166,18 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
             </p>
           </div>
         </div>
-        
+
         <nav className="flex-1 p-4 space-y-1">
           {navItems.map((item) => {
             const isActive = pathname === item.href
-            
+
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
-                  isActive 
-                    ? "bg-gray-100 dark:bg-gray-700 text-primary" 
+                  isActive
+                    ? "bg-gray-100 dark:bg-gray-700 text-primary"
                     : "hover:bg-gray-100 dark:hover:bg-gray-700"
                 }`}
               >
@@ -153,27 +187,23 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
             )
           })}
         </nav>
-        
+
         <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-          <Button variant="outline" className="w-full justify-start gap-2" asChild>
-            <Link href="/">
-              <LogOut className="h-4 w-4" />
-              <span>Logout</span>
-            </Link>
+          <Button variant="outline" className="w-full justify-start gap-2" onClick={handleLogout}>
+            <LogOut className="h-4 w-4" />
+            <span>Logout</span>
           </Button>
         </div>
       </aside>
-      
-      {/* Main content */}
+
+      {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        {/* Header */}
         <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-16 flex items-center px-4 justify-between">
-          {/* Mobile menu */}
+          {/* Mobile Nav */}
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon" className="md:hidden">
                 <Menu className="h-5 w-5" />
-                <span className="sr-only">Toggle menu</span>
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-64 p-0">
@@ -186,18 +216,18 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
                   </p>
                 </div>
               </div>
-              
+
               <nav className="flex-1 p-4 space-y-1">
                 {navItems.map((item) => {
                   const isActive = pathname === item.href
-                  
+
                   return (
                     <Link
                       key={item.href}
                       href={item.href}
                       className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
-                        isActive 
-                          ? "bg-gray-100 dark:bg-gray-700 text-primary" 
+                        isActive
+                          ? "bg-gray-100 dark:bg-gray-700 text-primary"
                           : "hover:bg-gray-100 dark:hover:bg-gray-700"
                       }`}
                     >
@@ -207,39 +237,34 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
                   )
                 })}
               </nav>
-              
+
               <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-                <Button variant="outline" className="w-full justify-start gap-2" asChild>
-                  <Link href="/">
-                    <LogOut className="h-4 w-4" />
-                    <span>Logout</span>
-                  </Link>
+                <Button variant="outline" className="w-full justify-start gap-2" onClick={handleLogout}>
+                  <LogOut className="h-4 w-4" />
+                  <span>Logout</span>
                 </Button>
               </div>
             </SheetContent>
           </Sheet>
-          
+
           <div className="md:hidden flex items-center gap-2">
             <GraduationCap className="h-5 w-5 text-primary" />
             <span className="font-semibold">Test Buddy</span>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <Button variant="outline" size="icon">
               <Bell className="h-5 w-5" />
-              <span className="sr-only">Notifications</span>
             </Button>
-            
+
             <ModeToggle />
-            
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src="/placeholder.svg?height=32&width=32" alt="User" />
-                    <AvatarFallback>
-                      {role === "admin" ? "AD" : "ST"}
-                    </AvatarFallback>
+                    <AvatarImage src="/placeholder.svg" alt="User" />
+                    <AvatarFallback>{role === "admin" ? "AD" : "ST"}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
@@ -255,24 +280,17 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
                   <span>Settings</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Logout</span>
-                  </Link>
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Logout</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </header>
-        
-        {/* Page content */}
-        <main className="flex-1 p-6 overflow-auto">
-          {children}
-        </main>
+
+        <main className="flex-1 p-6 overflow-auto">{children}</main>
       </div>
     </div>
   )
-}
-
 }

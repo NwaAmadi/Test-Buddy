@@ -94,3 +94,8 @@ export interface ExamResult {
 export interface GetExamResultsParams {
   exam_id: string;
 }
+export  interface ActiveState{
+  user_email: string;
+  role: "admin" | "student";
+  status: boolean;
+}

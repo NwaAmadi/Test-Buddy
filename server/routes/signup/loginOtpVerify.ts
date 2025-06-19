@@ -65,6 +65,19 @@ router.post("/", async (req: Request, res: Response): Promise<any> => {
       return res.status(403).json({ error: "ROLE MISMATCH" });
     }
 
+    const { data, error } = await supabase
+    .from("active")
+    .insert([
+      {
+        email: user.email,
+        role: user.role,
+        status: true
+      }
+    ]);
+    
+    if (data)  res.status(200).json({ success: true, message: "SESSION UPDATED SUCCESSFULLY" });
+    else  res.status(500).json({ success: false, error: error?.message || "FAILED TO UPDATE SESSION" });
+
     const { accessToken, refreshToken } = await generateTokens(
       { email: user.email, role: user.role, id: user.id },
       JWT_SECRET,

@@ -41,26 +41,31 @@ export default function LoginPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, role }),
-      })
-      const data = await res.json()
+      });
+
+      const data = await res.json();
+
       if (!res.ok) {
-        setError(data?.error || "Verification failed. Please try again.")
-        setIsLoading(false)
-        return
+        setError(data?.error || "LOGOUT FROM YOUR OTHER DEVICE");
+        setIsVerified(false);
+        setIsLoading(false);
+        return;
       }
 
-      if (data.success) {
-        setError(data.message)
-        setIsVerified(false)
+      if (data.active) {
+        setError(data.message || "LOGOUT FROM YOUR OTHER DEVICE");
+        setIsVerified(false);
       } else {
-        setInfo("Verification successful. You can now send the OTP.")
-        setIsVerified(true)
+        
+        setInfo(data.message || "VERIFIED.");
+        setIsVerified(true);
       }
     } catch (err) {
-      setError("Network error. Please try again.")
+      setError("Network error. Please try again.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
+
   }
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
@@ -167,7 +172,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value)
-                    setIsVerified(false) 
+                    setIsVerified(false)
                     setError("")
                     setInfo("")
                   }}
@@ -203,8 +208,8 @@ export default function LoginPage() {
                     ? "Sending OTP..."
                     : "Verifying..."
                   : isVerified
-                  ? "Send OTP"
-                  : "Verify Email"}
+                    ? "Send OTP"
+                    : "Verify Email"}
               </Button>
             </form>
           )}
