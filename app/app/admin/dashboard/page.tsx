@@ -3,65 +3,101 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { DashboardLayout } from "@/components/dashboard-layout"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
 import Link from "next/link"
 import { toast } from "sonner"
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER 
+const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER
+
+interface Exam {
+  id: string
+  title: string
+  date: string
+  time: string
+  duration: number
+}
 
 export default function AdminDashboard() {
   const [userName, setUserName] = useState("")
-  const [exams, setExams] = useState<any[]>([])
+  const [exams, setExams] = useState<Exam[]>([])
   const [openDialog, setOpenDialog] = useState(false)
-  const [selectedExam, setSelectedExam] = useState<any | null>(null)
+  const [selectedExam, setSelectedExam] = useState<Exam | null>(null)
   const router = useRouter()
 
-  const accessToken = localStorage.getItem("accessToken")
-  if (!accessToken) {
-    toast.error("UNAUTHORIZED!")
-    router.push("/login")
-    return
-  }
-
   useEffect(() => {
-    const userStr = localStorage.getItem("user")
-    if (userStr) {
-      const user = JSON.parse(userStr)
-      setUserName(user.first_name)
+    const accessToken = localStorage.getItem("accessToken")
+    if (!accessToken) {
+      toast.error("UNAUTHORIZED!")
+      router.push("/login")
+      return
     }
 
-    fetchExams()
+    const userStr = localStorage.getItem("user")
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr)
+        setUserName(user.first_name || "Admin")
+      } catch (error) {
+        console.error("Invalid user object in localStorage")
+      }
+    }
+
+    fetchExams(accessToken)
   }, [])
 
-  const fetchExams = async () => {
-
-
-    const res = await fetch(`${BACKEND_URL}/api/admin/exam`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    })
-    if (res.ok) {
-      const data = await res.json()
-      setExams(data)
+  const fetchExams = async (token: string) => {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/exam`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setExams(data)
+      } else {
+        toast.error("Failed to fetch exams")
+      }
+    } catch (error) {
+      toast.error("Error fetching exams")
+      console.error(error)
     }
   }
 
   const handleDelete = async () => {
     if (!selectedExam) return
-    const accessToken = localStorage.getItem("accessToken") || ""
-    const res = await fetch(`${BACKEND_URL}/api/admin/exam/${selectedExam.id}`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    })
+    const token = localStorage.getItem("accessToken") || ""
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/exam/${selectedExam.id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
 
-    if (res.ok) {
-      setExams((prev) => prev.filter((exam) => exam.id !== selectedExam.id))
-      setOpenDialog(false)
+      if (res.ok) {
+        setExams((prev) => prev.filter((exam) => exam.id !== selectedExam.id))
+        setOpenDialog(false)
+        toast.success("Exam deleted")
+      } else {
+        toast.error("Failed to delete exam")
+      }
+    } catch (error) {
+      toast.error("Error deleting exam")
+      console.error(error)
     }
   }
 
