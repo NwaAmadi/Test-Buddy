@@ -22,7 +22,7 @@ export default function CreateExamPage() {
   const handleSubmit = async () => {
     setError("")
     if (!title || !date || !time || !duration) {
-      setError("All fields are required.")
+      toast.info("All fields are required.")
       return
     }
 
