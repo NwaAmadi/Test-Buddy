@@ -68,7 +68,7 @@ router.post("/", async (req: Request, res: Response): Promise<any> => {
     const { data, error } = await supabase
       .from("active")
       .update({ status: true })
-      .eq("user_email", user.email)
+      .eq("email", user.email)
       .eq("role", user.role);
 
     if (data) res.status(200).json({ success: true, message: "SESSION UPDATED SUCCESSFULLY" });
