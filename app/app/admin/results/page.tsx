@@ -12,7 +12,7 @@ export default function ExamResultsPage({ params }: { params: { id: string } }) 
 
   useEffect(() => {
     const fetchResults = async () => {
-      const accessToken = localStorage.getItem("accessToken") || ""
+      const accessToken = localStorage.getItem("accessToken")
       const res = await fetch(`${BACKEND_URL}/api/admin/exams/${params.id}/results`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
