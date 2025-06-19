@@ -29,7 +29,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { Dialog, DialogContent } from "@/components/ui/dialog2"
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER
 
@@ -60,96 +60,50 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
     setLoadingLogout(true)
 
     try {
-      const res = await fetch(`${BACKEND_URL}/api/logout`, {
+      await fetch(`${BACKEND_URL}/api/logout`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: user.email,
-          role: user.role,
-        }),
+        body: JSON.stringify({ email: user.email, role: user.role }),
       })
-
-      if (!res.ok) {
-        console.error("Logout failed")
-      }
     } catch (err) {
       console.error("Logout error", err)
     } finally {
-      localStorage.removeItem("user")
-      router.push("/")
+      setTimeout(() => {
+        localStorage.removeItem("user")
+        router.push("/")
+      }, 1000)
     }
   }
 
   if (!isMounted) return null
 
   const adminNavItems = [
-    {
-      title: "Dashboard",
-      href: "/admin/dashboard",
-      icon: LayoutDashboard,
-    },
-    {
-      title: "Exams",
-      href: "/admin/exams/create",
-      icon: FileText,
-    },
-    {
-      title: "Students",
-      href: "/admin/students",
-      icon: Users,
-    },
-    {
-      title: "Proctoring",
-      href: "/admin/proctoring",
-      icon: Video,
-    },
-    {
-      title: "Results",
-      href: "/admin/results",
-      icon: FileSpreadsheet,
-    },
-    {
-      title: "Questions",
-      href: "/admin/exams/questions",
-      icon: NotebookPen,
-    },
-    {
-      title: "Settings",
-      href: "/admin/settings",
-      icon: Settings,
-    },
+    { title: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+    { title: "Exams", href: "/admin/exams/create", icon: FileText },
+    { title: "Students", href: "/admin/students", icon: Users },
+    { title: "Proctoring", href: "/admin/proctoring", icon: Video },
+    { title: "Results", href: "/admin/results", icon: FileSpreadsheet },
+    { title: "Questions", href: "/admin/exams/questions", icon: NotebookPen },
+    { title: "Settings", href: "/admin/settings", icon: Settings },
   ]
 
   const studentNavItems = [
-    {
-      title: "Dashboard",
-      href: "/student/dashboard",
-      icon: LayoutDashboard,
-    },
-    {
-      title: "My Exams",
-      href: "/student/[id]/exams",
-      icon: FileText,
-    },
-    {
-      title: "Results",
-      href: "/student/results",
-      icon: FileSpreadsheet,
-    },
-    {
-      title: "Settings",
-      href: "/student/settings",
-      icon: Settings,
-    },
+    { title: "Dashboard", href: "/student/dashboard", icon: LayoutDashboard },
+    { title: "My Exams", href: "/student/[id]/exams", icon: FileText },
+    { title: "Results", href: "/student/results", icon: FileSpreadsheet },
+    { title: "Settings", href: "/student/settings", icon: Settings },
   ]
 
   const navItems = role === "admin" ? adminNavItems : studentNavItems
 
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Logout Loading Modal */}
+      {/* Logout Modal */}
       <Dialog open={loadingLogout}>
-        <DialogContent className="flex flex-col items-center justify-center space-y-3 py-10">
+        <DialogContent
+          className="flex flex-col items-center justify-center space-y-3 py-10"
+          hideClose
+        >
           <div className="w-8 h-8 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
           <p className="text-lg font-semibold">Logging out...</p>
         </DialogContent>
@@ -170,7 +124,6 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
         <nav className="flex-1 p-4 space-y-1">
           {navItems.map((item) => {
             const isActive = pathname === item.href
-
             return (
               <Link
                 key={item.href}
@@ -199,7 +152,6 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-16 flex items-center px-4 justify-between">
-          {/* Mobile Nav */}
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon" className="md:hidden">
@@ -216,11 +168,9 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
                   </p>
                 </div>
               </div>
-
               <nav className="flex-1 p-4 space-y-1">
                 {navItems.map((item) => {
                   const isActive = pathname === item.href
-
                   return (
                     <Link
                       key={item.href}
@@ -237,7 +187,6 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
                   )
                 })}
               </nav>
-
               <div className="p-4 border-t border-gray-200 dark:border-gray-700">
                 <Button variant="outline" className="w-full justify-start gap-2" onClick={handleLogout}>
                   <LogOut className="h-4 w-4" />
