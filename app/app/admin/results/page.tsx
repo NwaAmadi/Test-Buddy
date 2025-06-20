@@ -51,7 +51,7 @@ export default function ExamResultsPage() {
       const data = await res.json()
       setResults(data)
     } catch (err) {
-      toast.error("Error fetching results")
+      toast.info("No results found for this exam!")
       console.error(err)
     } finally {
       setLoading(false)
