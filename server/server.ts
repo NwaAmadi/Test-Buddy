@@ -18,10 +18,10 @@ import examRoute from "./routes/student/exam";
 import resultRoute from "./routes/student/result";
 import submitExamRoute from "./routes/student/submitExam";
 import allResultsRouter from "./routes/student/allResults";
+import adminResultsRoute from './routes/admin/results';
 
 import examsRoutes from "./routes/admin/exams"
 import questionsRoutes from "./routes/admin/questions"
-import resultsRoutes from "./routes/admin/results"
 
 const app = express();
 
@@ -44,7 +44,7 @@ app.use("/student/results", allResultsRouter);
 
 app.use("/api/admin/exam", examsRoutes)
 app.use("/api/admin/questions", questionsRoutes)
-app.use("/api/admin/results", resultsRoutes)
+app.use('/api/admin/results', adminResultsRoute);
 
 app.use("/api/active", Session);
 app.use("/api/logout", logoutRouter);
