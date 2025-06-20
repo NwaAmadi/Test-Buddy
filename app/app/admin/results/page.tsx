@@ -70,12 +70,12 @@ export default function ExamResultsPage() {
 
   return (
     <DashboardLayout role="admin">
-      <div className="space-y-6 max-w-4xl mx-auto px-4 py-8">
+      <div className="space-y-6 max-w-7xl mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">Exam Results</h1>
 
         <div className="flex flex-col sm:flex-row items-center gap-4">
           <select
-            className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded px-4 py-2 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+            className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md px-4 py-2 text-gray-900 dark:text-gray-100 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 w-full sm:w-auto"
             onChange={(e) => {
               const exam = exams.find(ex => ex.id === e.target.value)
               setSelectedExam(exam)
@@ -108,11 +108,11 @@ export default function ExamResultsPage() {
         )}
 
         {selectedExam && results.length > 0 && (
-          <div className="overflow-x-auto mt-6 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+          <div className="overflow-x-auto mt-6 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 w-full">
             <h2 className="text-xl font-semibold px-6 pt-6 pb-2 text-gray-800 dark:text-gray-200">
               Results for <span className="text-blue-600 dark:text-blue-400">{selectedExam.title}</span>
             </h2>
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <table className="w-full min-w-[700px] divide-y divide-gray-200 dark:divide-gray-700">
               <thead>
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700 dark:text-gray-300">First Name</th>
