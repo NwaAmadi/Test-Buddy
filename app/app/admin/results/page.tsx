@@ -110,7 +110,7 @@ export default function ExamResultsPage() {
         {selectedExam && results.length > 0 && (
           <div className="overflow-x-auto mt-6 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 w-full">
             <h2 className="text-xl font-semibold px-6 pt-6 pb-2 text-gray-800 dark:text-gray-200">
-              <span className="text-blue-600 dark:text-white-400">{selectedExam.title}</span>
+              <span className="text-black dark:text-white">{selectedExam.title}</span>
             </h2>
             <table className="w-full min-w-[700px] divide-y divide-gray-200 dark:divide-gray-700">
               <thead>
