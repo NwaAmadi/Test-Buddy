@@ -1,160 +1,126 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
-import { DashboardLayout } from "@/components/dashboard-layout";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "sonner";
-import { saveAs } from "file-saver";
+import { useEffect, useState } from "react"
+import { DashboardLayout } from "@/components/dashboard-layout"
+import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
+import { saveAs } from "file-saver"
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER;
+const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER
 
 export default function ExamResultsPage() {
-  const [exams, setExams] = useState<any[]>([]);
-  const [selectedExamId, setSelectedExamId] = useState("");
-  const [results, setResults] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [exams, setExams] = useState<any[]>([])
+  const [selectedExam, setSelectedExam] = useState<any>(null)
+  const [results, setResults] = useState<any[]>([])
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("accessToken")
+    if (!token) return
+
     const fetchExams = async () => {
       try {
         const res = await fetch(`${BACKEND_URL}/api/admin/exam`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json();
-        setExams(data);
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        if (!res.ok) throw new Error("Failed to fetch exams")
+        const data = await res.json()
+        setExams(data)
       } catch (err) {
-        toast.error("Failed to fetch exams");
+        toast.error("Error fetching exams")
+        console.error(err)
       }
-    };
+    }
 
-    fetchExams();
-  }, []);
+    fetchExams()
+  }, [])
 
   const fetchResults = async (examId: string) => {
-    const token = localStorage.getItem("token");
-    setLoading(true);
+    setLoading(true)
+    setResults([])
+    const token = localStorage.getItem("accessToken")
     try {
       const res = await fetch(`${BACKEND_URL}/api/admin/results/${examId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setResults(data);
-      } else {
-        toast.error(data.error || "Failed to fetch results");
-        setResults([]);
-      }
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      if (!res.ok) throw new Error("Failed to fetch results")
+      const data = await res.json()
+      setResults(data)
     } catch (err) {
-      toast.error("Error fetching results");
-      setResults([]);
+      toast.error("Error fetching results")
+      console.error(err)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const downloadResults = () => {
     const csvContent =
       "data:text/csv;charset=utf-8," +
-      ["First Name,Last Name,Email,Score,Passed"]
-        .concat(results.map(r => `${r.first_name},${r.last_name},${r.email},${r.score},${r.passed}`))
-        .join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv" });
-    saveAs(blob, "exam_results.csv");
-  };
-
-  const selectedExam = exams.find(e => e.id === selectedExamId);
+      ["First Name,Last Name,Score %,Passed"]
+        .concat(results.map(r => `${r.first_name},${r.last_name},${r.score},${r.passed}`))
+        .join("\n")
+    const blob = new Blob([csvContent], { type: "text/csv" })
+    saveAs(blob, `results_${selectedExam?.title || "exam"}.csv`)
+  }
 
   return (
     <DashboardLayout role="admin">
-      <div className="space-y-6">
-        <h1 className="text-3xl font-bold tracking-tight">Exam Results</h1>
+      <div className="space-y-4">
+        <h1 className="text-2xl font-bold">Exam Results</h1>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <div className="space-y-2">
-            <Label>Select Exam</Label>
-            <Select onValueChange={(id) => {
-              setSelectedExamId(id);
-              fetchResults(id);
-            }}>
-              <SelectTrigger>
-                <SelectValue placeholder="Choose an exam..." />
-              </SelectTrigger>
-              <SelectContent>
-                {exams.map(exam => (
-                  <SelectItem key={exam.id} value={exam.id}>
-                    {exam.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        <select
+          className="border rounded p-2"
+          onChange={(e) => {
+            const exam = exams.find(ex => ex.id === e.target.value)
+            setSelectedExam(exam)
+            fetchResults(e.target.value)
+          }}
+        >
+          <option value="">Select Exam</option>
+          {exams.map((exam) => (
+            <option key={exam.id} value={exam.id}>
+              {exam.title}
+            </option>
+          ))}
+        </select>
 
-          {selectedExamId && results.length > 0 && (
-            <div className="flex items-end">
-              <Button onClick={downloadResults} className="w-full">
-                Download CSV
-              </Button>
-            </div>
-          )}
-        </div>
+        {loading && <p>Fetching results...</p>}
 
-        {selectedExamId && (
+        {selectedExam && results.length > 0 && (
           <>
-            <h2 className="text-xl font-semibold mt-6">
-              Results for <span className="text-blue-500">{selectedExam?.title}</span>
+            <h2 className="text-xl font-semibold">
+              Results for {selectedExam.title}
             </h2>
+            <Button onClick={downloadResults}>Download Results</Button>
 
-            {loading ? (
-              <div className="grid gap-2 mt-4">
-                {[...Array(5)].map((_, i) => (
-                  <Skeleton key={i} className="h-14 rounded-md w-full" />
+            <table className="w-full mt-4 border">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="border p-2">First Name</th>
+                  <th className="border p-2">Last Name</th>
+                  <th className="border p-2">Score (%)</th>
+                  <th className="border p-2">Passed</th>
+                </tr>
+              </thead>
+              <tbody>
+                {results.map((r, i) => (
+                  <tr key={i}>
+                    <td className="border p-2">{r.first_name}</td>
+                    <td className="border p-2">{r.last_name}</td>
+                    <td className="border p-2">{r.score}</td>
+                    <td className="border p-2">{r.passed ? "Yes" : "No"}</td>
+                  </tr>
                 ))}
-              </div>
-            ) : results.length > 0 ? (
-              <div className="overflow-x-auto mt-4">
-                <table className="w-full border text-sm dark:border-neutral-700">
-                  <thead className="bg-muted text-muted-foreground">
-                    <tr>
-                      <th className="p-3 text-left">Name</th>
-                      <th className="p-3 text-left">Email</th>
-                      <th className="p-3 text-left">Score (%)</th>
-                      <th className="p-3 text-left">Passed</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {results.map((r, idx) => (
-                      <tr key={idx} className="border-t dark:border-neutral-800 hover:bg-muted/50">
-                        <td className="p-3">{r.first_name} {r.last_name}</td>
-                        <td className="p-3">{r.email}</td>
-                        <td className="p-3">{r.score}</td>
-                        <td className="p-3">
-                          <span className={`font-medium ${r.passed ? "text-green-500" : "text-red-500"}`}>
-                            {r.passed ? "Yes" : "No"}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              !loading && (
-                <Card className="mt-6">
-                  <CardContent className="py-6 text-center text-muted-foreground">
-                    No results found for this exam.
-                  </CardContent>
-                </Card>
-              )
-            )}
+              </tbody>
+            </table>
           </>
         )}
       </div>
     </DashboardLayout>
-  );
+  )
 }
