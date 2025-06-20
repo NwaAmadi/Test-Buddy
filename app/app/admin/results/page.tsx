@@ -70,55 +70,83 @@ export default function ExamResultsPage() {
 
   return (
     <DashboardLayout role="admin">
-      <div className="space-y-4">
-        <h1 className="text-2xl font-bold">Exam Results</h1>
+      <div className="space-y-6 max-w-4xl mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">Exam Results</h1>
 
-        <select
-          className="border rounded p-2"
-          onChange={(e) => {
-            const exam = exams.find(ex => ex.id === e.target.value)
-            setSelectedExam(exam)
-            fetchResults(e.target.value)
-          }}
-        >
-          <option value="">Select Exam</option>
-          {exams.map((exam) => (
-            <option key={exam.id} value={exam.id}>
-              {exam.title}
-            </option>
-          ))}
-        </select>
+        <div className="flex flex-col sm:flex-row items-center gap-4">
+          <select
+            className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded px-4 py-2 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+            onChange={(e) => {
+              const exam = exams.find(ex => ex.id === e.target.value)
+              setSelectedExam(exam)
+              fetchResults(e.target.value)
+            }}
+            value={selectedExam?.id || ""}
+          >
+            <option value="">Select Exam</option>
+            {exams.map((exam) => (
+              <option key={exam.id} value={exam.id}>
+                {exam.title}
+              </option>
+            ))}
+          </select>
+          {selectedExam && results.length > 0 && (
+            <Button onClick={downloadResults} className="ml-0 sm:ml-4">
+              Download Results
+            </Button>
+          )}
+        </div>
 
-        {loading && <p>Fetching results...</p>}
+        {loading && (
+          <div className="flex items-center gap-2 mt-6">
+            <svg className="animate-spin h-5 w-5 text-blue-500" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+            </svg>
+            <span className="text-gray-700 dark:text-gray-300">Fetching results...</span>
+          </div>
+        )}
 
         {selectedExam && results.length > 0 && (
-          <>
-            <h2 className="text-xl font-semibold">
-              Results for {selectedExam.title}
+          <div className="overflow-x-auto mt-6 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+            <h2 className="text-xl font-semibold px-6 pt-6 pb-2 text-gray-800 dark:text-gray-200">
+              Results for <span className="text-blue-600 dark:text-blue-400">{selectedExam.title}</span>
             </h2>
-            <Button onClick={downloadResults}>Download Results</Button>
-
-            <table className="w-full mt-4 border">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead>
-                <tr className="bg-gray-100">
-                  <th className="border p-2">First Name</th>
-                  <th className="border p-2">Last Name</th>
-                  <th className="border p-2">Score (%)</th>
-                  <th className="border p-2">Passed</th>
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700 dark:text-gray-300">First Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700 dark:text-gray-300">Last Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700 dark:text-gray-300">Score (%)</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700 dark:text-gray-300">Passed</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-100 dark:divide-gray-800">
                 {results.map((r, i) => (
-                  <tr key={i}>
-                    <td className="border p-2">{r.first_name}</td>
-                    <td className="border p-2">{r.last_name}</td>
-                    <td className="border p-2">{r.score}</td>
-                    <td className="border p-2">{r.passed ? "Yes" : "No"}</td>
+                  <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+                    <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-100">{r.first_name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-100">{r.last_name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-100">{r.score}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                        r.passed
+                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+                      }`}>
+                        {r.passed ? "Yes" : "No"}
+                      </span>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </>
+          </div>
+        )}
+
+        {!loading && selectedExam && results.length === 0 && (
+          <div className="text-center text-gray-500 dark:text-gray-400 mt-8">
+            No results found for this exam.
+          </div>
         )}
       </div>
     </DashboardLayout>
