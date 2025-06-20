@@ -28,7 +28,7 @@ router.get('/results/:examId', verifyToken, isAdmin, async (req: Request, res: R
   const { examId } = req.params;
 
   if (!examId) {
-    console.error("❌ Missing examId");
+    
     return res.status(400).json({ error: "Missing examId" });
   }
 
@@ -52,16 +52,14 @@ router.get('/results/:examId', verifyToken, isAdmin, async (req: Request, res: R
     .eq('exam_id', examId);
 
   if (error) {
-    console.error("❌ Supabase error:", error.message);
+    
     return res.status(500).json({ error: error.message });
   }
 
   if (!data || data.length === 0) {
-    console.warn("⚠️ No results found for this exam.");
+    
     return res.status(404).json({ error: "No results found for this exam" });
   }
-
-  console.log("✅ Raw Supabase data:", data);
 
   const formatted = data.map((r: any) => {
     const student = (r.student ?? {}) as ResultRow["student"];
@@ -76,8 +74,6 @@ router.get('/results/:examId', verifyToken, isAdmin, async (req: Request, res: R
       exam_title: exam.title,
     };
   });
-
-  console.log("✅ Formatted results:", formatted);
 
   return res.json(formatted);
 });
