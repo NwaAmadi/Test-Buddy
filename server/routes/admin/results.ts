@@ -24,7 +24,7 @@ type ResultRow = {
   };
 };
 
-router.get('/api/admin/results/:examId', verifyToken, isAdmin, async (req: Request, res: Response): Promise<any> => {
+router.get('/results/:examId', verifyToken, isAdmin, async (req: Request, res: Response): Promise<any> => {
   const { examId } = req.params;
 
   if (!examId) {

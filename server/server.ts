@@ -44,7 +44,7 @@ app.use("/student/results", allResultsRouter);
 
 app.use("/api/admin/exam", examsRoutes)
 app.use("/api/admin/questions", questionsRoutes)
-app.use('/api/admin/results', adminResultsRoute);
+app.use('/api/admin', adminResultsRoute);
 
 app.use("/api/active", Session);
 app.use("/api/logout", logoutRouter);
