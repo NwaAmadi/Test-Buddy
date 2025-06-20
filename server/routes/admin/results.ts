@@ -24,9 +24,15 @@ type ResultRow = {
   };
 };
 
-// GET /api/admin/results/:examId
 router.get('/api/admin/results/:examId', verifyToken, isAdmin, async (req: Request, res: Response): Promise<any> => {
   const { examId } = req.params;
+
+  if (!examId) {
+    console.error("❌ Missing examId");
+    return res.status(400).json({ error: "Missing examId" });
+  }
+
+  console.log("🔎 Fetching results for examId:", examId);
 
   const { data, error } = await supabase
     .from('results')
@@ -45,14 +51,18 @@ router.get('/api/admin/results/:examId', verifyToken, isAdmin, async (req: Reque
     `)
     .eq('exam_id', examId);
 
-  // 🔍 Debug logs
-  console.log("Raw Supabase data:", data);
-  console.log("Supabase error:", error);
+  if (error) {
+    console.error("❌ Supabase error:", error.message);
+    return res.status(500).json({ error: error.message });
+  }
 
-  if (error) return res.status(500).json({ error: error.message });
-  if (!data || data.length === 0) return res.status(404).json({ error: "No results found for this exam" });
+  if (!data || data.length === 0) {
+    console.warn("⚠️ No results found for this exam.");
+    return res.status(404).json({ error: "No results found for this exam" });
+  }
 
-  // Format and safely cast data
+  console.log("✅ Raw Supabase data:", data);
+
   const formatted = data.map((r: any) => {
     const student = (r.student ?? {}) as ResultRow["student"];
     const exam = (r.exam ?? {}) as ResultRow["exam"];
@@ -66,6 +76,8 @@ router.get('/api/admin/results/:examId', verifyToken, isAdmin, async (req: Reque
       exam_title: exam.title,
     };
   });
+
+  console.log("✅ Formatted results:", formatted);
 
   return res.json(formatted);
 });
