@@ -34,7 +34,7 @@ router.post("/", async (req: Request, res: Response): Promise<any> => {
     return res.json({
         success: true,
         active: false,
-        message: "PROCEED"
+        message: "PROCEED TO LOGIN"
     });
 });
 
