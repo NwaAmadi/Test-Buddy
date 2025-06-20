@@ -24,6 +24,7 @@ type ResultRow = {
   };
 };
 
+// GET /api/admin/results/:examId
 router.get('/api/admin/results/:examId', verifyToken, isAdmin, async (req: Request, res: Response): Promise<any> => {
   const { examId } = req.params;
 
@@ -44,9 +45,15 @@ router.get('/api/admin/results/:examId', verifyToken, isAdmin, async (req: Reque
     `)
     .eq('exam_id', examId);
 
-  if (error) return res.status(500).json({ error: error.message });
+  // 🔍 Debug logs
+  console.log("Raw Supabase data:", data);
+  console.log("Supabase error:", error);
 
-  const formatted = (data || []).map((r: any) => {
+  if (error) return res.status(500).json({ error: error.message });
+  if (!data || data.length === 0) return res.status(404).json({ error: "No results found for this exam" });
+
+  // Format and safely cast data
+  const formatted = data.map((r: any) => {
     const student = (r.student ?? {}) as ResultRow["student"];
     const exam = (r.exam ?? {}) as ResultRow["exam"];
 
