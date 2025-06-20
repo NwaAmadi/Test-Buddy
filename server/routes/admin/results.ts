@@ -1,7 +1,6 @@
-import { Router } from "express";
+import { Router, Request, Response } from "express";
 import { supabase } from "../../db/supabase";
 import { verifyToken, isAdmin } from "../../middleware/auth";
-import { ExamResult, GetExamResultsParams } from "../../types/interface";
 import cors from "cors";
 import express from "express";
 
@@ -11,52 +10,57 @@ app.use(express.json());
 
 const router = Router();
 
-router.get("/:examId", verifyToken, isAdmin, async (req, res) => {
+type ResultRow = {
+  score: number;
+  total: number;
+  passed: boolean;
+  student: {
+    first_name: string;
+    last_name: string;
+    email: string;
+  };
+  exam: {
+    title: string;
+  };
+};
+
+router.get('/api/admin/results/:examId', verifyToken, isAdmin, async (req: Request, res: Response): Promise<any> => {
   const { examId } = req.params;
-  try {
-    const { data: results, error } = await supabase
-      .rpc("get_exam_results", { exam_id: examId });
 
-    if (error) throw error;
+  const { data, error } = await supabase
+    .from('results')
+    .select(`
+      score,
+      total,
+      passed,
+      student:student_id (
+        first_name,
+        last_name,
+        email
+      ),
+      exam:exam_id (
+        title
+      )
+    `)
+    .eq('exam_id', examId);
 
-    res.json(results);
-  } catch (err: unknown) {
-    const error = err as Error;
-    res.status(500).json({ error: error.message || "An unexpected error occurred." });
-  }
-});
+  if (error) return res.status(500).json({ error: error.message });
 
+  const formatted = (data || []).map((r: any) => {
+    const student = (r.student ?? {}) as ResultRow["student"];
+    const exam = (r.exam ?? {}) as ResultRow["exam"];
 
-router.get("/:examId/csv", verifyToken, isAdmin, async (req, res) => {
-  const { examId } = req.params;
-  try {
-    const { data, error } = await supabase
-      .rpc("get_exam_results", { exam_id: examId });
+    return {
+      first_name: student.first_name,
+      last_name: student.last_name,
+      email: student.email,
+      score: ((r.score / r.total) * 100).toFixed(2),
+      passed: r.passed,
+      exam_title: exam.title,
+    };
+  });
 
-    if (error) throw error;
-
-    const results = data as ExamResult[];
-
-    const csvRows = [
-      "Student ID,First Name,Last Name,Score,Total,Passed,Submitted At",
-      ...results.map((result) => [
-        result.student_id,
-        result.first_name || "",
-        result.last_name || "",
-        result.score,
-        result.total,
-        result.passed ? "Yes" : "No",
-        new Date(result.submitted_at).toISOString(),
-      ].join(","))
-    ];
-
-    res.setHeader("Content-Type", "text/csv");
-    res.setHeader("Content-Disposition", `attachment; filename=results-${examId}.csv`);
-    res.send(csvRows.join("\n"));
-  } catch (err: unknown) {
-    const error = err as Error;
-    res.status(500).json({ error: error.message || "An unexpected error occurred." });
-  }
+  return res.json(formatted);
 });
 
 export default router;
