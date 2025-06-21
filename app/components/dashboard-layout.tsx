@@ -1,5 +1,6 @@
 "use client"
 
+import { useRefreshToken } from "@/hooks/useRefreshToken"
 import React, { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
@@ -29,7 +30,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Dialog, DialogContent } from "@/components/ui/dialog" // Ensure DialogClose is NOT imported if you want to explicitly avoid it
+import { Dialog, DialogContent } from "@/components/ui/dialog"
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER
 
@@ -146,7 +147,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
   ]
 
   const navItems = role === "admin" ? adminNavItems : studentNavItems
-
+  useRefreshToken();
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Logout Loading Modal */}

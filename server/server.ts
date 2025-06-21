@@ -23,6 +23,8 @@ import adminResultsRoute from './routes/admin/results';
 import examsRoutes from "./routes/admin/exams"
 import questionsRoutes from "./routes/admin/questions"
 
+import refreshRoute from "./routes/refresh/index";
+
 const app = express();
 
 app.use(cors());
@@ -48,6 +50,8 @@ app.use('/api/admin', adminResultsRoute);
 
 app.use("/api/active", Session);
 app.use("/api/logout", logoutRouter);
+
+app.use("/api/refresh", refreshRoute);
 
 app.listen(PORT, () => {
   console.log(`ACTIVE ON  ${PORT}`);

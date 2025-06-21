@@ -51,6 +51,9 @@ export interface TokenPair {
   accessToken: string;
   refreshToken: string;
 }
+export interface AccessTokenRequest {
+  accessToken: string;
+}
 
 export interface AuthUser {
   id?: string;

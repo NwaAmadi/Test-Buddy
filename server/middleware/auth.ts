@@ -29,6 +29,22 @@ export const verifyToken = async (req: AuthRequest, res: Response, next: NextFun
   }
 };
 
+export const verifyRefreshToken = async (
+  refreshToken: string
+): Promise<{ email: string; role: string; id: string }> => {
+  try {
+    const secret = new TextEncoder().encode(process.env.REFRESH_SECRET!);
+    const { payload } = await jose.jwtVerify<{ email: string; role: string; id: string }>(
+      refreshToken,
+      secret
+    );
+
+    return payload;
+  } catch (err) {
+    throw new Error('INVALID OR EXPIRED REFRESH TOKEN');
+  }
+};
+
 export const isAdmin = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   if (!req.user) {
     res.status(401).json({ message: 'UNAUTHORIZED: USER NOT FOUND' });
