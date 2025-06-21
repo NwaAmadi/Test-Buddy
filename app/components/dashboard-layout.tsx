@@ -166,7 +166,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
           <div>
             <h1 className="text-xl font-bold">Test Buddy</h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              {role === "admin" ? "Administrator" : "Student"} Portal
+              {role === "admin" ? "Administrator" : "Student"} Portal 
             </p>
           </div>
         </div>
