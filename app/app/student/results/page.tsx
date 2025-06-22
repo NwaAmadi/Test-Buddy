@@ -35,31 +35,44 @@ export default function ResultsPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <LoadingPopup message="Fetching your results..." />;
-  if (!results || results.length === 0) return <Modal title="Oops...!" description="No results found, contact the admin" />;
-
   return (
     <DashboardLayout role="student">
-      <Card>
-        <CardHeader>
-          <CardTitle>All Exam Results</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            {results.map((result) => (
-              <div key={result.id} className="border rounded p-4">
-                <h2 className="text-xl font-bold mb-4">{result.examTitle}</h2>
-                <div>
-                  <p className="text-gray-500">Score: <Badge>{((result.score / result.total) * 100).toFixed(2)}%</Badge></p>
+      {loading ? (
+        <LoadingPopup message="Fetching your results..." />
+      ) : !results || results.length === 0 ? (
+        <Modal title="Oops...!" description="No results found, contact the admin" />
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle>All Exam Results</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {results.map((result) => (
+                <div key={result.id} className="border rounded p-4">
+                  <h2 className="text-xl font-bold mb-4">{result.examTitle}</h2>
+                  <div>
+                    <p className="text-gray-500">
+                      Score:{" "}
+                      <Badge>
+                        {((result.score / result.total) * 100).toFixed(2)}%
+                      </Badge>
+                    </p>
+                  </div>
+                  <div className="mt-1">
+                    <p className="text-gray-500">
+                      Status:{" "}
+                      <Badge variant={result.passed ? "default" : "destructive"}>
+                        {result.passed ? "Passed" : "Failed"}
+                      </Badge>
+                    </p>
+                  </div>
                 </div>
-                <div className="mt-1">
-                  <p className="text-gray-500">Status: <Badge variant={result.passed ? "default" : "destructive"}>{result.passed ? "Passed" : "Failed"}</Badge></p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </DashboardLayout>
   );
 }
