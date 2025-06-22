@@ -33,8 +33,8 @@ export function useRefreshToken() {
         if (!res.ok) throw new Error("Failed to refresh");
 
         const tokens = await res.json();
-        if (typeof tokens.accessToken === "string") {
-          localStorage.setItem("accessToken", tokens.accessToken);
+        if (tokens.accessToken && typeof tokens.accessToken.accessToken === "string") {
+          localStorage.setItem("accessToken", tokens.accessToken.accessToken);
           return;
         } else {
           throw new Error("Invalid access token format");
@@ -66,7 +66,7 @@ export function useRefreshToken() {
       }
     };
 
-    
+
     const interval = setInterval(refreshTokenIfNeeded, 55 * 60 * 1000);
 
     window.addEventListener("focus", refreshTokenIfNeeded);
