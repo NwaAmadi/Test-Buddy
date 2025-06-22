@@ -125,7 +125,6 @@ export default function AdminStudents() {
     }
 
     return (
-        <AuthProvider>
             <DashboardLayout role="admin">
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold mb-2">Manage Students</h1>
@@ -199,6 +198,5 @@ export default function AdminStudents() {
                     </CardContent>
                 </Card>
             </DashboardLayout>
-        </AuthProvider>
     )
 }
