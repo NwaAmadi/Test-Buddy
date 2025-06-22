@@ -5,6 +5,13 @@ import { DashboardLayout } from "@/components/dashboard-layout"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { saveAs } from "file-saver"
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select"
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER
 
@@ -73,25 +80,31 @@ export default function ExamResultsPage() {
       <div className="space-y-6 max-w-7xl mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">Exam Results</h1>
 
-        <div className="flex flex-col sm:flex-row items-center gap-4">
-          <select
-            className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md px-4 py-2 text-gray-900 dark:text-gray-100 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 w-full sm:w-auto"
-            onChange={(e) => {
-              const exam = exams.find(ex => ex.id === e.target.value)
-              setSelectedExam(exam)
-              fetchResults(e.target.value)
-            }}
-            value={selectedExam?.id || ""}
-          >
-            <option value="">Select Exam</option>
-            {exams.map((exam) => (
-              <option key={exam.id} value={exam.id}>
-                {exam.title}
-              </option>
-            ))}
-          </select>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
+          <div className="w-full sm:w-64">
+            <Select
+              onValueChange={(value) => {
+                const exam = exams.find((ex) => ex.id === value)
+                setSelectedExam(exam)
+                fetchResults(value)
+              }}
+              value={selectedExam?.id || ""}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select Exam" />
+              </SelectTrigger>
+              <SelectContent>
+                {exams.map((exam) => (
+                  <SelectItem key={exam.id} value={exam.id}>
+                    {exam.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           {selectedExam && results.length > 0 && (
-            <Button onClick={downloadResults} className="ml-0 sm:ml-4">
+            <Button onClick={downloadResults} className="w-full sm:w-auto">
               Download Results
             </Button>
           )}
