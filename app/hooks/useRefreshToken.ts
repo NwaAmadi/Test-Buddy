@@ -35,6 +35,7 @@ export function useRefreshToken() {
         const tokens = await res.json();
         if (typeof tokens.accessToken === "string") {
           localStorage.setItem("accessToken", tokens.accessToken);
+          return;
         } else {
           throw new Error("Invalid access token format");
         }
