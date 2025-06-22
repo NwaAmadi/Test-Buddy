@@ -29,6 +29,7 @@ const stepVariants = {
 
 export default function SignupForm() {
   const router = useRouter()
+  const [error, setError] = useState("")
   const [step, setStep] = useState(1)
   const [form, setForm] = useState({
     first_name: "",
@@ -95,6 +96,7 @@ export default function SignupForm() {
       const data = await response.json()
       if (!response.ok) {
         if (data.message === "STUDENT NOT FOUND") {
+          setError(data?.error || " STUDENT NOT RECOGNIZED! ")
           toast.error(" STUDENT NOT RECOGNIZED! ");
         } else {
           toast.error(data.message || "Signup failed");
