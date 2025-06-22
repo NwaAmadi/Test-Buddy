@@ -94,8 +94,13 @@ export default function SignupForm() {
 
       const data = await response.json()
       if (!response.ok) {
-        toast.info(data.message || "Signup failed")
-        return
+        if (data.message === "STUDENT NOT FOUND") {
+          toast.error(" STUDENT NOT RECOGNIZED! ");
+        } else {
+          toast.error(data.message || "Signup failed");
+        }
+        setIsLoading(false);
+        return;
       }
 
       const sendOtp = await axios.post(`${BACKEND_URL}/api/sendOtp`, {

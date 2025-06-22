@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import { supabase } from "../../db/supabase";
 import { verifyAdminCode } from "../../admin/verifyAdminAccessCode";
 import express from "express";
+import checkStudent  from "./utils/checkStudent";
 import cors from 'cors';
 import { SignupRequest } from "../../types/interface";
 const app = express();
@@ -18,6 +19,13 @@ router.post("/", async (req: Request, res: Response): Promise<any> => {
     return res.status(400).json({ error: "ALL FIELDS ARE REQUIRED" });
   }
 
+  if (role === "student") {
+    const isStudent = await checkStudent(first_name, last_name, email);
+    if (!isStudent) {
+      return res.status(400).json({ message: "STUDENT NOT FOUND" });
+    }
+  }
+  
   if (role !== "admin" && role !== "student") {
     return res.status(400).json({ message: "INVALID ROLE" });
   }
