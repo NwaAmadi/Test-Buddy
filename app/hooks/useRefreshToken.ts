@@ -7,14 +7,14 @@ export function useRefreshToken() {
   const router = useRouter();
 
   useEffect(() => {
-    const refreshTokenIfNeeded = async () => {
+    const interval = setInterval(async () => {
       const refreshToken = localStorage.getItem("refreshToken");
       const user = JSON.parse(localStorage.getItem("user") || "{}");
 
       if (!refreshToken || !user.email || !user.role) return;
 
       try {
-        const res = await fetch(`${BACKEND_URL}/api/refresh`, {
+        const res = await fetch(`${BACKEND_URL}/refresh`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ refreshToken }),
@@ -28,8 +28,10 @@ export function useRefreshToken() {
         }
       } catch (err) {
         console.error("TOKEN REFRESH FAILED:", err);
+        localStorage.clear();
+
         try {
-          const logoutRes = await fetch(`${BACKEND_URL}/api/logout`, {
+          const res = await fetch(`${BACKEND_URL}/api/logout`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -38,7 +40,7 @@ export function useRefreshToken() {
             }),
           });
 
-          if (!logoutRes.ok) {
+          if (!res.ok) {
             console.error("Logout failed");
           }
         } catch (logoutErr) {
@@ -50,14 +52,8 @@ export function useRefreshToken() {
           router.push("/login");
         }
       }
-    };
+    }, 55 * 60 * 1000); // Every 55 minutes
 
-    const interval = setInterval(refreshTokenIfNeeded, 55 * 60 * 1000);
-    window.addEventListener("focus", refreshTokenIfNeeded);
-
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener("focus", refreshTokenIfNeeded);
-    };
+    return () => clearInterval(interval);
   }, [router]);
 }
