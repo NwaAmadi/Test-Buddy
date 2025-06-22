@@ -52,7 +52,7 @@ export function useRefreshToken() {
           router.push("/login");
         }
       }
-    }, 55 * 60 * 1000); // Every 55 minutes
+    }, 55 * 60 * 1000);
 
     return () => clearInterval(interval);
   }, [router]);
