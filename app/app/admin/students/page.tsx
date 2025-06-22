@@ -13,7 +13,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import Papa from "papaparse"
-import { AuthProvider } from "@/components/AuthProvider"
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER
 
@@ -66,15 +65,48 @@ export default function AdminStudents() {
         setEmail("")
     }
 
-    const submitStudents = async () => {
+    const submitSingleStudent = async () => {
+        if (!first_name || !last_name || !email) {
+            toast.error("All fields are required!")
+            return
+        }
+
         try {
-            const res = await fetch(`${BACKEND_URL}/api/admin/students/bulk`, {
+            const res = await fetch(`${BACKEND_URL}/api/admin/students`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${accessToken}`,
                 },
-                body: JSON.stringify({ students }),
+                body: JSON.stringify({ first_name, last_name, email }),
+            })
+
+            if (res.ok) {
+                toast.success("Student uploaded successfully!")
+                setFirstName("")
+                setLastName("")
+                setEmail("")
+                fetchStudents()
+            } else {
+                toast.error("Failed to upload student")
+            }
+        } catch (err) {
+            toast.error("Error uploading student")
+        }
+    }
+
+    const submitStudents = async () => {
+        try {
+            const formData = new FormData()
+            const blob = new Blob([JSON.stringify(students)], { type: "application/json" })
+            formData.append("file", blob, "students.json")
+
+            const res = await fetch(`${BACKEND_URL}/api/admin/students/bulk`, {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+                body: formData,
             })
 
             if (res.ok) {
@@ -115,7 +147,7 @@ export default function AdminStudents() {
 
         Papa.parse(file, {
             header: true,
-            complete: async (results) => {
+            complete: (results) => {
                 const parsedStudents = (results.data as any[])
                     .filter((s: any) => s.first_name && s.last_name && s.email) as Student[]
                 setStudents((prev) => [...prev, ...parsedStudents])
@@ -125,78 +157,82 @@ export default function AdminStudents() {
     }
 
     return (
-            <DashboardLayout role="admin">
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold mb-2">Manage Students</h1>
-                    <p className="text-muted-foreground">Add or upload students, view and delete from the list.</p>
-                </div>
+        <DashboardLayout role="admin">
+            <div className="mb-8">
+                <h1 className="text-3xl font-bold mb-2">Manage Students</h1>
+                <p className="text-muted-foreground">Add or upload students, view and delete from the list.</p>
+            </div>
 
-                <Card className="mb-6">
-                    <CardHeader>
-                        <CardTitle>Add New Student</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
-                                <Label>First Name</Label>
-                                <Input value={first_name} onChange={(e) => setFirstName(e.target.value)} />
-                            </div>
-                            <div>
-                                <Label>Last Name</Label>
-                                <Input value={last_name} onChange={(e) => setLastName(e.target.value)} />
-                            </div>
-                            <div>
-                                <Label>Email</Label>
-                                <Input value={email} onChange={(e) => setEmail(e.target.value)} />
-                            </div>
+            <Card className="mb-6">
+                <CardHeader>
+                    <CardTitle>Add New Student</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <Label>First Name</Label>
+                            <Input value={first_name} onChange={(e) => setFirstName(e.target.value)} />
                         </div>
-                        <div className="flex items-center gap-4">
-                            <Button onClick={addStudentToList}>Add</Button>
-                            <Button onClick={submitStudents} disabled={students.length === 0}>Submit All</Button>
-                            <Label className="text-sm font-medium cursor-pointer">
-                                Upload Excel
-                                <Input
-                                    type="file"
-                                    accept=".csv"
-                                    className="hidden"
-                                    onChange={handleExcelUpload}
-                                />
-                            </Label>
+                        <div>
+                            <Label>Last Name</Label>
+                            <Input value={last_name} onChange={(e) => setLastName(e.target.value)} />
                         </div>
-                        {students.length > 0 && (
-                            <div className="mt-4">
-                                <p className="font-semibold">Students to be uploaded:</p>
-                                <ul className="list-disc pl-6">
-                                    {students.map((s, idx) => (
-                                        <li key={idx}>{s.first_name} {s.last_name} ({s.email})</li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
+                        <div>
+                            <Label>Email</Label>
+                            <Input value={email} onChange={(e) => setEmail(e.target.value)} />
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-4 flex-wrap">
+                        <Button onClick={submitSingleStudent}>Submit Single</Button>
+                        <Button onClick={addStudentToList}>Add to Bulk</Button>
+                        <Button onClick={submitStudents} disabled={students.length === 0}>
+                            Submit Bulk
+                        </Button>
+                        <Label className="text-sm font-medium cursor-pointer">
+                            Upload Excel
+                            <Input
+                                type="file"
+                                accept=".csv"
+                                className="hidden"
+                                onChange={handleExcelUpload}
+                            />
+                        </Label>
+                    </div>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Registered Students</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-                            {dbStudents.map((student) => (
-                                <li key={student.id} className="flex justify-between py-2">
-                                    <span>{student.first_name} {student.last_name} ({student.email})</span>
-                                    <Button
-                                        variant="destructive"
-                                        size="sm"
-                                        onClick={() => deleteStudent(student.id!)}
-                                    >
-                                        Delete
-                                    </Button>
-                                </li>
-                            ))}
-                        </ul>
-                    </CardContent>
-                </Card>
-            </DashboardLayout>
+                    {students.length > 0 && (
+                        <div className="mt-4">
+                            <p className="font-semibold">Students to be uploaded:</p>
+                            <ul className="list-disc pl-6">
+                                {students.map((s, idx) => (
+                                    <li key={idx}>{s.first_name} {s.last_name} ({s.email})</li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Registered Students</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+                        {dbStudents.map((student) => (
+                            <li key={student.id} className="flex justify-between py-2">
+                                <span>{student.first_name} {student.last_name} ({student.email})</span>
+                                <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    onClick={() => deleteStudent(student.id!)}
+                                >
+                                    Delete
+                                </Button>
+                            </li>
+                        ))}
+                    </ul>
+                </CardContent>
+            </Card>
+        </DashboardLayout>
     )
 }
