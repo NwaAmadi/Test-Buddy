@@ -7,11 +7,21 @@ export function useRefreshToken() {
   const router = useRouter();
 
   useEffect(() => {
-    const interval = setInterval(async () => {
+    const refreshTokenIfNeeded = async () => {
       const refreshToken = localStorage.getItem("refreshToken");
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      const userString = localStorage.getItem("user");
 
-      if (!refreshToken || !user.email || !user.role) return;
+      if (!refreshToken || !userString) return;
+
+      let user;
+      try {
+        user = JSON.parse(userString);
+      } catch {
+        console.error("Corrupted user object");
+        return;
+      }
+
+      if (!user.email || !user.role) return;
 
       try {
         const res = await fetch(`${BACKEND_URL}/refresh`, {
@@ -23,12 +33,13 @@ export function useRefreshToken() {
         if (!res.ok) throw new Error("Failed to refresh");
 
         const tokens = await res.json();
-        if (tokens.accessToken) {
+        if (typeof tokens.accessToken === "string") {
           localStorage.setItem("accessToken", tokens.accessToken);
+        } else {
+          throw new Error("Invalid access token format");
         }
       } catch (err) {
         console.error("TOKEN REFRESH FAILED:", err);
-        localStorage.clear();
 
         try {
           const res = await fetch(`${BACKEND_URL}/api/logout`, {
@@ -52,8 +63,16 @@ export function useRefreshToken() {
           router.push("/login");
         }
       }
-    }, 55 * 60 * 1000);
+    };
 
-    return () => clearInterval(interval);
+    
+    const interval = setInterval(refreshTokenIfNeeded, 55 * 60 * 1000);
+
+    window.addEventListener("focus", refreshTokenIfNeeded);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("focus", refreshTokenIfNeeded);
+    };
   }, [router]);
 }
