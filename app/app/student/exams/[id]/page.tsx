@@ -76,7 +76,6 @@ export default function ExamPage({ params }: { params: { id: string } }) {
     try {
       const accessToken = localStorage.getItem("accessToken") || ""
 
-     
       const allAnswers: Record<string, string> = {}
       exam.questions.forEach((q: any) => {
         allAnswers[q.id] = answers[q.id] || ""
@@ -170,23 +169,37 @@ export default function ExamPage({ params }: { params: { id: string } }) {
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
   }
 
-  if (loading) return <Modal title="Loading..." description="Please wait while the exam is being loaded." />
+  if (loading) {
+    return (
+      <DashboardLayout role="student">
+        <Modal title="Loading..." description="Please wait while the exam is being loaded." />
+      </DashboardLayout>
+    )
+  }
 
-  if (error) return (
-    <Modal
-      title="Error"
-      description={error}
-      onClose={() => router.push("/student/dashboard")}
-    />
-  )
+  if (error) {
+    return (
+      <DashboardLayout role="student">
+        <Modal
+          title="Error"
+          description={error}
+          onClose={() => router.push("/student/dashboard")}
+        />
+      </DashboardLayout>
+    )
+  }
 
-  if (!exam || !exam.questions || exam.questions.length === 0) return (
-    <Modal
-      title="Exam Not Found"
-      description="This exam could not be found or has no questions."
-      onClose={() => router.push("/student/dashboard")}
-    />
-  )
+  if (!exam || !exam.questions || exam.questions.length === 0) {
+    return (
+      <DashboardLayout role="student">
+        <Modal
+          title="Exam Not Found"
+          description="This exam could not be found or has no questions."
+          onClose={() => router.push("/student/dashboard")}
+        />
+      </DashboardLayout>
+    )
+  }
 
   const progress = (currentQuestion / exam.questions.length) * 100
   const question = exam.questions[currentQuestion]
