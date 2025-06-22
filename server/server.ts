@@ -22,6 +22,7 @@ import adminResultsRoute from './routes/admin/results';
 
 import examsRoutes from "./routes/admin/exams"
 import questionsRoutes from "./routes/admin/questions"
+import addStudents from "./routes/admin/students";
 
 import refreshRoute from "./routes/refresh/index";
 
@@ -47,6 +48,7 @@ app.use("/student/results", allResultsRouter);
 app.use("/api/admin/exam", examsRoutes)
 app.use("/api/admin/questions", questionsRoutes)
 app.use('/api/admin', adminResultsRoute);
+app.use("/api/admin", addStudents);
 
 app.use("/api/active", Session);
 app.use("/api/logout", logoutRouter);
