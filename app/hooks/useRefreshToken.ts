@@ -24,7 +24,7 @@ export function useRefreshToken() {
       if (!user.email || !user.role) return;
 
       try {
-        const res = await fetch(`${BACKEND_URL}/refresh`, {
+        const res = await fetch(`${BACKEND_URL}/api/refresh`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ refreshToken }),
