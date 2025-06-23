@@ -11,6 +11,8 @@ import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AlertCircle, Clock } from "lucide-react"
 import { Modal } from "@/components/ui/Modal"
+import { ModalWithJSX } from "@/components/ui/ModalWithJsx"
+import { Checkbox } from "@/components/ui/checkbox"
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER
 
@@ -49,6 +51,10 @@ export default function ExamPage({ params }: { params: { id: string } }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
+
+  const [showRulesModal, setShowRulesModal] = useState(true)
+  const [examStarted, setExamStarted] = useState(false)
+  const [agreed, setAgreed] = useState(false)
 
   const handleAnswerSelect = (value: string) => {
     setAnswers((prev) => ({
@@ -115,7 +121,7 @@ export default function ExamPage({ params }: { params: { id: string } }) {
   }, [params.id])
 
   useEffect(() => {
-    if (!timeLeft || !exam) return
+    if (!examStarted || !timeLeft || !exam) return
 
     timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
@@ -129,7 +135,7 @@ export default function ExamPage({ params }: { params: { id: string } }) {
     }, 1000)
 
     return () => clearInterval(timerRef.current!)
-  }, [timeLeft, exam])
+  }, [timeLeft, examStarted, exam])
 
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -196,6 +202,42 @@ export default function ExamPage({ params }: { params: { id: string } }) {
           title="Exam Not Found"
           description="This exam could not be found or has no questions."
           onClose={() => router.push("/student/dashboard")}
+        />
+      </DashboardLayout>
+    )
+  }
+
+  if (showRulesModal) {
+    return (
+      <DashboardLayout role="student">
+        <ModalWithJSX
+          title="Exam Rules & Guidelines"
+          description={
+            <div className="space-y-4 text-sm">
+              <ul className="list-disc list-inside space-y-2">
+                <li>Do not switch tabs during the exam. It will be logged.</li>
+                <li>You must remain visible on camera throughout the exam.</li>
+                <li>Do not close or refresh this page. Doing so may submit your exam automatically.</li>
+                <li>The exam is timed and will auto-submit when time expires.</li>
+              </ul>
+
+              <div className="flex items-center space-x-2 pt-2">
+                <Checkbox id="agree" checked={agreed} onCheckedChange={(val) => setAgreed(!!val)} />
+                <Label htmlFor="agree">I have read and agree to the rules</Label>
+              </div>
+            </div>
+          }
+          footer={
+            <Button
+              disabled={!agreed}
+              onClick={() => {
+                setShowRulesModal(false)
+                setExamStarted(true)
+              }}
+            >
+              Start Exam
+            </Button>
+          }
         />
       </DashboardLayout>
     )
