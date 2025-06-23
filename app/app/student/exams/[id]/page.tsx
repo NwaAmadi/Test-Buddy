@@ -220,7 +220,7 @@ export default function ExamPage({ params }: { params: { id: string } }) {
                 <li>Do not close or refresh this page. Doing so will submit your exam automatically.</li>
                 <li>The exam is timed and will auto-submit when time expires.</li>
                 <li>Attempt all questions to the best of your ability and ensure you submit something.</li>
-                <li>The system will submit with a zero-score if you didn't manually submit.</li>
+                <li>The system will submit with a <strong>zero-score</strong> if you didn't manually submit.</li>
               </ul>
               <div className="flex items-center space-x-2 pt-2">
                 <Checkbox id="agree" checked={agreed} onCheckedChange={(val) => setAgreed(!!val)} />
