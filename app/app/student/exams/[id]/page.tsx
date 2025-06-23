@@ -213,19 +213,18 @@ export default function ExamPage({ params }: { params: { id: string } }) {
         <ModalWithJSX
           title="Exam Rules & Guidelines"
           description={
-            <div className="space-y-4 text-sm">
+            <>
               <ul className="list-disc list-inside space-y-2">
                 <li>Do not switch tabs during the exam. It will be logged.</li>
                 <li>You must remain visible on camera throughout the exam.</li>
                 <li>Do not close or refresh this page. Doing so may submit your exam automatically.</li>
                 <li>The exam is timed and will auto-submit when time expires.</li>
               </ul>
-
               <div className="flex items-center space-x-2 pt-2">
                 <Checkbox id="agree" checked={agreed} onCheckedChange={(val) => setAgreed(!!val)} />
                 <Label htmlFor="agree">I have read and agree to the rules</Label>
               </div>
-            </div>
+            </>
           }
           footer={
             <Button
@@ -238,6 +237,9 @@ export default function ExamPage({ params }: { params: { id: string } }) {
               Start Exam
             </Button>
           }
+          onForceClose={() => {
+            if (!agreed && !examStarted) router.push("/student/dashboard")
+          }}
         />
       </DashboardLayout>
     )

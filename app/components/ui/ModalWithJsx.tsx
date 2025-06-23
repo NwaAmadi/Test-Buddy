@@ -1,14 +1,15 @@
 "use client"
 
 import { ReactNode } from "react"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { useRouter } from "next/navigation"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
 interface ModalWithJSXProps {
   title: string
   description: ReactNode
   footer?: ReactNode
   open?: boolean
-  onClose?: () => void
+  onForceClose?: () => void // 👈 new prop
 }
 
 export const ModalWithJSX = ({
@@ -16,10 +17,19 @@ export const ModalWithJSX = ({
   description,
   footer,
   open = true,
-  onClose,
+  onForceClose,
 }: ModalWithJSXProps) => {
+  const router = useRouter()
+
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose?.()}>
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) {
+          onForceClose?.() ?? router.push("/student/dashboard")
+        }
+      }}
+    >
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
