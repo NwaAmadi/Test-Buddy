@@ -217,8 +217,10 @@ export default function ExamPage({ params }: { params: { id: string } }) {
               <ul className="list-disc list-inside space-y-2">
                 <li>Do not switch tabs during the exam. It will be logged.</li>
                 <li>You must remain visible on camera throughout the exam.</li>
-                <li>Do not close or refresh this page. Doing so may submit your exam automatically.</li>
+                <li>Do not close or refresh this page. Doing so will submit your exam automatically.</li>
                 <li>The exam is timed and will auto-submit when time expires.</li>
+                <li>Attempt all questions to the best of your ability and ensure you submit something.</li>
+                <li>The system will submit with a zero-score if you didn't manually submit.</li>
               </ul>
               <div className="flex items-center space-x-2 pt-2">
                 <Checkbox id="agree" checked={agreed} onCheckedChange={(val) => setAgreed(!!val)} />
