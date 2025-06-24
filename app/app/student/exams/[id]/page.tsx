@@ -13,8 +13,12 @@ import { AlertCircle, Clock } from "lucide-react"
 import { Modal } from "@/components/ui/Modal"
 import { ModalWithJSX } from "@/components/ui/ModalWithJsx"
 import { Checkbox } from "@/components/ui/checkbox"
+import { startFaceMonitoring } from "@/utils/face-monitoring"
+import { toast } from "sonner"
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER
+const userObject = localStorage.getItem("user")
+const user = userObject ? JSON.parse(userObject) : null
 
 const fetchExam = async (examId: string, accessToken: string) => {
   try {
@@ -231,13 +235,40 @@ export default function ExamPage({ params }: { params: { id: string } }) {
           footer={
             <Button
               disabled={!agreed}
-              onClick={() => {
+              onClick={async () => {
                 setShowRulesModal(false)
                 setExamStarted(true)
+
+                try {
+                  const video = document.createElement("video")
+                  video.autoplay = true
+                  video.muted = true
+                  video.playsInline = true
+                  video.style.display = "none"
+                  document.body.appendChild(video)
+
+                  const stream = await navigator.mediaDevices.getUserMedia({ video: true })
+                  video.srcObject = stream
+
+                  const studentId = user.id
+                  const exam_id = exam.id
+
+                  startFaceMonitoring(video, studentId, exam_id, (reason) => {
+                    
+                    stream.getTracks().forEach((track) => track.stop())
+
+                    alert(`Exam ended: ${reason}`)
+                    router.push("/student/dashboard")
+                  })
+                } catch (err) {
+                  toast.info("Camera access denied!")
+                  router.push("/student/dashboard")
+                }
               }}
             >
               Start Exam
             </Button>
+
           }
           onForceClose={() => {
             if (!agreed && !examStarted) router.push("/student/dashboard")

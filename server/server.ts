@@ -24,6 +24,8 @@ import examsRoutes from "./routes/admin/exams"
 import questionsRoutes from "./routes/admin/questions"
 import addStudents from "./routes/admin/students";
 
+import logger from "./routes/student/monitoring"
+
 import refreshRoute from "./routes/refresh/index";
 
 const app = express();
@@ -54,6 +56,8 @@ app.use("/api/active", Session);
 app.use("/api/logout", logoutRouter);
 
 app.use("/api/refresh", refreshRoute);
+
+app.use("/api/monitoring", logger);
 
 app.listen(PORT, () => {
   console.log(`ACTIVE ON  ${PORT}`);
