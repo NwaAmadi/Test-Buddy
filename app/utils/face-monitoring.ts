@@ -30,7 +30,7 @@ export const startFaceMonitoring = (
     canvas.height = video.videoHeight;
     const ctx = canvas.getContext("2d")!;
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const imageData = canvas.toDataURL("image/png");
+    const imageData = canvas.toDataURL("image/jpeg", 0.6);
 
     fetch(`${BACKEND_URL}/api/monitoring/report-violation`, {
       method: "POST",
