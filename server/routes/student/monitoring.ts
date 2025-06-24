@@ -24,7 +24,7 @@ router.post("/report-violation", verifyToken, isStudent, async (req: Request, re
     const filename = `${student_id}_${exam_id}_${Date.now()}.png`
 
     const { error: uploadError } = await supabase.storage
-      .from("violations")
+      .from("testbuddy")
       .upload(filename, imageBuffer, {
         contentType: "image/png",
       })
@@ -35,7 +35,7 @@ router.post("/report-violation", verifyToken, isStudent, async (req: Request, re
     }
 
     const { data } = supabase.storage
-      .from("violations")
+      .from("testbuddy")
       .getPublicUrl(filename)
 
     const publicUrl = data?.publicUrl
