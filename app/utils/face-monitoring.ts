@@ -8,6 +8,10 @@ declare global {
   }
 }
 
+let cameraInstance: any = null;
+let mediaStream: MediaStream | null = null;
+
+
 export const startFaceMonitoring = (
   videoEl: HTMLVideoElement,
   student_id: string,
@@ -22,6 +26,7 @@ export const startFaceMonitoring = (
     ended = true;
     sendScreenshot(videoEl, reason);
     onViolation(reason);
+    stopFaceMonitoring();
   };
 
   const sendScreenshot = (video: HTMLVideoElement, reason: string) => {
@@ -34,9 +39,9 @@ export const startFaceMonitoring = (
 
     fetch(`${BACKEND_URL}/api/monitoring/report-violation`, {
       method: "POST",
-      headers: { 
+      headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
       },
       body: JSON.stringify({
         student_id,
@@ -79,17 +84,34 @@ export const startFaceMonitoring = (
   navigator.mediaDevices
     .getUserMedia({ video: true })
     .then((stream) => {
+      mediaStream = stream;
       videoEl.srcObject = stream;
-      const camera = new window.Camera(videoEl, {
+
+      cameraInstance = new window.Camera(videoEl, {
         onFrame: async () => {
           await faceMesh.send({ image: videoEl });
         },
         width: 640,
         height: 480,
       });
-      camera.start();
+
+      cameraInstance.start();
     })
     .catch(() => {
       onViolation("Camera access denied");
+      stopFaceMonitoring();
     });
+};
+
+
+export const stopFaceMonitoring = () => {
+  if (cameraInstance) {
+    cameraInstance.stop();
+    cameraInstance = null;
+  }
+
+  if (mediaStream) {
+    mediaStream.getTracks().forEach((track) => track.stop());
+    mediaStream = null;
+  }
 };

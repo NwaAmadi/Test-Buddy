@@ -15,6 +15,7 @@ import { ModalWithJSX } from "@/components/ui/ModalWithJsx"
 import { Checkbox } from "@/components/ui/checkbox"
 import { startFaceMonitoring } from "@/utils/face-monitoring"
 import { toast } from "sonner"
+import { stopFaceMonitoring } from "@/utils/face-monitoring"
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_SERVER
 const userObject = localStorage.getItem("user")
@@ -258,6 +259,7 @@ export default function ExamPage({ params }: { params: { id: string } }) {
                     stream.getTracks().forEach((track) => track.stop())
 
                     alert(`Exam ended!: ${reason}`)
+                    stopFaceMonitoring();
                     router.push("/student/dashboard")
                   })
                 } catch (err) {
