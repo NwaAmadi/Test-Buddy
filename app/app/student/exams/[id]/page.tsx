@@ -257,7 +257,7 @@ export default function ExamPage({ params }: { params: { id: string } }) {
                     
                     stream.getTracks().forEach((track) => track.stop())
 
-                    alert(`Exam ended: ${reason}`)
+                    alert(`Exam ended!: ${reason}`)
                     router.push("/student/dashboard")
                   })
                 } catch (err) {
