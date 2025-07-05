@@ -59,7 +59,7 @@ export const startFaceMonitoring = (
   });
 
   faceMesh.setOptions({
-    maxNumFaces: 2,
+    maxNumFaces: 1,
     refineLandmarks: true,
     minDetectionConfidence: 0.5,
     minTrackingConfidence: 0.5,

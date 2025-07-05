@@ -54,11 +54,11 @@ router.post("/report-violation", verifyToken, isStudent, async (req: Request, re
 
     if (insertError) {
       console.error("Database insert error:", insertError)
-      return res.status(500).json({ error: "Failed to save violation to DB" })
+      return res.status(500).json({ error: "Failed to log violation to DB" })
     }
 
     return res.status(200).json({
-      message: "Violation reported successfully",
+      message: "Violation has been logged",
       image_url: publicUrl,
     })
   } catch (err) {
